@@ -25,11 +25,12 @@ router.post('/applications', (req, res) => {
     const trackingCode = generateTrackingCode();
 
     const stmt = db.prepare(`
-      INSERT INTO applications (tracking_code, parent_name, phone, email, child_name, grade, notes, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
+      INSERT INTO applications (tracking_code, parent_name, phone, email, child_name, grade, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
+      trackingCode,
       parentName.trim(),
       phone.trim(),
       email ? email.trim() : null,
