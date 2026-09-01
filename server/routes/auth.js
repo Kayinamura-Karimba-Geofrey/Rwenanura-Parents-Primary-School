@@ -1,10 +1,20 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import db from '../db.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'rwenanura-secret-key-2026';
+
+// Rate Limiter for Login Attempts (Max 10 attempts per 15 mins)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Too many login attempts from this IP address. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Middleware to verify JWT token
 export function authenticateToken(req, res, next) {
@@ -77,7 +87,7 @@ router.post('/auth/signup', (req, res) => {
 });
 
 // POST /api/auth/login - Authenticate staff/admin
-router.post('/auth/login', (req, res) => {
+router.post('/auth/login', loginLimiter, (req, res) => {
   try {
     const { email, password } = req.body;
 
