@@ -11,21 +11,27 @@ import { createNewsEvents } from './components/NewsEvents.js';
 import { createAdmissions } from './components/Admissions.js';
 import { createTestimonials } from './components/Testimonials.js';
 import { createContactModal } from './components/ContactModal.js';
+import { createAdminModal } from './components/AdminModal.js';
 import { createFooter } from './components/Footer.js';
 
 function initApp() {
   const app = document.querySelector('#app');
   app.innerHTML = '';
 
-  // Modal handler
+  // Modals
   const contactModal = createContactModal();
+  const adminModal = createAdminModal();
 
   const handleOpenModal = () => {
     contactModal.classList.add('active');
   };
 
+  const handleOpenAdminModal = () => {
+    adminModal.classList.add('active');
+  };
+
   // Mount Components
-  app.appendChild(createHeader(handleOpenModal));
+  app.appendChild(createHeader(handleOpenModal, handleOpenAdminModal));
   app.appendChild(createHero(handleOpenModal));
   app.appendChild(createStats());
   app.appendChild(createAcademics(handleOpenModal));
@@ -36,6 +42,7 @@ function initApp() {
   app.appendChild(createTestimonials());
   app.appendChild(createFooter());
   app.appendChild(contactModal);
+  app.appendChild(adminModal);
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
