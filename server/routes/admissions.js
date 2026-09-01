@@ -76,6 +76,28 @@ router.get('/applications', (req, res) => {
   } catch (err) {
     console.error('Error fetching applications:', err);
     res.status(500).json({ success: false, error: 'Database fetch error' });
+// GET /api/applications/track/:code - Public tracking code lookup for parents
+router.get('/applications/track/:code', (req, res) => {
+  try {
+    const { code } = req.params;
+    if (!code) {
+      return res.status(400).json({ success: false, error: 'Tracking code is required.' });
+    }
+
+    const cleanCode = code.trim().toUpperCase();
+    const app = db.prepare('SELECT tracking_code, child_name, grade, status, created_at FROM applications WHERE UPPER(tracking_code) = ?').get(cleanCode);
+
+    if (!app) {
+      return res.status(404).json({ success: false, error: `No application found for tracking code "${cleanCode}". Please verify your reference number.` });
+    }
+
+    res.json({
+      success: true,
+      application: app
+    });
+  } catch (err) {
+    console.error('Error tracking application:', err);
+    res.status(500).json({ success: false, error: 'Failed to look up tracking code.' });
   }
 });
 
