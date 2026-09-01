@@ -9,6 +9,8 @@ import { createAbout } from './components/About.js';
 import { createFacilities } from './components/Facilities.js';
 import { createNewsEvents } from './components/NewsEvents.js';
 import { createAdmissions } from './components/Admissions.js';
+import { createTuitionEstimator } from './components/TuitionEstimator.js';
+import { createFAQ } from './components/FAQ.js';
 import { createTestimonials } from './components/Testimonials.js';
 import { createContactModal } from './components/ContactModal.js';
 import { createTrackModal } from './components/TrackModal.js';
@@ -35,7 +37,7 @@ function setupScrollReveal() {
   }, observerOptions);
 
   const elementsToReveal = document.querySelectorAll(
-    '.section-header, .program-card, .facility-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider'
+    '.section-header, .program-card, .facility-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider, .faq-item'
   );
 
   elementsToReveal.forEach((el, idx) => {
@@ -93,6 +95,8 @@ function initApp() {
   app.appendChild(createFacilities());
   app.appendChild(createNewsEvents());
   app.appendChild(createAdmissions(handleOpenApplyModal));
+  app.appendChild(createTuitionEstimator(handleOpenApplyModal));
+  app.appendChild(createFAQ());
   app.appendChild(createTestimonials());
   app.appendChild(createFooter());
   app.appendChild(contactModal);
