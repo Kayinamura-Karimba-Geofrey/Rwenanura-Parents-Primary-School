@@ -1,6 +1,6 @@
 import { schoolInfo } from '../data/schoolData.js';
 
-export function createHeader(onOpenApplyModal) {
+export function createHeader(onOpenApplyModal, onOpenAdminModal) {
   const header = document.createElement('header');
   header.className = 'site-header';
   
@@ -31,6 +31,9 @@ export function createHeader(onOpenApplyModal) {
           </div>
           <button class="btn btn-gold btn-sm apply-modal-trigger" style="padding: 0.35rem 0.9rem; font-size: 0.8rem;">
             Parent Portal
+          </button>
+          <button class="btn btn-sm admin-modal-trigger" style="padding: 0.35rem 0.9rem; font-size: 0.8rem; background: var(--navy-light); color: var(--gold); border: 1px solid var(--gold);">
+            Staff Portal 🔐
           </button>
         </div>
       </div>
@@ -83,9 +86,11 @@ export function createHeader(onOpenApplyModal) {
   // Attach event listeners
   const applyBtn = header.querySelector('.apply-now-btn');
   const portalBtn = header.querySelector('.apply-modal-trigger');
+  const adminBtn = header.querySelector('.admin-modal-trigger');
   
   applyBtn.addEventListener('click', onOpenApplyModal);
   portalBtn.addEventListener('click', onOpenApplyModal);
+  if (adminBtn && onOpenAdminModal) adminBtn.addEventListener('click', onOpenAdminModal);
 
   const mobileBtn = header.querySelector('#mobile-menu-btn');
   const navMenu = header.querySelector('#nav-menu');
