@@ -11,6 +11,7 @@ import { createNewsEvents } from './components/NewsEvents.js';
 import { createAdmissions } from './components/Admissions.js';
 import { createTestimonials } from './components/Testimonials.js';
 import { createContactModal } from './components/ContactModal.js';
+import { createTrackModal } from './components/TrackModal.js';
 import { createAuthModal } from './components/AuthModal.js';
 import { createAdminDashboard } from './components/AdminDashboard.js';
 import { createFooter } from './components/Footer.js';
@@ -33,7 +34,6 @@ function setupScrollReveal() {
     });
   }, observerOptions);
 
-  // Target all reveal elements and cards
   const elementsToReveal = document.querySelectorAll(
     '.section-header, .program-card, .facility-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider'
   );
@@ -52,11 +52,16 @@ function initApp() {
 
   // Modals
   const contactModal = createContactModal();
+  const trackModal = createTrackModal();
   let authModal = null;
   let adminDashboard = null;
 
   const handleOpenApplyModal = () => {
     contactModal.classList.add('active');
+  };
+
+  const handleOpenTrackModal = () => {
+    trackModal.classList.add('active');
   };
 
   const handleOpenAdminConsole = () => {
@@ -80,7 +85,7 @@ function initApp() {
   adminDashboard = createAdminDashboard(handleLogout);
 
   // Mount Components
-  app.appendChild(createHeader(handleOpenApplyModal, handleOpenAdminConsole));
+  app.appendChild(createHeader(handleOpenApplyModal, handleOpenTrackModal, handleOpenAdminConsole));
   app.appendChild(createHero(handleOpenApplyModal));
   app.appendChild(createStats());
   app.appendChild(createAcademics(handleOpenApplyModal));
@@ -91,6 +96,7 @@ function initApp() {
   app.appendChild(createTestimonials());
   app.appendChild(createFooter());
   app.appendChild(contactModal);
+  app.appendChild(trackModal);
   app.appendChild(authModal);
   app.appendChild(adminDashboard);
 
