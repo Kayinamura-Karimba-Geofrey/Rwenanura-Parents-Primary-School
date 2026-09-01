@@ -11,8 +11,11 @@ import { createNewsEvents } from './components/NewsEvents.js';
 import { createAdmissions } from './components/Admissions.js';
 import { createTestimonials } from './components/Testimonials.js';
 import { createContactModal } from './components/ContactModal.js';
-import { createAdminModal } from './components/AdminModal.js';
+import { createAuthModal } from './components/AuthModal.js';
+import { createAdminDashboard } from './components/AdminDashboard.js';
 import { createFooter } from './components/Footer.js';
+
+import { getStoredToken } from './data/api.js';
 
 function initApp() {
   const app = document.querySelector('#app');
@@ -20,29 +23,47 @@ function initApp() {
 
   // Modals
   const contactModal = createContactModal();
-  const adminModal = createAdminModal();
+  let authModal = null;
+  let adminDashboard = null;
 
-  const handleOpenModal = () => {
+  const handleOpenApplyModal = () => {
     contactModal.classList.add('active');
   };
 
-  const handleOpenAdminModal = () => {
-    adminModal.classList.add('active');
+  const handleOpenAdminConsole = () => {
+    const token = getStoredToken();
+    if (token) {
+      adminDashboard.classList.add('active');
+    } else {
+      authModal.classList.add('active');
+    }
   };
 
+  const handleAuthSuccess = (user) => {
+    adminDashboard.classList.add('active');
+  };
+
+  const handleLogout = () => {
+    // Session cleared
+  };
+
+  authModal = createAuthModal(handleAuthSuccess);
+  adminDashboard = createAdminDashboard(handleLogout);
+
   // Mount Components
-  app.appendChild(createHeader(handleOpenModal, handleOpenAdminModal));
-  app.appendChild(createHero(handleOpenModal));
+  app.appendChild(createHeader(handleOpenApplyModal, handleOpenAdminConsole));
+  app.appendChild(createHero(handleOpenApplyModal));
   app.appendChild(createStats());
-  app.appendChild(createAcademics(handleOpenModal));
+  app.appendChild(createAcademics(handleOpenApplyModal));
   app.appendChild(createAbout());
   app.appendChild(createFacilities());
   app.appendChild(createNewsEvents());
-  app.appendChild(createAdmissions(handleOpenModal));
+  app.appendChild(createAdmissions(handleOpenApplyModal));
   app.appendChild(createTestimonials());
   app.appendChild(createFooter());
   app.appendChild(contactModal);
-  app.appendChild(adminModal);
+  app.appendChild(authModal);
+  app.appendChild(adminDashboard);
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
