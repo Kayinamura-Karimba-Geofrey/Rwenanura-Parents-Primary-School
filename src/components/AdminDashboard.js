@@ -16,7 +16,7 @@ export function createAdminDashboard(onLogout) {
   modal.id = 'admin-dashboard-modal';
 
   modal.innerHTML = `
-    <div class="modal-dialog" style="max-width: 950px; width: 94%; max-height: 90vh; display: flex; flex-direction: column;">
+    <div class="modal-dialog" style="max-width: 980px; width: 94%; max-height: 90vh; display: flex; flex-direction: column;">
       
       <!-- Top Header -->
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gray-200); padding-bottom: 1rem; margin-bottom: 1rem;">
@@ -41,7 +41,7 @@ export function createAdminDashboard(onLogout) {
       </div>
 
       <!-- Quick Stats Counter Grid -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
         <div style="background: var(--gray-100); padding: 0.85rem; border-radius: var(--radius-sm); border-left: 4px solid var(--primary);">
           <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase; font-weight: 600;">Total Admissions</div>
           <div id="stat-total-apps" style="font-size: 1.5rem; font-weight: 800; color: var(--navy);">0</div>
@@ -63,6 +63,15 @@ export function createAdminDashboard(onLogout) {
         </div>
       </div>
 
+      <!-- Grade Analytics Breakdown -->
+      <div style="background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <strong style="font-size: 0.88rem; color: var(--navy);">📊 Applicant Distribution by Grade Level</strong>
+          <span style="font-size: 0.75rem; color: var(--gray-500);">Live Class Enrollment Analytics</span>
+        </div>
+        <div id="grade-analytics-bars" style="display: flex; gap: 0.85rem; flex-wrap: wrap; font-size: 0.8rem;"></div>
+      </div>
+
       <!-- Main Navigation Tabs -->
       <div style="display: flex; gap: 0.5rem; border-bottom: 1px solid var(--gray-300); margin-bottom: 1rem;">
         <button class="dash-tab active" data-tab="admissions" style="padding: 0.6rem 1.25rem; font-weight: 700; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid var(--primary); color: var(--primary); cursor: pointer;">
@@ -81,13 +90,20 @@ export function createAdminDashboard(onLogout) {
         
         <!-- 1. ADMISSIONS TAB -->
         <div id="tab-content-admissions">
-          <div style="display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+          <div style="display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
             <input type="text" id="dash-app-search" placeholder="🔍 Search by pupil name, parent, or code..." style="padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.88rem; flex: 1; min-width: 200px;" />
-            <div style="display: flex; gap: 0.35rem;" id="dash-app-filters">
-              <button class="filter-btn active" data-filter="all">All</button>
-              <button class="filter-btn" data-filter="Pending">Pending</button>
-              <button class="filter-btn" data-filter="Under Review">Under Review</button>
-              <button class="filter-btn" data-filter="Approved">Approved</button>
+            
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <div style="display: flex; gap: 0.35rem;" id="dash-app-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="Pending">Pending</button>
+                <button class="filter-btn" data-filter="Under Review">Under Review</button>
+                <button class="filter-btn" data-filter="Approved">Approved</button>
+              </div>
+              
+              <button id="export-csv-btn" class="btn btn-outline" style="padding: 0.45rem 0.85rem; font-size: 0.82rem; background: var(--primary-subtle); border-color: var(--primary); color: var(--primary);">
+                📥 Export CSV
+              </button>
             </div>
           </div>
 
@@ -204,6 +220,9 @@ export function createAdminDashboard(onLogout) {
   const refreshBtn = modal.querySelector('#dash-refresh-btn');
   refreshBtn.addEventListener('click', loadAllData);
 
+  const exportCsvBtn = modal.querySelector('#export-csv-btn');
+  exportCsvBtn.addEventListener('click', exportApplicationsCSV);
+
   // Tab Switching Logic
   const tabs = modal.querySelectorAll('.dash-tab');
   const tabContents = {
@@ -255,6 +274,7 @@ export function createAdminDashboard(onLogout) {
     if (newsRes.success) newsList = newsRes.newsAndEvents || [];
 
     updateCounters();
+    renderGradeAnalytics();
     renderApplications();
     renderNews();
     renderSubscribers();
@@ -266,6 +286,68 @@ export function createAdminDashboard(onLogout) {
     modal.querySelector('#stat-approved-apps').textContent = applications.filter(a => a.status === 'Approved').length;
     modal.querySelector('#stat-subscribers').textContent = subscribers.length;
     modal.querySelector('#dash-subscribers-count').textContent = subscribers.length;
+  }
+
+  function renderGradeAnalytics() {
+    const container = modal.querySelector('#grade-analytics-bars');
+    const gradeCounts = {};
+    
+    applications.forEach(app => {
+      const g = app.grade || 'Other';
+      gradeCounts[g] = (gradeCounts[g] || 0) + 1;
+    });
+
+    const total = applications.length || 1;
+    const sortedGrades = Object.keys(gradeCounts).sort();
+
+    if (sortedGrades.length === 0) {
+      container.innerHTML = `<span style="color: var(--gray-500);">No application grade metrics recorded yet.</span>`;
+      return;
+    }
+
+    container.innerHTML = sortedGrades.map(grade => {
+      const count = gradeCounts[grade];
+      const pct = Math.round((count / total) * 100);
+      return `
+        <div style="flex: 1; min-width: 110px; background: var(--gray-50); border: 1px solid var(--gray-200); padding: 0.5rem; border-radius: 4px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.25rem;">
+            <span>${grade}</span>
+            <span style="color: var(--primary);">${count} (${pct}%)</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden;">
+            <div style="width: ${pct}%; height: 100%; background: var(--primary);"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function exportApplicationsCSV() {
+    if (applications.length === 0) {
+      alert('No application records available to export.');
+      return;
+    }
+
+    const headers = ['Tracking Code', 'Pupil Name', 'Grade Level', 'Parent Name', 'Phone', 'Email', 'Status', 'Date Submitted'];
+    const rows = applications.map(a => [
+      `"${a.tracking_code || ''}"`,
+      `"${a.child_name || ''}"`,
+      `"${a.grade || ''}"`,
+      `"${a.parent_name || ''}"`,
+      `"${a.phone || ''}"`,
+      `"${a.email || ''}"`,
+      `"${a.status || ''}"`,
+      `"${new Date(a.created_at).toLocaleDateString()}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `rpps_admissions_roster_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   // 1. Render Applications Table
@@ -331,6 +413,7 @@ export function createAdminDashboard(onLogout) {
           const item = applications.find(a => a.id == id);
           if (item) item.status = newStatus;
           updateCounters();
+          renderGradeAnalytics();
         }
       });
     });
@@ -343,6 +426,7 @@ export function createAdminDashboard(onLogout) {
           if (res.success) {
             applications = applications.filter(a => a.id != id);
             updateCounters();
+            renderGradeAnalytics();
             renderApplications();
           }
         }
