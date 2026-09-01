@@ -1,5 +1,10 @@
 
 
+# Dependencies & Build artifacts
+node_modules/
+dist/
+.DS_Store
+
 # Security & Hardening rules
 *.bat
 *.cmd
@@ -11,3 +16,4 @@ config.bat
 public/fonts/fa-solid-*
 public/fonts/fa-regular-*
 public/fonts/fa-brands-*
+
