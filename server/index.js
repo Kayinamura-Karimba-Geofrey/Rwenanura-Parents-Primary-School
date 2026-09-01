@@ -7,6 +7,7 @@ import { initDatabase } from './db.js';
 import admissionsRouter from './routes/admissions.js';
 import newsletterRouter from './routes/newsletter.js';
 import newsRouter from './routes/news.js';
+import authRouter from './routes/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use('/api', admissionsRouter);
 app.use('/api', newsletterRouter);
 app.use('/api', newsRouter);
+app.use('/api', authRouter);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
