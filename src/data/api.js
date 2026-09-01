@@ -100,6 +100,15 @@ export async function submitApplication(data) {
   }
 }
 
+export async function trackApplication(code) {
+  try {
+    const res = await fetch(`/api/applications/track/${encodeURIComponent(code)}`);
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: 'Network error verifying application tracking code.' };
+  }
+}
+
 export async function fetchApplications() {
   try {
     const res = await fetch('/api/applications', { headers: getAuthHeaders() });
