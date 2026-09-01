@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +21,19 @@ db.pragma('journal_mode = WAL');
 
 // Initialize Database Tables
 export function initDatabase() {
-  // 1. Applications Table
+  // 1. Users Table (Authentication)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'staff',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 2. Applications Table
   db.exec(`
     CREATE TABLE IF NOT EXISTS applications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +49,7 @@ export function initDatabase() {
     )
   `);
 
-  // 2. Newsletter Subscribers Table
+  // 3. Newsletter Subscribers Table
   db.exec(`
     CREATE TABLE IF NOT EXISTS subscribers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +58,7 @@ export function initDatabase() {
     )
   `);
 
-  // 3. News & Events Table
+  // 4. News & Events Table
   db.exec(`
     CREATE TABLE IF NOT EXISTS news_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,6 +74,21 @@ export function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Seed default admin user if no users exist
+  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  if (userCount === 0) {
+    const adminEmail = 'admin@rwenanura.ac.rw';
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync('Admin@2026', salt);
+
+    const insertAdmin = db.prepare(`
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `);
+    insertAdmin.run('Super Admin', adminEmail, hash, 'admin');
+    console.log('👤 Default Admin Account Created: admin@rwenanura.ac.rw / Admin@2026');
+  }
 
   // Seed default news if empty
   const count = db.prepare('SELECT COUNT(*) as count FROM news_events').get().count;
