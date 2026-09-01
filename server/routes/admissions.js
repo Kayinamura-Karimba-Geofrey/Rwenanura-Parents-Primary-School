@@ -77,6 +77,9 @@ router.get('/applications', (req, res) => {
   } catch (err) {
     console.error('Error fetching applications:', err);
     res.status(500).json({ success: false, error: 'Database fetch error' });
+  }
+});
+
 // GET /api/applications/track/:code - Public tracking code lookup for parents
 router.get('/applications/track/:code', (req, res) => {
   try {
