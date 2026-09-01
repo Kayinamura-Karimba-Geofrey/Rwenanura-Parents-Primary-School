@@ -79,4 +79,46 @@ router.get('/applications', (req, res) => {
   }
 });
 
+// PATCH /api/applications/:id - Update application status
+router.patch('/applications/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ success: false, error: 'Status is required' });
+    }
+
+    const stmt = db.prepare('UPDATE applications SET status = ? WHERE id = ?');
+    const result = stmt.run(status, id);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Application not found' });
+    }
+
+    res.json({ success: true, message: `Application status updated to ${status}` });
+  } catch (err) {
+    console.error('Error updating status:', err);
+    res.status(500).json({ success: false, error: 'Failed to update status' });
+  }
+});
+
+// DELETE /api/applications/:id - Delete an application
+router.delete('/applications/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const stmt = db.prepare('DELETE FROM applications WHERE id = ?');
+    const result = stmt.run(id);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Application not found' });
+    }
+
+    res.json({ success: true, message: 'Application deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting application:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete application' });
+  }
+});
+
 export default router;
