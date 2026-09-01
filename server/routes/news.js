@@ -1,5 +1,6 @@
 import express from 'express';
 import db from '../db.js';
+import { authenticateToken } from './auth.js';
 
 const router = express.Router();
 
@@ -33,8 +34,8 @@ router.get('/news', (req, res) => {
   }
 });
 
-// POST /api/news - Create new news item or event (Admin)
-router.post('/news', (req, res) => {
+// POST /api/news - Create new news item or event (Protected Admin)
+router.post('/news', authenticateToken, (req, res) => {
   try {
     const { title, type, category, day, month, year, time, location, summary } = req.body;
 
@@ -73,8 +74,8 @@ router.post('/news', (req, res) => {
   }
 });
 
-// DELETE /api/news/:id - Delete news item or event (Admin)
-router.delete('/news/:id', (req, res) => {
+// DELETE /api/news/:id - Delete news item or event (Protected Admin)
+router.delete('/news/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const stmt = db.prepare('DELETE FROM news_events WHERE id = ?');
