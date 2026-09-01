@@ -1,5 +1,6 @@
 import express from 'express';
 import db from '../db.js';
+import { authenticateToken } from './auth.js';
 
 const router = express.Router();
 
@@ -101,8 +102,8 @@ router.get('/applications/track/:code', (req, res) => {
   }
 });
 
-// PATCH /api/applications/:id - Update application status
-router.patch('/applications/:id', (req, res) => {
+// PATCH /api/applications/:id - Update application status (Protected)
+router.patch('/applications/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -125,8 +126,8 @@ router.patch('/applications/:id', (req, res) => {
   }
 });
 
-// DELETE /api/applications/:id - Delete an application
-router.delete('/applications/:id', (req, res) => {
+// DELETE /api/applications/:id - Delete an application (Protected)
+router.delete('/applications/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const stmt = db.prepare('DELETE FROM applications WHERE id = ?');
