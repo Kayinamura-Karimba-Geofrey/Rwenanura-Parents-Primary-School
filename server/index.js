@@ -1,9 +1,15 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { initDatabase } from './db.js';
 import admissionsRouter from './routes/admissions.js';
 import newsletterRouter from './routes/newsletter.js';
 import newsRouter from './routes/news.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,7 +36,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve frontend build if dist directory exists
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
 // Start Express Backend
 app.listen(PORT, () => {
-  console.log(`🚀 RPPS Express Backend Server running on http://localhost:${PORT}`);
+  console.log(`🚀 RPPS Unified Express & Frontend Server running on http://localhost:${PORT}`);
 });
+
