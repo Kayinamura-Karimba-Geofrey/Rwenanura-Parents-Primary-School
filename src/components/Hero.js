@@ -29,7 +29,7 @@ export function createHero(onOpenApplyModal) {
         <p id="hero-subtitle">${heroSlides[0].subtitle}</p>
         
         <div class="hero-actions">
-          <button class="btn btn-gold hero-cta-primary">
+          <button class="btn btn-gold hero-cta-primary animate-pulse-glow">
             <span id="cta-primary-text">${heroSlides[0].ctaPrimary}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
