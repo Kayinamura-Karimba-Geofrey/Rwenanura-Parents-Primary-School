@@ -1,4 +1,5 @@
 import { schoolInfo } from '../data/schoolData.js';
+import { subscribeNewsletter } from '../data/api.js';
 
 export function createFooter() {
   const footer = document.createElement('footer');
@@ -63,9 +64,10 @@ export function createFooter() {
 
           <h5 style="color: var(--white); font-size: 0.95rem; margin-bottom: 0.5rem;">Subscribe to Bulletin</h5>
           <form id="newsletter-form" style="display: flex; gap: 0.5rem;">
-            <input type="email" required placeholder="Enter email" style="padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--gray-700); background: var(--navy-light); color: var(--white); font-size: 0.82rem; width: 100%;" />
-            <button type="submit" class="btn btn-gold" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;">Join</button>
+            <input type="email" id="newsletter-email" required placeholder="Enter email" style="padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--gray-700); background: var(--navy-light); color: var(--white); font-size: 0.82rem; width: 100%;" />
+            <button type="submit" id="newsletter-btn" class="btn btn-gold" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;">Join</button>
           </form>
+          <div id="newsletter-msg" style="font-size: 0.8rem; margin-top: 0.5rem; display: none;"></div>
         </div>
       </div>
 
@@ -81,10 +83,28 @@ export function createFooter() {
     </div>
   `;
 
-  footer.querySelector('#newsletter-form').addEventListener('submit', (e) => {
+  const form = footer.querySelector('#newsletter-form');
+  const msgEl = footer.querySelector('#newsletter-msg');
+  const btn = footer.querySelector('#newsletter-btn');
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    alert('Thank you for subscribing to the Rwenanura Parents Primary School official bulletin!');
-    e.target.reset();
+    const email = footer.querySelector('#newsletter-email').value;
+
+    btn.disabled = true;
+    const res = await subscribeNewsletter(email);
+
+    msgEl.style.display = 'block';
+    if (res.success) {
+      msgEl.style.color = '#34d399';
+      msgEl.textContent = res.message;
+      form.reset();
+    } else {
+      msgEl.style.color = '#f87171';
+      msgEl.textContent = res.error || 'Failed to subscribe.';
+    }
+
+    btn.disabled = false;
   });
 
   return footer;
