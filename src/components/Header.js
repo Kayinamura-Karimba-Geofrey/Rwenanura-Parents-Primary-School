@@ -1,6 +1,6 @@
 import { schoolInfo } from '../data/schoolData.js';
 
-export function createHeader(onOpenApplyModal, onOpenAdminModal) {
+export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal) {
   const header = document.createElement('header');
   header.className = 'site-header';
   
@@ -29,8 +29,8 @@ export function createHeader(onOpenApplyModal, onOpenAdminModal) {
             <button class="lang-btn" data-lang="rw">RW</button>
             <button class="lang-btn" data-lang="fr">FR</button>
           </div>
-          <button class="btn btn-gold btn-sm apply-modal-trigger" style="padding: 0.35rem 0.9rem; font-size: 0.8rem;">
-            Parent Portal
+          <button class="btn btn-gold btn-sm parent-track-trigger" style="padding: 0.35rem 0.9rem; font-size: 0.8rem;">
+            Track Application 🔍
           </button>
           <button class="btn btn-sm admin-modal-trigger" style="padding: 0.35rem 0.9rem; font-size: 0.8rem; background: var(--navy-light); color: var(--gold); border: 1px solid var(--gold);">
             Staff Portal 🔐
@@ -85,11 +85,11 @@ export function createHeader(onOpenApplyModal, onOpenAdminModal) {
 
   // Attach event listeners
   const applyBtn = header.querySelector('.apply-now-btn');
-  const portalBtn = header.querySelector('.apply-modal-trigger');
+  const trackBtn = header.querySelector('.parent-track-trigger');
   const adminBtn = header.querySelector('.admin-modal-trigger');
   
-  applyBtn.addEventListener('click', onOpenApplyModal);
-  portalBtn.addEventListener('click', onOpenApplyModal);
+  if (applyBtn && onOpenApplyModal) applyBtn.addEventListener('click', onOpenApplyModal);
+  if (trackBtn && onOpenTrackModal) trackBtn.addEventListener('click', onOpenTrackModal);
   if (adminBtn && onOpenAdminModal) adminBtn.addEventListener('click', onOpenAdminModal);
 
   const mobileBtn = header.querySelector('#mobile-menu-btn');
