@@ -17,6 +17,35 @@ import { createFooter } from './components/Footer.js';
 
 import { getStoredToken } from './data/api.js';
 
+function setupScrollReveal() {
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px 0px -60px 0px',
+    threshold: 0.12
+  };
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // Target all reveal elements and cards
+  const elementsToReveal = document.querySelectorAll(
+    '.section-header, .program-card, .facility-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider'
+  );
+
+  elementsToReveal.forEach((el, idx) => {
+    el.classList.add('reveal-on-scroll');
+    const delayClass = `reveal-delay-${(idx % 4) + 1}`;
+    el.classList.add(delayClass);
+    observer.observe(el);
+  });
+}
+
 function initApp() {
   const app = document.querySelector('#app');
   app.innerHTML = '';
@@ -39,7 +68,7 @@ function initApp() {
     }
   };
 
-  const handleAuthSuccess = (user) => {
+  const handleAuthSuccess = () => {
     adminDashboard.classList.add('active');
   };
 
@@ -64,6 +93,9 @@ function initApp() {
   app.appendChild(contactModal);
   app.appendChild(authModal);
   app.appendChild(adminDashboard);
+
+  // Initialize Scroll Reveal Animations
+  setupScrollReveal();
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
