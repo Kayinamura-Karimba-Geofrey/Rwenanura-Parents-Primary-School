@@ -1,6 +1,6 @@
 import { schoolInfo } from '../data/schoolData.js';
 
-export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal) {
+export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal, onOpenAlumniModal) {
   const header = document.createElement('header');
   header.className = 'site-header';
   
@@ -29,6 +29,9 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
             <button class="lang-btn" data-lang="rw">RW</button>
             <button class="lang-btn" data-lang="fr">FR</button>
           </div>
+          <button class="btn btn-sm alumni-header-trigger" style="padding: 0.35rem 0.9rem; font-size: 0.8rem;">
+            OBs & OGs ChatUp 🎓
+          </button>
           <button class="btn btn-gold btn-sm parent-track-trigger" style="padding: 0.35rem 0.9rem; font-size: 0.8rem;">
             Track Application 🔍
           </button>
@@ -65,6 +68,7 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <li><a href="#facilities" class="nav-link">Campus Life</a></li>
           <li><a href="#news" class="nav-link">News & Events</a></li>
           <li><a href="#admissions" class="nav-link">Admissions</a></li>
+          <li><a href="#alumni" class="nav-link alumni-nav-link" style="color: var(--gold); font-weight: 700;">OBs & OGs Chat 🎓</a></li>
           <li><a href="#contact" class="nav-link">Contact</a></li>
         </ul>
 
@@ -87,10 +91,22 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
   const applyBtn = header.querySelector('.apply-now-btn');
   const trackBtn = header.querySelector('.parent-track-trigger');
   const adminBtn = header.querySelector('.admin-modal-trigger');
+  const alumniBtn = header.querySelector('.alumni-header-trigger');
+  const alumniNavLink = header.querySelector('.alumni-nav-link');
   
   if (applyBtn && onOpenApplyModal) applyBtn.addEventListener('click', onOpenApplyModal);
   if (trackBtn && onOpenTrackModal) trackBtn.addEventListener('click', onOpenTrackModal);
   if (adminBtn && onOpenAdminModal) adminBtn.addEventListener('click', onOpenAdminModal);
+  
+  if (onOpenAlumniModal) {
+    if (alumniBtn) alumniBtn.addEventListener('click', onOpenAlumniModal);
+    if (alumniNavLink) {
+      alumniNavLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        onOpenAlumniModal();
+      });
+    }
+  }
 
   const mobileBtn = header.querySelector('#mobile-menu-btn');
   const navMenu = header.querySelector('#nav-menu');

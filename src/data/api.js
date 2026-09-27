@@ -236,3 +236,98 @@ export async function deleteNewsItem(id) {
     return { success: false, error: err.message || 'Failed to delete news item.' };
   }
 }
+
+// ----------------- ALUMNI (OBs & OGs) APIS -----------------
+
+export function getStoredAlumniProfile() {
+  try {
+    const raw = localStorage.getItem('rpps_alumni_profile');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setStoredAlumniProfile(profile) {
+  try {
+    localStorage.setItem('rpps_alumni_profile', JSON.stringify(profile));
+  } catch (e) {
+    console.error('Failed to save alumni profile locally:', e);
+  }
+}
+
+export async function fetchAlumniMessages(channel = 'general', search = '', limit = 100) {
+  try {
+    const params = new URLSearchParams();
+    if (channel && channel !== 'all') params.append('channel', channel);
+    if (search && search.trim()) params.append('search', search.trim());
+    if (limit) params.append('limit', limit);
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return await apiRequest(`/api/alumni/messages${query}`);
+  } catch (err) {
+    console.error('fetchAlumniMessages error:', err);
+    return { success: false, messages: [], error: err.message || 'Failed to fetch messages' };
+  }
+}
+
+export async function sendAlumniMessage(messageData) {
+  try {
+    return await apiRequest('/api/alumni/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(messageData)
+    });
+  } catch (err) {
+    console.error('sendAlumniMessage error:', err);
+    return { success: false, error: err.message || 'Failed to send message' };
+  }
+}
+
+export async function reactToAlumniMessage(messageId) {
+  try {
+    return await apiRequest(`/api/alumni/messages/${messageId}/react`, {
+      method: 'POST'
+    });
+  } catch (err) {
+    console.error('reactToAlumniMessage error:', err);
+    return { success: false, error: err.message || 'Failed to react' };
+  }
+}
+
+export async function fetchAlumniChannels() {
+  try {
+    return await apiRequest('/api/alumni/channels');
+  } catch (err) {
+    console.error('fetchAlumniChannels error:', err);
+    return { success: false, channels: [] };
+  }
+}
+
+export async function fetchAlumniMembers(type = '', search = '') {
+  try {
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    if (search && search.trim()) params.append('search', search.trim());
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return await apiRequest(`/api/alumni/members${query}`);
+  } catch (err) {
+    console.error('fetchAlumniMembers error:', err);
+    return { success: false, members: [], stats: {} };
+  }
+}
+
+export async function registerAlumniMember(memberData) {
+  try {
+    return await apiRequest('/api/alumni/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(memberData)
+    });
+  } catch (err) {
+    console.error('registerAlumniMember error:', err);
+    return { success: false, error: err.message || 'Failed to register alumni member' };
+  }
+}
+

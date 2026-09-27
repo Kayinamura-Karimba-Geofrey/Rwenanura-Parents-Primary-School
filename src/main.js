@@ -1,5 +1,6 @@
 import './style.css';
 import './styles/components.css';
+import './styles/alumni.css';
 
 import { createHeader } from './components/Header.js';
 import { createHero } from './components/Hero.js';
@@ -16,6 +17,7 @@ import { createContactModal } from './components/ContactModal.js';
 import { createTrackModal } from './components/TrackModal.js';
 import { createAuthModal } from './components/AuthModal.js';
 import { createAdminDashboard } from './components/AdminDashboard.js';
+import { createAlumniModal } from './components/AlumniModal.js';
 import { createFooter } from './components/Footer.js';
 
 import { getStoredToken } from './data/api.js';
@@ -55,6 +57,7 @@ function initApp() {
   // Modals
   const contactModal = createContactModal();
   const trackModal = createTrackModal();
+  const alumniModal = createAlumniModal();
   let authModal = null;
   let adminDashboard = null;
 
@@ -64,6 +67,10 @@ function initApp() {
 
   const handleOpenTrackModal = () => {
     trackModal.classList.add('active');
+  };
+
+  const handleOpenAlumniModal = () => {
+    alumniModal.open();
   };
 
   const handleOpenAdminConsole = () => {
@@ -87,7 +94,7 @@ function initApp() {
   adminDashboard = createAdminDashboard(handleLogout);
 
   // Mount Components
-  app.appendChild(createHeader(handleOpenApplyModal, handleOpenTrackModal, handleOpenAdminConsole));
+  app.appendChild(createHeader(handleOpenApplyModal, handleOpenTrackModal, handleOpenAdminConsole, handleOpenAlumniModal));
   app.appendChild(createHero(handleOpenApplyModal));
   app.appendChild(createStats());
   app.appendChild(createAcademics(handleOpenApplyModal));
@@ -103,6 +110,7 @@ function initApp() {
   app.appendChild(trackModal);
   app.appendChild(authModal);
   app.appendChild(adminDashboard);
+  app.appendChild(alumniModal);
 
   // Initialize Scroll Reveal Animations
   setupScrollReveal();

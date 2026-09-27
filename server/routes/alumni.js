@@ -191,7 +191,7 @@ router.get('/alumni/members', (req, res) => {
 });
 
 // POST /api/alumni/members - Register in Alumni Network
-router.post('/api/alumni/members', (req, res) => {
+router.post('/alumni/members', (req, res) => {
   try {
     const { name, email, phone, memberType, classYear, profession, location, bio } = req.body;
 
