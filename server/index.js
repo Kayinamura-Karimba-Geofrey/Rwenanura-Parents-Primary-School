@@ -8,6 +8,7 @@ import admissionsRouter from './routes/admissions.js';
 import newsletterRouter from './routes/newsletter.js';
 import newsRouter from './routes/news.js';
 import authRouter from './routes/auth.js';
+import alumniRouter from './routes/alumni.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +28,7 @@ app.use('/api', admissionsRouter);
 app.use('/api', newsletterRouter);
 app.use('/api', newsRouter);
 app.use('/api', authRouter);
+app.use('/api', alumniRouter);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
@@ -48,7 +50,7 @@ if (fs.existsSync(distPath)) {
 }
 
 // Start Express Backend
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 RPPS Unified Express & Frontend Server running on http://localhost:${PORT}`);
 });
 

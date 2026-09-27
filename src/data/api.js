@@ -32,50 +32,93 @@ function getAuthHeaders() {
   };
 }
 
+/**
+ * Resilient API Request with Automatic Backend Fallback:
+ * 1. Attempts relative proxied path (e.g. /api/auth/login)
+ * 2. If network fails, automatically attempts direct connection to port 5000:
+ *    http://${window.location.hostname}:5000${path}
+ */
+async function apiRequest(path, options = {}) {
+  let res;
+
+  try {
+    res = await fetch(path, options);
+  } catch (primaryErr) {
+    // If Vite proxy dropped or failed, try direct connection to backend
+    try {
+      const host = typeof window !== 'undefined' && window.location ? window.location.hostname : 'localhost';
+      const fallbackUrl = `http://${host}:5000${path}`;
+      res = await fetch(fallbackUrl, options);
+    } catch (fallbackErr) {
+      throw new Error('Backend server is offline or unreachable. Please verify the server is running on port 5000.');
+    }
+  }
+
+  // Handle non-JSON responses (e.g. proxy HTML 502/504 errors)
+  const contentType = res.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return await res.json();
+  }
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    return {
+      success: false,
+      error: `Server response ${res.status}: ${res.statusText || errorText || 'Request failed'}`
+    };
+  }
+
+  try {
+    return await res.json();
+  } catch {
+    return { success: res.ok };
+  }
+}
+
 // ----------------- AUTH APIS -----------------
 
 export async function loginUser(email, password) {
   try {
-    const res = await fetch('/api/auth/login', {
+    const data = await apiRequest('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const data = await res.json();
+
     if (data.success && data.token) {
       setAuthSession(data.token, data.user);
     }
     return data;
   } catch (err) {
     console.error('Login error:', err);
-    return { success: false, error: 'Network error logging in. Please check connection.' };
+    return { success: false, error: err.message || 'Network error logging in. Please check connection.' };
   }
 }
 
 export async function signupUser(name, email, password, role = 'staff') {
   try {
-    const res = await fetch('/api/auth/signup', {
+    const data = await apiRequest('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, role })
     });
-    const data = await res.json();
+
     if (data.success && data.token) {
       setAuthSession(data.token, data.user);
     }
     return data;
   } catch (err) {
     console.error('Signup error:', err);
-    return { success: false, error: 'Network error registering account.' };
+    return { success: false, error: err.message || 'Network error registering account.' };
   }
 }
 
 export async function checkAuthMe() {
   try {
-    const res = await fetch('/api/auth/me', {
+    const data = await apiRequest('/api/auth/me', {
       headers: getAuthHeaders()
     });
-    const data = await res.json();
+
     if (!data.success) {
       clearAuthSession();
     }
@@ -89,30 +132,28 @@ export async function checkAuthMe() {
 
 export async function submitApplication(data) {
   try {
-    const res = await fetch('/api/applications', {
+    return await apiRequest('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    return await res.json();
   } catch (err) {
-    return { success: false, error: 'Network error submitting application.' };
+    return { success: false, error: err.message || 'Network error submitting application.' };
   }
 }
 
 export async function trackApplication(code) {
   try {
-    const res = await fetch(`/api/applications/track/${encodeURIComponent(code)}`);
-    return await res.json();
+    return await apiRequest(`/api/applications/track/${encodeURIComponent(code)}`);
   } catch (err) {
-    return { success: false, error: 'Network error verifying application tracking code.' };
+    return { success: false, error: err.message || 'Network error verifying application tracking code.' };
   }
 }
 
 export async function fetchApplications() {
   try {
-    const res = await fetch('/api/applications', { headers: getAuthHeaders() });
-    return await res.json();
+    const res = await apiRequest('/api/applications', { headers: getAuthHeaders() });
+    return res;
   } catch (err) {
     return { success: false, applications: [] };
   }
@@ -120,26 +161,24 @@ export async function fetchApplications() {
 
 export async function updateApplicationStatus(id, status) {
   try {
-    const res = await fetch(`/api/applications/${id}`, {
+    return await apiRequest(`/api/applications/${id}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ status })
     });
-    return await res.json();
   } catch (err) {
-    return { success: false, error: 'Failed to update status' };
+    return { success: false, error: err.message || 'Failed to update status' };
   }
 }
 
 export async function deleteApplication(id) {
   try {
-    const res = await fetch(`/api/applications/${id}`, {
+    return await apiRequest(`/api/applications/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
-    return await res.json();
   } catch (err) {
-    return { success: false, error: 'Failed to delete application' };
+    return { success: false, error: err.message || 'Failed to delete application' };
   }
 }
 
@@ -147,21 +186,19 @@ export async function deleteApplication(id) {
 
 export async function subscribeNewsletter(email) {
   try {
-    const res = await fetch('/api/newsletter', {
+    return await apiRequest('/api/newsletter', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
-    return await res.json();
   } catch (err) {
-    return { success: false, error: 'Network error joining newsletter.' };
+    return { success: false, error: err.message || 'Network error joining newsletter.' };
   }
 }
 
 export async function fetchSubscribers() {
   try {
-    const res = await fetch('/api/newsletter', { headers: getAuthHeaders() });
-    return await res.json();
+    return await apiRequest('/api/newsletter', { headers: getAuthHeaders() });
   } catch (err) {
     return { success: false, subscribers: [] };
   }
@@ -171,8 +208,7 @@ export async function fetchSubscribers() {
 
 export async function fetchNewsAndEvents() {
   try {
-    const res = await fetch('/api/news');
-    return await res.json();
+    return await apiRequest('/api/news');
   } catch (err) {
     return { success: false, newsAndEvents: [] };
   }
@@ -180,25 +216,23 @@ export async function fetchNewsAndEvents() {
 
 export async function createNewsItem(itemData) {
   try {
-    const res = await fetch('/api/news', {
+    return await apiRequest('/api/news', {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(itemData)
     });
-    return await res.json();
   } catch (err) {
-    return { success: false, error: 'Failed to publish news item.' };
+    return { success: false, error: err.message || 'Failed to publish news item.' };
   }
 }
 
 export async function deleteNewsItem(id) {
   try {
-    const res = await fetch(`/api/news/${id}`, {
+    return await apiRequest(`/api/news/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
-    return await res.json();
   } catch (err) {
-    return { success: false, error: 'Failed to delete news item.' };
+    return { success: false, error: err.message || 'Failed to delete news item.' };
   }
 }

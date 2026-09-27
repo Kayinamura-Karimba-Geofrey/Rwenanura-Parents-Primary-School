@@ -90,6 +90,38 @@ export function initDatabase() {
     console.log('👤 Default Admin Account Created: admin@rwenanura.ac.rw / Admin@2026');
   }
 
+  // 5. Alumni Messages Table (OBs & OGs Chat)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS alumni_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      channel TEXT NOT NULL DEFAULT 'general',
+      author_name TEXT NOT NULL,
+      author_type TEXT NOT NULL, -- 'OB' or 'OG'
+      class_year TEXT NOT NULL,
+      profession TEXT,
+      avatar_color TEXT DEFAULT '#0d5c3a',
+      content TEXT NOT NULL,
+      likes_count INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 6. Alumni Members Directory Table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS alumni_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      member_type TEXT NOT NULL, -- 'OB' or 'OG'
+      class_year TEXT NOT NULL,
+      profession TEXT,
+      location TEXT,
+      bio TEXT,
+      registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed default news if empty
   const count = db.prepare('SELECT COUNT(*) as count FROM news_events').get().count;
   if (count === 0) {
@@ -127,6 +159,102 @@ export function initDatabase() {
       'Sports Stadium',
       'A thrilling day of track events, relay races, traditional Rwandan dance, and athletics.'
     );
+  }
+
+  // Seed default alumni messages if empty
+  const alumniMsgCount = db.prepare('SELECT COUNT(*) as count FROM alumni_messages').get().count;
+  if (alumniMsgCount === 0) {
+    const insertMsg = db.prepare(`
+      INSERT INTO alumni_messages (channel, author_name, author_type, class_year, profession, avatar_color, content, likes_count, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertMsg.run(
+      'general',
+      'Emmanuel Mugisha',
+      'OB',
+      'Class of 2016',
+      'Civil Engineer, Kigali',
+      '#1e40af',
+      'Hello fellow OBs and OGs! Wonderful to finally have our official RPPS Alumni chat lounge. Who remembers the morning assembly hymns and Mr. Habimana’s science experiments?',
+      8,
+      new Date(Date.now() - 3600000 * 24 * 3).toISOString()
+    );
+
+    insertMsg.run(
+      'general',
+      'Grace Uwase',
+      'OG',
+      'Class of 2018',
+      'Biomedical Scientist, Butare',
+      '#be185d',
+      'Warm greetings everyone! So proud to see RPPS still topping Nyagatare district in academic excellence. The discipline and light we received there guided my whole journey.',
+      12,
+      new Date(Date.now() - 3600000 * 24 * 2).toISOString()
+    );
+
+    insertMsg.run(
+      'reunions',
+      'Patrick Kayitare',
+      'OB',
+      'Class of 2015',
+      'Agribusiness Consultant',
+      '#047857',
+      'Attention OBs & OGs! We are organizing the 2026 End-of-Year Alumni Gala & Sports Match at the school campus. Let us organize an OBs vs current P6 football match!',
+      15,
+      new Date(Date.now() - 3600000 * 18).toISOString()
+    );
+
+    insertMsg.run(
+      'reunions',
+      'Diane Mukamana',
+      'OG',
+      'Class of 2019',
+      'Software Developer, Norrsken Kigali',
+      '#d97706',
+      'Count me in for the alumni gala! We should also arrange a mentoring session where we talk to the candidates about career choices and high school life.',
+      9,
+      new Date(Date.now() - 3600000 * 12).toISOString()
+    );
+
+    insertMsg.run(
+      'mentorship',
+      'Jean Claude Nshimiyimana',
+      'OB',
+      'Class of 2014',
+      'High School Teacher & Mentor',
+      '#4338ca',
+      'I am currently offering weekend online mentorship for any younger OBs/OGs entering Senior 1 or Senior 4 looking for scholarship guidance. Feel free to connect!',
+      11,
+      new Date(Date.now() - 3600000 * 6).toISOString()
+    );
+
+    insertMsg.run(
+      'memories',
+      'Aline Umutoni',
+      'OG',
+      'Class of 2017',
+      'Architect, Kigali',
+      '#9333ea',
+      'Throwback Thursday! Does anyone still have our P6 graduation ceremony photos from 2017? The traditional Intore dance performance was unforgettable. Light and Leadership!',
+      7,
+      new Date(Date.now() - 3600000 * 2).toISOString()
+    );
+  }
+
+  // Seed default alumni directory if empty
+  const alumniMemberCount = db.prepare('SELECT COUNT(*) as count FROM alumni_members').get().count;
+  if (alumniMemberCount === 0) {
+    const insertMember = db.prepare(`
+      INSERT INTO alumni_members (name, email, phone, member_type, class_year, profession, location, bio)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertMember.run('Emmanuel Mugisha', 'emmanuel.m@gmail.com', '+250 788 123 456', 'OB', 'Class of 2016', 'Civil Engineer', 'Kigali, Rwanda', 'Passionate about infrastructure development and mentoring future Rwandan engineers.');
+    insertMember.run('Grace Uwase', 'grace.uwase@gmail.com', '+250 788 234 567', 'OG', 'Class of 2018', 'Biomedical Scientist', 'Huye, Rwanda', 'Researching health sciences; proud RPPS debate team captain 2018.');
+    insertMember.run('Patrick Kayitare', 'p.kayitare@gmail.com', '+250 788 345 678', 'OB', 'Class of 2015', 'Agribusiness Entrepreneur', 'Nyagatare, Rwanda', 'Promoting youth farming cooperatives in Eastern Province.');
+    insertMember.run('Diane Mukamana', 'diane.m@tech.rw', '+250 788 456 789', 'OG', 'Class of 2019', 'Software Developer', 'Kigali, Rwanda', 'Building fintech solutions; advocating for girls in STEM.');
+    insertMember.run('Jean Claude Nshimiyimana', 'jc.nshimiye@gmail.com', '+250 788 567 890', 'OB', 'Class of 2014', 'Education Consultant', 'Musanze, Rwanda', 'Supporting access to quality rural education and youth leadership.');
   }
 
   console.log('✅ SQLite Database initialized successfully at:', dbPath);
