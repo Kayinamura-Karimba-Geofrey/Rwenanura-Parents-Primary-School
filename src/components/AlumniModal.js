@@ -77,6 +77,21 @@ export function createAlumniModal() {
         </button>
       </div>
 
+      <!-- WhatsApp Quick Community Bar -->
+      <div class="alumni-whatsapp-quickbar">
+        <div class="whatsapp-quick-text">
+          <span class="whatsapp-badge-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-5.805 1.524zm6.208-3.805c1.474.875 3.09 1.338 4.743 1.339 5.431 0 9.849-4.418 9.851-9.852.001-2.633-1.023-5.108-2.887-6.973-1.863-1.864-4.337-2.89-6.97-2.891-5.432 0-9.85 4.418-9.852 9.852-.001 1.748.468 3.454 1.357 4.972l-.999 3.649 3.757-.986z"/>
+            </svg>
+          </span>
+          <span>Prefer mobile messaging? Join the <strong>Official RPPS Alumni WhatsApp Community</strong></span>
+        </div>
+        <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-pill">
+          Join WhatsApp Group 📲
+        </a>
+      </div>
+
       <!-- TAB 1: LIVE CHAT -->
       <div class="alumni-tab-content active" id="tab-chat-content">
         <!-- Channels Bar -->
@@ -111,6 +126,12 @@ export function createAlumniModal() {
             <div class="chat-search-wrap">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" id="chat-search-input" placeholder="Search alumni messages..." />
+            </div>
+            <div class="chat-year-filter-pills" id="chat-year-filters">
+              <button class="year-pill active" data-year="all">All Batches</button>
+              <button class="year-pill" data-year="2014-2016">2014–16</button>
+              <button class="year-pill" data-year="2017-2019">2017–19</button>
+              <button class="year-pill" data-year="2020">2020+</button>
             </div>
             <button id="refresh-chat-btn" class="btn-chat-icon" title="Refresh messages">🔄</button>
           </div>
@@ -379,6 +400,36 @@ export function createAlumniModal() {
     });
   });
 
+  // Batch / Cohort Year Filters
+  let selectedCohort = 'all';
+  const cohortPills = modal.querySelectorAll('.chat-year-filter-pills .year-pill');
+  cohortPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      cohortPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedCohort = pill.getAttribute('data-year');
+      applyFiltersAndRender();
+    });
+  });
+
+  function applyFiltersAndRender() {
+    let filtered = messagesList;
+    if (selectedCohort !== 'all') {
+      filtered = messagesList.filter(msg => {
+        const yr = (msg.class_year || '').toLowerCase();
+        if (selectedCohort === '2014-2016') {
+          return yr.includes('2014') || yr.includes('2015') || yr.includes('2016');
+        } else if (selectedCohort === '2017-2019') {
+          return yr.includes('2017') || yr.includes('2018') || yr.includes('2019');
+        } else if (selectedCohort === '2020') {
+          return yr.includes('2020') || yr.includes('2021') || yr.includes('2022') || yr.includes('2023') || yr.includes('2024') || yr.includes('2025');
+        }
+        return true;
+      });
+    }
+    renderMessages(filtered);
+  }
+
   // Load and Render Messages
   async function loadMessages(isBackground = false) {
     if (!isBackground) {
@@ -390,7 +441,7 @@ export function createAlumniModal() {
 
     if (res.success && res.messages) {
       messagesList = res.messages;
-      renderMessages(messagesList);
+      applyFiltersAndRender();
       updateChannelCounts();
     } else if (!isBackground) {
       messagesFeed.innerHTML = `<div class="chat-empty-state">Could not connect to the alumni chat server. Please ensure the backend is running.</div>`;
@@ -786,10 +837,28 @@ export function createAlumniModal() {
   updatePersonaDisplay();
 
   // Public open method
-  modal.open = () => {
+  modal.open = (targetTab = 'chat', targetChannel = null) => {
     modal.classList.add('active');
-    loadMessages();
-    startPolling();
+
+    // Switch to target tab if specified
+    if (targetTab && tabContents[targetTab]) {
+      tabs.forEach(btn => {
+        if (btn.getAttribute('data-tab') === targetTab) {
+          btn.click();
+        }
+      });
+    }
+
+    // Switch to target channel if specified
+    if (targetChannel) {
+      const chBtn = channelsContainer.querySelector(`[data-channel="${targetChannel}"]`);
+      if (chBtn) {
+        chBtn.click();
+      }
+    } else if (activeTab === 'chat') {
+      loadMessages();
+      startPolling();
+    }
   };
 
   return modal;

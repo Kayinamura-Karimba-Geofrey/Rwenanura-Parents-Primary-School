@@ -99,11 +99,17 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
   if (adminBtn && onOpenAdminModal) adminBtn.addEventListener('click', onOpenAdminModal);
   
   if (onOpenAlumniModal) {
-    if (alumniBtn) alumniBtn.addEventListener('click', onOpenAlumniModal);
+    if (alumniBtn) alumniBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
     if (alumniNavLink) {
       alumniNavLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        onOpenAlumniModal();
+        const sec = document.querySelector('#alumni');
+        if (sec) {
+          e.preventDefault();
+          sec.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          e.preventDefault();
+          onOpenAlumniModal('chat', 'general');
+        }
       });
     }
   }

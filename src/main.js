@@ -18,6 +18,7 @@ import { createTrackModal } from './components/TrackModal.js';
 import { createAuthModal } from './components/AuthModal.js';
 import { createAdminDashboard } from './components/AdminDashboard.js';
 import { createAlumniModal } from './components/AlumniModal.js';
+import { createAlumniSection } from './components/AlumniSection.js';
 import { createFooter } from './components/Footer.js';
 
 import { getStoredToken } from './data/api.js';
@@ -39,7 +40,7 @@ function setupScrollReveal() {
   }, observerOptions);
 
   const elementsToReveal = document.querySelectorAll(
-    '.section-header, .program-card, .facility-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider, .faq-item'
+    '.section-header, .program-card, .facility-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider, .faq-item, .alumni-pillar-card, .spotlight-card, .metric-pill'
   );
 
   elementsToReveal.forEach((el, idx) => {
@@ -69,8 +70,8 @@ function initApp() {
     trackModal.classList.add('active');
   };
 
-  const handleOpenAlumniModal = () => {
-    alumniModal.open();
+  const handleOpenAlumniModal = (tab = 'chat', channel = null) => {
+    alumniModal.open(tab, channel);
   };
 
   const handleOpenAdminConsole = () => {
@@ -101,6 +102,7 @@ function initApp() {
   app.appendChild(createAbout());
   app.appendChild(createFacilities());
   app.appendChild(createNewsEvents());
+  app.appendChild(createAlumniSection(handleOpenAlumniModal));
   app.appendChild(createAdmissions(handleOpenApplyModal));
   app.appendChild(createTuitionEstimator(handleOpenApplyModal));
   app.appendChild(createFAQ());
