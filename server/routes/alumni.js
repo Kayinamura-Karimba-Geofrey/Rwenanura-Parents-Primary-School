@@ -62,7 +62,7 @@ router.post('/alumni/messages', (req, res) => {
 
     const cleanChannel = VALID_CHANNELS.includes(channel) ? channel : 'general';
     const cleanType = authorType.toUpperCase() === 'OG' ? 'OG' : 'OB';
-    const cleanColor = avatarColor || (cleanType === 'OB' ? '#1e40af' : '#be185d');
+    const cleanColor = avatarColor && avatarColor !== '#1e40af' && avatarColor !== '#be185d' ? avatarColor : (cleanType === 'OB' ? '#0d5c3a' : '#d97706');
 
     const stmt = db.prepare(`
       INSERT INTO alumni_messages (channel, author_name, author_type, class_year, profession, avatar_color, content, likes_count)

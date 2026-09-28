@@ -26,7 +26,7 @@ export function createAlumniModal() {
     type: 'OB', // 'OB' or 'OG'
     classYear: 'Class of 2018',
     profession: 'Alumni Member',
-    color: '#1e40af'
+    color: '#0d5c3a'
   };
 
   modal.innerHTML = `
@@ -481,7 +481,7 @@ export function createAlumniModal() {
 
       return `
         <div class="chat-message-item" data-id="${msg.id}">
-          <div class="message-avatar" style="background-color: ${msg.avatar_color || (isOB ? '#1e40af' : '#be185d')};">
+          <div class="message-avatar" style="background-color: ${msg.avatar_color && msg.avatar_color !== '#1e40af' && msg.avatar_color !== '#be185d' ? msg.avatar_color : (isOB ? '#0d5c3a' : '#d97706')};">
             ${initials}
           </div>
           <div class="message-content-wrap">
@@ -643,7 +643,7 @@ export function createAlumniModal() {
       type,
       classYear,
       profession,
-      color: type === 'OB' ? '#1e40af' : '#be185d'
+      color: type === 'OB' ? '#0d5c3a' : '#d97706'
     };
 
     setStoredAlumniProfile(userProfile);
@@ -700,7 +700,7 @@ export function createAlumniModal() {
       directoryGrid.innerHTML = res.members.map(member => {
         const isOB = member.member_type === 'OB';
         const badgeClass = isOB ? 'badge-ob' : 'badge-og';
-        const color = isOB ? '#1e40af' : '#be185d';
+        const color = isOB ? '#0d5c3a' : '#d97706';
         const initials = (member.name || 'Alumni').substring(0, 2).toUpperCase();
 
         return `
@@ -817,7 +817,7 @@ export function createAlumniModal() {
         type: memberType,
         classYear,
         profession,
-        color: memberType === 'OB' ? '#1e40af' : '#be185d'
+        color: memberType === 'OB' ? '#0d5c3a' : '#d97706'
       };
       setStoredAlumniProfile(userProfile);
       updatePersonaDisplay();

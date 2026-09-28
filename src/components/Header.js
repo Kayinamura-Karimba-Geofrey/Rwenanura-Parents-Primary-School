@@ -68,7 +68,7 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <li><a href="#facilities" class="nav-link">Campus Life</a></li>
           <li><a href="#news" class="nav-link">News & Events</a></li>
           <li><a href="#admissions" class="nav-link">Admissions</a></li>
-          <li><a href="#alumni" class="nav-link alumni-nav-link" style="color: var(--gold); font-weight: 700;">OBs & OGs Chat 🎓</a></li>
+          <li><a href="#alumni" class="nav-link alumni-nav-link">OBs & OGs 🎓</a></li>
           <li><a href="#contact" class="nav-link">Contact</a></li>
         </ul>
 

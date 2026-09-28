@@ -175,7 +175,7 @@ export function initDatabase() {
       'OB',
       'Class of 2016',
       'Civil Engineer, Kigali',
-      '#1e40af',
+      '#0d5c3a',
       'Hello fellow OBs and OGs! Wonderful to finally have our official RPPS Alumni chat lounge. Who remembers the morning assembly hymns and Mr. Habimana’s science experiments?',
       8,
       new Date(Date.now() - 3600000 * 24 * 3).toISOString()
@@ -187,7 +187,7 @@ export function initDatabase() {
       'OG',
       'Class of 2018',
       'Biomedical Scientist, Butare',
-      '#be185d',
+      '#d97706',
       'Warm greetings everyone! So proud to see RPPS still topping Nyagatare district in academic excellence. The discipline and light we received there guided my whole journey.',
       12,
       new Date(Date.now() - 3600000 * 24 * 2).toISOString()
@@ -199,7 +199,7 @@ export function initDatabase() {
       'OB',
       'Class of 2015',
       'Agribusiness Consultant',
-      '#047857',
+      '#0d5c3a',
       'Attention OBs & OGs! We are organizing the 2026 End-of-Year Alumni Gala & Sports Match at the school campus. Let us organize an OBs vs current P6 football match!',
       15,
       new Date(Date.now() - 3600000 * 18).toISOString()
@@ -223,7 +223,7 @@ export function initDatabase() {
       'OB',
       'Class of 2014',
       'High School Teacher & Mentor',
-      '#4338ca',
+      '#0d5c3a',
       'I am currently offering weekend online mentorship for any younger OBs/OGs entering Senior 1 or Senior 4 looking for scholarship guidance. Feel free to connect!',
       11,
       new Date(Date.now() - 3600000 * 6).toISOString()
@@ -235,7 +235,7 @@ export function initDatabase() {
       'OG',
       'Class of 2017',
       'Architect, Kigali',
-      '#9333ea',
+      '#d97706',
       'Throwback Thursday! Does anyone still have our P6 graduation ceremony photos from 2017? The traditional Intore dance performance was unforgettable. Light and Leadership!',
       7,
       new Date(Date.now() - 3600000 * 2).toISOString()

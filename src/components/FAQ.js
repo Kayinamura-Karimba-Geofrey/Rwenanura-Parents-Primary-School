@@ -53,7 +53,7 @@ export function createFAQ() {
         </div>
 
         <!-- Download Prospectus Sidebar Card -->
-        <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center;">
+        <div style="background: var(--primary); color: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; border: 1px solid var(--primary-light);">
           <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📄</div>
           <h3 style="font-size: 1.35rem; color: white; margin-bottom: 0.5rem;">Download Official School Guide</h3>
           <p style="font-size: 0.88rem; color: rgba(255,255,255,0.85); margin-bottom: 1.5rem; line-height: 1.5;">

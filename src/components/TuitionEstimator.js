@@ -54,7 +54,7 @@ export function createTuitionEstimator(onOpenApplyModal) {
         </div>
 
         <!-- Right Summary Card -->
-        <div style="background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: white; padding: 2.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="background: var(--navy); border-left: 1px solid var(--navy-light); color: white; padding: 2.25rem; display: flex; flex-direction: column; justify-content: space-between;">
           <div>
             <h3 style="font-size: 1.25rem; color: var(--gold-light); margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 0.75rem;">Estimated Summary</h3>
 

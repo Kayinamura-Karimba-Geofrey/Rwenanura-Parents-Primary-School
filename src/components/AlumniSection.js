@@ -39,7 +39,7 @@ export function createAlumniSection(onOpenAlumniModal) {
       <!-- 3 Communication Pillars Grid -->
       <div class="alumni-pillars-grid">
         <!-- Card 1: Live ChatUp -->
-        <div class="alumni-pillar-card featured">
+        <div class="alumni-pillar-card">
           <div class="pillar-badge">Real-Time Community</div>
           <div class="pillar-icon">💬</div>
           <h3>OBs & OGs Live ChatUp</h3>
@@ -51,20 +51,16 @@ export function createAlumniSection(onOpenAlumniModal) {
             <li>✓ Cheer reactions & instant replies</li>
             <li>✓ Classmate directory & mentions</li>
           </ul>
-          <button class="btn btn-gold btn-block trigger-chat-btn">
+          <button class="btn btn-primary btn-block trigger-chat-btn">
             <span>Open Alumni ChatUp</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
 
         <!-- Card 2: Official WhatsApp Community -->
-        <div class="alumni-pillar-card whatsapp-card">
-          <div class="pillar-badge whatsapp-badge">Instant Mobile Messaging</div>
-          <div class="pillar-icon whatsapp-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-5.805 1.524zm6.208-3.805c1.474.875 3.09 1.338 4.743 1.339 5.431 0 9.849-4.418 9.851-9.852.001-2.633-1.023-5.108-2.887-6.973-1.863-1.864-4.337-2.89-6.97-2.891-5.432 0-9.85 4.418-9.852 9.852-.001 1.748.468 3.454 1.357 4.972l-.999 3.649 3.757-.986z"/>
-            </svg>
-          </div>
+        <div class="alumni-pillar-card">
+          <div class="pillar-badge">Mobile Messaging</div>
+          <div class="pillar-icon">📲</div>
           <h3>Official WhatsApp Group</h3>
           <p>
             Stay connected on your phone! Receive instant updates about school events, alumni announcements, and cohort-specific WhatsApp threads.
@@ -74,15 +70,15 @@ export function createAlumniSection(onOpenAlumniModal) {
             <span class="cohort-tag">Nyagatare Hub</span>
             <span class="cohort-tag">Diaspora OB/OG</span>
           </div>
-          <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-block">
+          <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-block">
             <span>Join WhatsApp Community</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
         </div>
 
         <!-- Card 3: Upcoming 2026 Reunion & Mentorship -->
-        <div class="alumni-pillar-card event-card">
-          <div class="pillar-badge event-badge">Next Event</div>
+        <div class="alumni-pillar-card">
+          <div class="pillar-badge">Homecoming 2026</div>
           <div class="pillar-icon">🤝</div>
           <h3>2026 Grand Alumni Gala</h3>
           <p>
@@ -90,16 +86,16 @@ export function createAlumniSection(onOpenAlumniModal) {
           </p>
           <div class="event-details-box">
             <div class="event-row">
-              <span>📅 Date:</span>
+              <span>Date:</span>
               <strong>December 19, 2026</strong>
             </div>
             <div class="event-row">
-              <span>📍 Venue:</span>
+              <span>Venue:</span>
               <strong>RPPS Main Campus, Nyagatare</strong>
             </div>
             <div class="event-row">
-              <span>⚽ Highlights:</span>
-              <strong>OBs Football Match & Mentorship Session</strong>
+              <span>Highlights:</span>
+              <strong>OBs Football Match & Mentorship</strong>
             </div>
           </div>
           <button class="btn btn-outline btn-block trigger-reunion-btn">

@@ -25,7 +25,7 @@ export function createAdmissions(onOpenApplyModal) {
       </div>
 
       <!-- Application CTA Card -->
-      <div style="margin-top: 4rem; background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); border-radius: var(--radius-lg); padding: 3rem; color: var(--white); display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; box-shadow: var(--shadow-lg);">
+      <div style="margin-top: 4rem; background: var(--navy); border: 1px solid var(--navy-light); border-radius: var(--radius-lg); padding: 3rem; color: var(--white); display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; box-shadow: var(--shadow-lg);">
         <div style="max-width: 600px;">
           <div class="badge badge-gold" style="margin-bottom: 0.75rem;">Enrollment Open for 2026/2027 Academic Year</div>
           <h3 style="font-size: 2rem; color: var(--white); margin-bottom: 0.75rem;">Ready to Begin Your Child's Journey?</h3>

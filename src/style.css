@@ -285,29 +285,6 @@ img {
 .reveal-delay-3 { transition-delay: 0.3s; }
 .reveal-delay-4 { transition-delay: 0.4s; }
 
-/* Shimmer Button Effect */
-.btn {
-  position: relative;
-  overflow: hidden;
-}
-
-.btn::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.28), transparent);
-  transform: translateX(-100%) rotate(30deg);
-  transition: transform 0.6s ease;
-  pointer-events: none;
-}
-
-.btn:hover::after {
-  transform: translateX(100%) rotate(30deg);
-}
-
 /* Glass Card */
 .glass-card {
   background: rgba(255, 255, 255, 0.85);
