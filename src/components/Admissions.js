@@ -43,20 +43,20 @@ export function createAdmissions(onOpenApplyModal) {
       </div>
 
       <!-- Application CTA Card -->
-      <div style="margin-top: 4rem; background: var(--navy); border: 1px solid var(--navy-light); border-radius: var(--radius-lg); padding: 3rem; color: var(--white); display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; box-shadow: var(--shadow-lg);">
-        <div style="max-width: 600px;">
+      <div class="admissions-cta-banner">
+        <div class="admissions-cta-content">
           <div class="badge badge-gold" style="margin-bottom: 0.75rem;">${t('adm_banner_badge')}</div>
-          <h3 style="font-size: 2rem; color: var(--white); margin-bottom: 0.75rem;">${t('adm_banner_title')}</h3>
+          <h3 class="admissions-cta-title">${t('adm_banner_title')}</h3>
           <p style="color: var(--gray-300); font-size: 1rem;">${t('adm_banner_desc')}</p>
         </div>
 
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-          <button class="btn btn-gold start-application-btn" style="padding: 1rem 2rem; font-size: 1.05rem;">
+        <div class="admissions-cta-actions">
+          <button class="btn btn-gold start-application-btn" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
             <span>${t('btn_start_app')}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
           
-          <button class="btn btn-glass schedule-tour-btn" style="padding: 1rem 2rem;">
+          <button class="btn btn-glass schedule-tour-btn" style="padding: 0.85rem 1.75rem;">
             <span>${t('btn_book_tour')}</span>
           </button>
         </div>

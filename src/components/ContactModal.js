@@ -16,7 +16,7 @@ export function createContactModal() {
       <div id="modal-feedback" style="display: none; padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.9rem;"></div>
 
       <form id="apply-form">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div class="form-grid-2" style="margin-bottom: 1rem;">
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Parent / Guardian Name *</label>
             <input type="text" id="app-parent-name" required placeholder="e.g. Jean-Claude Habimana" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
@@ -28,7 +28,7 @@ export function createContactModal() {
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div class="form-grid-2" style="margin-bottom: 1rem;">
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Child's Full Name *</label>
             <input type="text" id="app-child-name" required placeholder="Child's full name" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />

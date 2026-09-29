@@ -9,10 +9,10 @@ export function createAdminModal() {
     <div class="modal-dialog" style="max-width: 850px; width: 92%;">
       <button class="modal-close" aria-label="Close portal">&times;</button>
       
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--gray-200); padding-bottom: 1rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; border-bottom: 1px solid var(--gray-200); padding-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
         <div>
           <div class="badge badge-gold" style="margin-bottom: 0.25rem;">Staff & Admissions Portal</div>
-          <h3 style="font-size: 1.6rem; color: var(--navy);">Submitted Applications Dashboard</h3>
+          <h3 style="font-size: 1.4rem; color: var(--navy);">Submitted Applications Dashboard</h3>
         </div>
         <button id="refresh-apps-btn" class="btn btn-outline" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">
           🔄 Refresh Live Database

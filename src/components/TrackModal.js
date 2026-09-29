@@ -18,7 +18,7 @@ export function createTrackModal() {
       </div>
 
       <form id="track-form" style="margin-bottom: 1.25rem;">
-        <div style="display: flex; gap: 0.5rem;">
+        <div class="track-input-row">
           <input type="text" id="track-code-input" required placeholder="e.g. RPPS-2026-4289" style="flex: 1; padding: 0.8rem 1rem; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 0.95rem; font-family: monospace; font-weight: 700; text-transform: uppercase;" />
           <button type="submit" class="btn btn-primary" style="padding: 0.8rem 1.25rem;">
             Check Status

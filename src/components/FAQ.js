@@ -37,7 +37,7 @@ export function createFAQ() {
         <p class="section-subtitle">${t('faq_subtitle')}</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2.5rem; align-items: start; max-width: 1100px; margin: 0 auto;">
+      <div class="faq-layout-grid">
         
         <!-- Accordion Items -->
         <div class="faq-accordion" style="display: flex; flex-direction: column; gap: 1rem;">
@@ -55,7 +55,7 @@ export function createFAQ() {
         </div>
 
         <!-- Download Prospectus Sidebar Card -->
-        <div style="background: var(--primary); color: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; border: 1px solid var(--primary-light);">
+        <div class="faq-prospectus-card">
           <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📄</div>
           <h3 style="font-size: 1.35rem; color: white; margin-bottom: 0.5rem;">${t('faq_guide_title')}</h3>
           <p style="font-size: 0.88rem; color: rgba(255,255,255,0.85); margin-bottom: 1.5rem; line-height: 1.5;">

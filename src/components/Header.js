@@ -60,6 +60,9 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <li><a href="#admissions" class="nav-link">${t('nav_admissions')}</a></li>
           <li><a href="#alumni" class="nav-link alumni-nav-link">${t('nav_alumni')}</a></li>
           <li><a href="#contact" class="nav-link">${t('nav_contact')}</a></li>
+          <li class="mobile-drawer-util" id="mobile-drawer-util">
+            <!-- Dynamically populated for mobile screens -->
+          </li>
         </ul>
 
         <!-- Right Action Button & Mobile Toggle -->
@@ -78,6 +81,7 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
   `;
 
   const topActionsContainer = header.querySelector('#top-bar-actions-container');
+  const mobileDrawerUtil = header.querySelector('#mobile-drawer-util');
 
   function renderTopBarActions() {
     const role = getUserRole();
@@ -116,6 +120,25 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
         <span class="util-divider">|</span>
         ${langSelectorHtml}
       `;
+
+      mobileDrawerUtil.innerHTML = `
+        <div class="mobile-util-lang-row">
+          <span class="mobile-util-label">🌐 Language:</span>
+          ${langSelectorHtml}
+        </div>
+        <div class="mobile-util-links">
+          <button class="mobile-util-btn parent-track-trigger">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>${t('top_track')}</span>
+          </button>
+          <button class="mobile-util-btn alumni-chat-quick">
+            <span>💬 Live Alumni ChatUp</span>
+          </button>
+          <button class="mobile-util-btn logout-trigger">
+            <span>Sign Out (${escapeHtml(shortName)}) ⎋</span>
+          </button>
+        </div>
+      `;
     } else if ((role === 'staff' || role === 'admin') && user) {
       const shortName = (user.name || 'Staff').split(' ')[0];
       topActionsContainer.innerHTML = `
@@ -139,6 +162,29 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
         <span class="util-divider">|</span>
         ${langSelectorHtml}
       `;
+
+      mobileDrawerUtil.innerHTML = `
+        <div class="mobile-util-lang-row">
+          <span class="mobile-util-label">🌐 Language:</span>
+          ${langSelectorHtml}
+        </div>
+        <div class="mobile-util-links">
+          <button class="mobile-util-btn parent-track-trigger">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>${t('top_track')}</span>
+          </button>
+          <button class="mobile-util-btn admin-modal-trigger">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>${user.role === 'admin' ? 'Admin Portal' : 'Staff Console'}</span>
+          </button>
+          <button class="mobile-util-btn alumni-top-trigger">
+            <span>🎓 ${t('top_alumni')}</span>
+          </button>
+          <button class="mobile-util-btn logout-trigger">
+            <span>Sign Out ⎋</span>
+          </button>
+        </div>
+      `;
     } else {
       // Default: Public Visitor / Prospective Parent View
       topActionsContainer.innerHTML = `
@@ -159,27 +205,67 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
         <span class="util-divider">|</span>
         ${langSelectorHtml}
       `;
+
+      mobileDrawerUtil.innerHTML = `
+        <div class="mobile-util-lang-row">
+          <span class="mobile-util-label">🌐 Language:</span>
+          ${langSelectorHtml}
+        </div>
+        <div class="mobile-util-links">
+          <button class="mobile-util-btn parent-track-trigger">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>${t('top_track')}</span>
+          </button>
+          <button class="mobile-util-btn alumni-top-trigger">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>${t('top_alumni')}</span>
+          </button>
+          <button class="mobile-util-btn admin-modal-trigger">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>${t('top_staff')}</span>
+          </button>
+        </div>
+      `;
     }
 
-    // Bind event listeners on top bar buttons
-    const trackBtn = topActionsContainer.querySelector('.parent-track-trigger');
-    const alumniBtn = topActionsContainer.querySelector('.alumni-top-trigger');
-    const alumniChatBtn = topActionsContainer.querySelector('.alumni-chat-quick');
-    const adminBtn = topActionsContainer.querySelector('.admin-modal-trigger');
-    const logoutBtn = topActionsContainer.querySelector('.logout-trigger');
+    // Bind event listeners on both top bar and mobile drawer buttons
+    header.querySelectorAll('.parent-track-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        header.querySelector('#nav-menu')?.classList.remove('open');
+        if (onOpenTrackModal) onOpenTrackModal();
+      });
+    });
 
-    if (trackBtn && onOpenTrackModal) trackBtn.addEventListener('click', onOpenTrackModal);
-    if (alumniBtn && onOpenAlumniModal) alumniBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
-    if (alumniChatBtn && onOpenAlumniModal) alumniChatBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
-    if (adminBtn && onOpenAdminModal) adminBtn.addEventListener('click', onOpenAdminModal);
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
+    header.querySelectorAll('.alumni-top-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        header.querySelector('#nav-menu')?.classList.remove('open');
+        if (onOpenAlumniModal) onOpenAlumniModal('chat', 'general');
+      });
+    });
+
+    header.querySelectorAll('.alumni-chat-quick').forEach(btn => {
+      btn.addEventListener('click', () => {
+        header.querySelector('#nav-menu')?.classList.remove('open');
+        if (onOpenAlumniModal) onOpenAlumniModal('chat', 'general');
+      });
+    });
+
+    header.querySelectorAll('.admin-modal-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        header.querySelector('#nav-menu')?.classList.remove('open');
+        if (onOpenAdminModal) onOpenAdminModal();
+      });
+    });
+
+    header.querySelectorAll('.logout-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        header.querySelector('#nav-menu')?.classList.remove('open');
         logoutUser();
       });
-    }
+    });
 
-    // Language switcher actions
-    topActionsContainer.querySelectorAll('.lang-btn').forEach(btn => {
+    // Language switcher actions across both containers
+    header.querySelectorAll('.lang-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const selectedLang = btn.getAttribute('data-lang');
         setLanguage(selectedLang);
@@ -229,6 +315,13 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
       link.classList.add('active');
       navMenu.classList.remove('open');
     });
+  });
+
+  // Close mobile drawer when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!header.contains(e.target) && navMenu.classList.contains('open')) {
+      navMenu.classList.remove('open');
+    }
   });
 
   return header;

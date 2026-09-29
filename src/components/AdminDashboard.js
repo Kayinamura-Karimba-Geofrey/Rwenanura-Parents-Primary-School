@@ -19,13 +19,13 @@ export function createAdminDashboard(onLogout) {
     <div class="modal-dialog" style="max-width: 980px; width: 94%; max-height: 90vh; display: flex; flex-direction: column;">
       
       <!-- Top Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gray-200); padding-bottom: 1rem; margin-bottom: 1rem;">
+      <div class="admin-dash-header" style="border-bottom: 2px solid var(--gray-200); padding-bottom: 1rem; margin-bottom: 1rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <div class="logo-crest" style="width: 40px; height: 40px;">
+          <div class="logo-crest" style="width: 40px; height: 40px; flex-shrink: 0;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div>
-            <h3 style="font-size: 1.4rem; color: var(--navy); margin-bottom: 0.15rem;">School Management Console</h3>
+            <h3 style="font-size: 1.3rem; color: var(--navy); margin-bottom: 0.15rem;">School Management Console</h3>
             <p style="font-size: 0.82rem; color: var(--gray-600);">
               User: <strong id="dash-user-name">Admin</strong> (<span id="dash-user-email">admin@rwenanura.ac.rw</span>)
               <span id="dash-user-role" class="badge badge-gold" style="font-size: 0.65rem; padding: 0.1rem 0.4rem; margin-left: 0.35rem;">ADMIN</span>
@@ -33,7 +33,7 @@ export function createAdminDashboard(onLogout) {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
           <button id="dash-refresh-btn" class="btn btn-outline" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">🔄 Sync Data</button>
           <button id="dash-logout-btn" class="btn btn-gold" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">Logout 🚪</button>
           <button class="modal-close" style="position: static; font-size: 1.5rem;" aria-label="Close modal">&times;</button>
@@ -128,7 +128,7 @@ export function createAdminDashboard(onLogout) {
           <form id="add-news-form" style="display: none; background: white; border: 1px solid var(--gray-300); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm);">
             <h4 style="font-size: 1.1rem; color: var(--navy); margin-bottom: 1rem; border-bottom: 1px solid var(--gray-200); padding-bottom: 0.5rem;">New News / Event Form</h4>
             
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div class="admin-form-grid-3">
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--navy);">Article Title *</label>
                 <input type="text" id="news-input-title" required placeholder="e.g. Primary 6 Graduation Ceremony" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.88rem;" />
@@ -146,7 +146,7 @@ export function createAdminDashboard(onLogout) {
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1.5fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div class="admin-form-grid-4">
               <div>
                 <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--navy);">Day (DD)</label>
                 <input type="text" id="news-input-day" required placeholder="15" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.88rem;" />

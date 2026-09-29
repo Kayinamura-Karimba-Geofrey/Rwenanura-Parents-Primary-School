@@ -466,3 +466,34 @@
     width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .calendar-control-bar {
+    padding: 1rem 0.85rem;
+  }
+  .calendar-export-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btn-export-ical, .btn-print-timetable {
+    width: 100%;
+  }
+  .calendar-term-tabs {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+  }
+  .calendar-term-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .calendar-tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .term-summary-card {
+    padding: 1.25rem 1rem;
+  }
+}

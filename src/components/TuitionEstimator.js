@@ -14,10 +14,10 @@ export function createTuitionEstimator(onOpenApplyModal) {
         <p class="section-subtitle">${t('calc_subtitle')}</p>
       </div>
 
-      <div style="max-width: 900px; margin: 0 auto; background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); box-shadow: var(--shadow-md); overflow: hidden; display: grid; grid-template-columns: 1.2fr 1fr;">
+      <div class="tuition-calculator-grid">
         
         <!-- Left Selection Controls -->
-        <div style="padding: 2.25rem;">
+        <div class="tuition-calc-left">
           <h3 style="font-size: 1.25rem; color: var(--navy); margin-bottom: 1.25rem;">${t('calc_select_options')}</h3>
 
           <div style="margin-bottom: 1.5rem;">
@@ -56,7 +56,7 @@ export function createTuitionEstimator(onOpenApplyModal) {
         </div>
 
         <!-- Right Summary Card -->
-        <div style="background: var(--navy); border-left: 1px solid var(--navy-light); color: white; padding: 2.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="tuition-calc-right">
           <div>
             <h3 style="font-size: 1.25rem; color: var(--gold-light); margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 0.75rem;">${t('calc_summary_title')}</h3>
 

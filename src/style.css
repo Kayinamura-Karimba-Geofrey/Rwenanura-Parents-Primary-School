@@ -102,6 +102,13 @@ img {
   padding-right: 1.5rem;
 }
 
+@media (max-width: 480px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
 .section {
   padding: 5rem 0;
 }
