@@ -1,5 +1,6 @@
 import { newsAndEvents as defaultNews } from '../data/schoolData.js';
 import { fetchNewsAndEvents } from '../data/api.js';
+import { t } from '../data/i18n.js';
 
 export function createNewsEvents() {
   const section = document.createElement('section');
@@ -11,9 +12,9 @@ export function createNewsEvents() {
     section.innerHTML = `
       <div class="container">
         <div class="section-header">
-          <div class="badge badge-gold">Stay Updated</div>
-          <h2 class="section-title">What's Happening at RPPS</h2>
-          <p class="section-subtitle">Keep up with recent school achievements, upcoming academic events, sports competitions, and parent announcements.</p>
+          <div class="badge badge-gold">${t('news_badge')}</div>
+          <h2 class="section-title">${t('news_title')}</h2>
+          <p class="section-subtitle">${t('news_subtitle')}</p>
         </div>
 
         <div class="news-grid">
@@ -35,7 +36,7 @@ export function createNewsEvents() {
                 
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: var(--gray-500); font-weight: 500;">
                   <span>📍 ${item.location}</span>
-                  <button class="read-news-btn" style="color: var(--primary); font-weight: 700;">Read More →</button>
+                  <button class="read-news-btn" style="color: var(--primary); font-weight: 700;">${t('news_read_more')}</button>
                 </div>
               </div>
             </div>

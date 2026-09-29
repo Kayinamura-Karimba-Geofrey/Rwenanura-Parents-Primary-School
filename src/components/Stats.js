@@ -1,13 +1,21 @@
 import { quickStats } from '../data/schoolData.js';
+import { t } from '../data/i18n.js';
 
 export function createStats() {
   const container = document.createElement('div');
   container.className = 'container';
 
+  const localizedStats = [
+    { value: t('stat_pass_rate'), label: t('stat_pass_label'), desc: t('stat_pass_desc') },
+    { value: t('stat_pupils'), label: t('stat_pupils_label'), desc: t('stat_pupils_desc') },
+    { value: t('stat_teachers'), label: t('stat_teachers_label'), desc: t('stat_teachers_desc') },
+    { value: t('stat_ratio'), label: t('stat_ratio_label'), desc: t('stat_ratio_desc') }
+  ];
+
   container.innerHTML = `
     <div class="stats-section">
       <div class="stats-grid">
-        ${quickStats.map(stat => `
+        ${localizedStats.map(stat => `
           <div class="stat-card">
             <h3 class="stat-value" data-target="${stat.value}">${stat.value}</h3>
             <p class="stat-label">${stat.label}</p>

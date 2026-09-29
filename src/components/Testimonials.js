@@ -1,4 +1,5 @@
 import { testimonials } from '../data/schoolData.js';
+import { t } from '../data/i18n.js';
 
 export function createTestimonials() {
   const section = document.createElement('section');
@@ -11,9 +12,9 @@ export function createTestimonials() {
   section.innerHTML = `
     <div class="container">
       <div class="section-header">
-        <div class="badge badge-gold">Community Voices</div>
-        <h2 class="section-title">What Parents & Pupils Say</h2>
-        <p class="section-subtitle">Hear firsthand experiences from members of our thriving Rwenanura school community.</p>
+        <div class="badge badge-gold">${t('test_badge')}</div>
+        <h2 class="section-title">${t('test_title')}</h2>
+        <p class="section-subtitle">${t('test_subtitle')}</p>
       </div>
 
       <div class="testimonials-slider">

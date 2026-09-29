@@ -1,4 +1,5 @@
 import { campusFacilities } from '../data/schoolData.js';
+import { t } from '../data/i18n.js';
 
 export function createFacilities() {
   const section = document.createElement('section');
@@ -12,9 +13,9 @@ export function createFacilities() {
   section.innerHTML = `
     <div class="container">
       <div class="section-header">
-        <div class="badge">Campus Life & Infrastructure</div>
-        <h2 class="section-title">Modern Learning Facilities</h2>
-        <p class="section-subtitle">Designed to support interactive learning, healthy physical growth, digital skills, and student wellbeing.</p>
+        <div class="badge">${t('fac_badge')}</div>
+        <h2 class="section-title">${t('fac_title')}</h2>
+        <p class="section-subtitle">${t('fac_subtitle')}</p>
       </div>
 
       <div class="facilities-tabs">

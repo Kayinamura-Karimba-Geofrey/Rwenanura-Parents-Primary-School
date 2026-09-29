@@ -23,6 +23,7 @@ import { createFooter } from './components/Footer.js';
 
 import { getStoredToken } from './data/api.js';
 import { initUserRole } from './data/userRole.js';
+import { onLanguageChange } from './data/i18n.js';
 
 function setupScrollReveal() {
   const observerOptions = {
@@ -124,4 +125,11 @@ function initApp() {
   setupScrollReveal();
 }
 
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', () => {
+  initApp();
+  onLanguageChange(() => {
+    const currentScrollY = window.scrollY;
+    initApp();
+    window.scrollTo({ top: currentScrollY, behavior: 'instant' });
+  });
+});

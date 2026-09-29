@@ -1,4 +1,5 @@
 import { heroSlides } from '../data/schoolData.js';
+import { t } from '../data/i18n.js';
 
 export function createHero(onOpenApplyModal) {
   const section = document.createElement('section');
@@ -8,10 +9,41 @@ export function createHero(onOpenApplyModal) {
   let currentSlide = 0;
   let autoplayTimer = null;
 
+  const localizedSlides = [
+    {
+      badge: t('hero_badge'),
+      title: t('hero_title_1'),
+      subtitle: t('hero_subtitle_1'),
+      ctaPrimary: t('hero_cta_apply'),
+      image: heroSlides[0]?.image || 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80'
+    },
+    {
+      badge: t('acad_badge'),
+      title: t('hero_title_2'),
+      subtitle: t('hero_subtitle_2'),
+      ctaPrimary: t('hero_cta_apply'),
+      image: heroSlides[1]?.image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1600&q=80'
+    },
+    {
+      badge: t('val_innovation'),
+      title: t('hero_title_3'),
+      subtitle: t('hero_subtitle_3'),
+      ctaPrimary: t('hero_cta_apply'),
+      image: heroSlides[2]?.image || 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1600&q=80'
+    },
+    {
+      badge: t('val_community'),
+      title: t('hero_title_4'),
+      subtitle: t('hero_subtitle_4'),
+      ctaPrimary: t('hero_cta_apply'),
+      image: heroSlides[3]?.image || 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1600&q=80'
+    }
+  ];
+
   section.innerHTML = `
     <!-- Background Carousel Slider -->
     <div class="hero-slider">
-      ${heroSlides.map((slide, index) => `
+      ${localizedSlides.map((slide, index) => `
         <div class="hero-slide ${index === 0 ? 'active' : ''}" style="background-image: url('${slide.image}');" data-index="${index}">
           <div class="hero-overlay"></div>
         </div>
@@ -23,19 +55,19 @@ export function createHero(onOpenApplyModal) {
       <div class="hero-content">
         <div class="badge badge-gold" id="hero-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span id="badge-text">${heroSlides[0].badge}</span>
+          <span id="badge-text">${localizedSlides[0].badge}</span>
         </div>
-        <h2 id="hero-title" class="animate-fade-in">${heroSlides[0].title}</h2>
-        <p id="hero-subtitle">${heroSlides[0].subtitle}</p>
+        <h2 id="hero-title" class="animate-fade-in">${localizedSlides[0].title}</h2>
+        <p id="hero-subtitle">${localizedSlides[0].subtitle}</p>
         
         <div class="hero-actions">
           <button class="btn btn-gold hero-cta-primary animate-pulse-glow">
-            <span id="cta-primary-text">${heroSlides[0].ctaPrimary}</span>
+            <span id="cta-primary-text">${localizedSlides[0].ctaPrimary}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
           
           <a href="#about" class="btn btn-glass">
-            <span>Learn More</span>
+            <span>${t('btn_learn_more')}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
           </a>
         </div>
@@ -49,7 +81,7 @@ export function createHero(onOpenApplyModal) {
       </button>
       
       <div class="slider-dots">
-        ${heroSlides.map((_, index) => `
+        ${localizedSlides.map((_, index) => `
           <div class="dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
         `).join('')}
       </div>
@@ -72,8 +104,8 @@ export function createHero(onOpenApplyModal) {
   ctaBtn.addEventListener('click', onOpenApplyModal);
 
   function goToSlide(index) {
-    currentSlide = (index + heroSlides.length) % heroSlides.length;
-    const slideData = heroSlides[currentSlide];
+    currentSlide = (index + localizedSlides.length) % localizedSlides.length;
+    const slideData = localizedSlides[currentSlide];
 
     slides.forEach((s, i) => {
       s.classList.toggle('active', i === currentSlide);

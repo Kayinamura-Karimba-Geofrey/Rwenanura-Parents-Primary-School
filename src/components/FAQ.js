@@ -1,3 +1,5 @@
+import { t } from '../data/i18n.js';
+
 export function createFAQ() {
   const section = document.createElement('section');
   section.className = 'section';
@@ -30,9 +32,9 @@ export function createFAQ() {
   section.innerHTML = `
     <div class="container">
       <div class="section-header">
-        <div class="badge">Frequently Asked Questions</div>
-        <h2 class="section-title">Parent Information & FAQs</h2>
-        <p class="section-subtitle">Find quick answers to common questions about RPPS admissions, academics, and campus life.</p>
+        <div class="badge">${t('faq_badge')}</div>
+        <h2 class="section-title">${t('faq_title')}</h2>
+        <p class="section-subtitle">${t('faq_subtitle')}</p>
       </div>
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2.5rem; align-items: start; max-width: 1100px; margin: 0 auto;">
@@ -55,13 +57,13 @@ export function createFAQ() {
         <!-- Download Prospectus Sidebar Card -->
         <div style="background: var(--primary); color: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; border: 1px solid var(--primary-light);">
           <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📄</div>
-          <h3 style="font-size: 1.35rem; color: white; margin-bottom: 0.5rem;">Download Official School Guide</h3>
+          <h3 style="font-size: 1.35rem; color: white; margin-bottom: 0.5rem;">${t('faq_guide_title')}</h3>
           <p style="font-size: 0.88rem; color: rgba(255,255,255,0.85); margin-bottom: 1.5rem; line-height: 1.5;">
-            Get the full 2026 Rwenanura Parents Primary School prospectus including academic calendar, fee schedules, and school policies.
+            ${t('faq_guide_desc')}
           </p>
 
           <button id="download-prospectus-btn" class="btn btn-gold" style="width: 100%;">
-            📥 Download Prospectus (PDF)
+            📥 ${t('faq_guide_btn')}
           </button>
         </div>
 

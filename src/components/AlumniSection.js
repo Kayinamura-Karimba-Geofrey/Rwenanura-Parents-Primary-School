@@ -1,5 +1,6 @@
 import { fetchAlumniMembers } from '../data/api.js';
 import { getUserRole, getCurrentUser, onAuthChange } from '../data/userRole.js';
+import { t } from '../data/i18n.js';
 
 export function createAlumniSection(onOpenAlumniModal) {
   const section = document.createElement('section');
@@ -10,30 +11,28 @@ export function createAlumniSection(onOpenAlumniModal) {
     <div class="container">
       <!-- Section Header -->
       <div class="section-header">
-        <div class="badge badge-gold">Alumni Network & Community</div>
-        <h2 class="section-title">Old Boys & Old Girls (OBs & OGs)</h2>
-        <p class="section-subtitle">
-          From Rwenanura to universities and leadership across Rwanda and beyond. Reconnect with classmates, mentor upcoming candidates, and participate in school development.
-        </p>
+        <div class="badge badge-gold">${t('alumni_badge')}</div>
+        <h2 class="section-title">${t('alumni_title')}</h2>
+        <p class="section-subtitle">${t('alumni_subtitle')}</p>
       </div>
 
       <!-- Quick Metrics Strip -->
       <div class="alumni-metrics-strip">
         <div class="metric-pill">
           <span class="metric-num">500+</span>
-          <span class="metric-lbl">Graduated Alumni</span>
+          <span class="metric-lbl">${t('alumni_stat_graduated')}</span>
         </div>
         <div class="metric-pill">
           <span class="metric-num">18+</span>
-          <span class="metric-lbl">Graduating Cohorts</span>
+          <span class="metric-lbl">${t('alumni_stat_cohorts')}</span>
         </div>
         <div class="metric-pill">
           <span class="metric-num">25+</span>
-          <span class="metric-lbl">Active Mentors</span>
+          <span class="metric-lbl">${t('alumni_stat_mentors')}</span>
         </div>
         <div class="metric-pill">
           <span class="metric-num">100%</span>
-          <span class="metric-lbl">RPPS Spirit & Pride</span>
+          <span class="metric-lbl">${t('alumni_stat_spirit')}</span>
         </div>
       </div>
 
@@ -43,17 +42,15 @@ export function createAlumniSection(onOpenAlumniModal) {
         <div class="alumni-pillar-card">
           <div class="pillar-badge">Real-Time Community</div>
           <div class="pillar-icon">💬</div>
-          <h3>OBs & OGs Live ChatUp</h3>
-          <p>
-            Connect directly in themed channels: daily catch-ups in <strong>#General</strong>, reunion arrangements in <strong>#Reunions</strong>, guidance in <strong>#Mentorship</strong>, and throwback stories in <strong>#Memories</strong>.
-          </p>
+          <h3>${t('alumni_card1_title')}</h3>
+          <p>${t('alumni_card1_desc')}</p>
           <ul class="pillar-perks">
             <li>✓ Custom OB/OG profile badge & class year</li>
             <li>✓ Cheer reactions & instant replies</li>
             <li>✓ Classmate directory & mentions</li>
           </ul>
           <button class="btn btn-primary btn-block trigger-chat-btn">
-            <span>Open Alumni ChatUp</span>
+            <span>${t('btn_open_chat')}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
@@ -62,17 +59,15 @@ export function createAlumniSection(onOpenAlumniModal) {
         <div class="alumni-pillar-card">
           <div class="pillar-badge">Mobile Messaging</div>
           <div class="pillar-icon">📲</div>
-          <h3>Official WhatsApp Group</h3>
-          <p>
-            Stay connected on your phone! Receive instant updates about school events, alumni announcements, and cohort-specific WhatsApp threads.
-          </p>
+          <h3>${t('alumni_card2_title')}</h3>
+          <p>${t('alumni_card2_desc')}</p>
           <div class="cohort-pills-row">
             <span class="cohort-tag">Kigali Chapter</span>
             <span class="cohort-tag">Nyagatare Hub</span>
             <span class="cohort-tag">Diaspora OB/OG</span>
           </div>
           <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-block">
-            <span>Join WhatsApp Community</span>
+            <span>${t('btn_join_whatsapp')}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
         </div>
@@ -81,10 +76,8 @@ export function createAlumniSection(onOpenAlumniModal) {
         <div class="alumni-pillar-card">
           <div class="pillar-badge">Homecoming 2026</div>
           <div class="pillar-icon">🤝</div>
-          <h3>2026 Grand Alumni Gala</h3>
-          <p>
-            The official homecoming at the RPPS Nyagatare Campus: alumni vs pupil sports matches, campus tour of new ICT facilities, and networking banquet.
-          </p>
+          <h3>${t('alumni_card3_title')}</h3>
+          <p>${t('alumni_card3_desc')}</p>
           <div class="event-details-box">
             <div class="event-row">
               <span>Date:</span>
@@ -100,7 +93,7 @@ export function createAlumniSection(onOpenAlumniModal) {
             </div>
           </div>
           <button class="btn btn-outline btn-block trigger-reunion-btn">
-            <span>Discuss in #Reunions Channel</span>
+            <span>${t('btn_discuss_reunions')}</span>
           </button>
         </div>
       </div>
@@ -109,11 +102,11 @@ export function createAlumniSection(onOpenAlumniModal) {
       <div class="alumni-spotlight-area">
         <div class="spotlight-header">
           <div>
-            <h3 class="spotlight-title">Featured Alumni Spotlights</h3>
-            <p class="spotlight-sub">Discover where our Old Boys and Old Girls are making an impact today.</p>
+            <h3 class="spotlight-title">${t('alumni_spotlight_title')}</h3>
+            <p class="spotlight-sub">${t('alumni_spotlight_sub')}</p>
           </div>
           <button class="btn btn-sm btn-outline trigger-directory-btn">
-            <span>Browse Full Directory (500+) →</span>
+            <span>${t('alumni_btn_directory')}</span>
           </button>
         </div>
 
@@ -138,16 +131,16 @@ export function createAlumniSection(onOpenAlumniModal) {
     if (role === 'alumni' && user) {
       bannerContainer.innerHTML = `
         <div class="cta-content">
-          <div class="cta-badge">Verified Member: ${escapeHtml(user.memberType || 'OB')}</div>
-          <h3>Welcome back, ${escapeHtml(user.name)}!</h3>
-          <p>You are authenticated with the ${escapeHtml(user.classYear || 'Alumni Cohort')}. Reconnect in real-time, plan the 2026 reunion, or explore the full alumni contact directory.</p>
+          <div class="cta-badge">${t('alumni_banner_auth_badge')}: ${escapeHtml(user.memberType || 'OB')}</div>
+          <h3>${t('alumni_banner_auth_title')}, ${escapeHtml(user.name)}!</h3>
+          <p>${t('alumni_banner_auth_p')}</p>
         </div>
         <div class="cta-actions">
           <button class="btn btn-gold btn-lg trigger-chat-action">
-            <span>Open Alumni Lounge 💬</span>
+            <span>${t('alumni_btn_lounge')}</span>
           </button>
           <button class="btn btn-outline-white btn-lg trigger-directory-action">
-            <span>Full Directory (500+) 👥</span>
+            <span>${t('alumni_btn_directory')}</span>
           </button>
         </div>
       `;
@@ -160,16 +153,16 @@ export function createAlumniSection(onOpenAlumniModal) {
     } else {
       bannerContainer.innerHTML = `
         <div class="cta-content">
-          <div class="cta-badge">Join the Legacy</div>
-          <h3>Are you an Old Boy or Old Girl of RPPS?</h3>
-          <p>Authenticate or register your profile to unlock full directory contacts, network with classmates, and post in the live chat lounge.</p>
+          <div class="cta-badge">${t('alumni_banner_guest_badge')}</div>
+          <h3>${t('alumni_banner_guest_title')}</h3>
+          <p>${t('alumni_banner_guest_p')}</p>
         </div>
         <div class="cta-actions">
           <button class="btn btn-gold btn-lg trigger-register-action">
-            <span>Alumni Sign In / Register 🎉</span>
+            <span>${t('alumni_btn_signin')}</span>
           </button>
           <button class="btn btn-outline-white btn-lg trigger-chat-action">
-            <span>Preview Chatroom 💬</span>
+            <span>${t('alumni_btn_preview')}</span>
           </button>
         </div>
       `;
