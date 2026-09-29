@@ -58,6 +58,7 @@ export const translations = {
     nav_about: "About",
     nav_academics: "Academics",
     nav_campus: "Campus Life",
+    nav_gallery: "Gallery",
     nav_news: "News",
     nav_admissions: "Admissions",
     nav_alumni: "Alumni",
@@ -139,6 +140,17 @@ export const translations = {
     fac_badge: "Campus Life & Infrastructure",
     fac_title: "Modern Learning Facilities",
     fac_subtitle: "Designed to support interactive learning, healthy physical growth, digital skills, and student wellbeing.",
+
+    // Gallery
+    gal_badge: "Campus Life in Pictures",
+    gal_title: "Moments of Joy, Discovery & Excellence",
+    gal_subtitle: "Explore our vibrant learning community in action across modern classrooms, science discovery labs, athletic pitches, and cultural celebrations.",
+    gal_tab_all: "All Moments",
+    gal_tab_academics: "Classrooms & Labs",
+    gal_tab_sports: "Sports & Athletics",
+    gal_tab_culture: "Culture & Arts",
+    gal_tab_campus: "Campus & Dining",
+    gal_view_photo: "Expand Image",
 
     // News & Events
     news_badge: "Stay Updated",
@@ -255,6 +267,7 @@ export const translations = {
     nav_about: "Ibyerekeye Ishuri",
     nav_academics: "Amasomo",
     nav_campus: "Ubuzima ku Ishuri",
+    nav_gallery: "Amafoto",
     nav_news: "Amakuru",
     nav_admissions: "Kwinjira",
     nav_alumni: "Abaharangije",
@@ -336,6 +349,17 @@ export const translations = {
     fac_badge: "Ibikorwaremezo Bigezweho",
     fac_title: "Hateguwe mu Buryo Butekanye kandi Bunoze",
     fac_subtitle: "Ku kigo cyacu kigari kandi gikeye muri Nyagatare, abanyeshuri bafite ibikoresho byose bikenewe mu myigire no mu mikurire myiza.",
+
+    // Gallery
+    gal_badge: "Ubuzima ku Ishuri mu Mafoto",
+    gal_title: "Ibihe by'Ibyishimo, Ubushakashatsi n'Ubuhanga",
+    gal_subtitle: "Reba ubuzima bw'ishuri ryacu mu mashuri agezweho, muri laboratwari ya siyansi, mu mikino, no mu mbyino z'umuco nyarwanda.",
+    gal_tab_all: "Amafoto Yose",
+    gal_tab_academics: "Amasomo na Laboratwari",
+    gal_tab_sports: "Siporo n'Imikino",
+    gal_tab_culture: "Umuco n'Imbyino",
+    gal_tab_campus: "Ubuzima n'Ifunguro",
+    gal_view_photo: "Kwagura Ifoto",
 
     // News & Events
     news_badge: "Amakuru Mashya",
@@ -452,6 +476,7 @@ export const translations = {
     nav_about: "À Propos",
     nav_academics: "Académique",
     nav_campus: "Vie Scolaire",
+    nav_gallery: "Galerie",
     nav_news: "Actualités",
     nav_admissions: "Admissions",
     nav_alumni: "Anciens Élèves",
@@ -533,6 +558,17 @@ export const translations = {
     fac_badge: "Infrastructures Modernes",
     fac_title: "Conçu pour un Apprentissage Sûr, Épanouissant et Moderne",
     fac_subtitle: "Sur un campus sécurisé et spacieux à Nyagatare, nous mettons à disposition des équipements modernes stimulant la réussite scolaire et humaine.",
+
+    // Gallery
+    gal_badge: "La Vie Scolaire en Images",
+    gal_title: "Moments de Joie, Découverte et Excellence",
+    gal_subtitle: "Explorez notre communauté scolaire vivante à travers nos classes modernes, nos laboratoires scientifiques, nos terrains de sport et nos célébrations culturelles.",
+    gal_tab_all: "Tous les Moments",
+    gal_tab_academics: "Salles de Classe & Labs",
+    gal_tab_sports: "Sports & Athlétisme",
+    gal_tab_culture: "Culture & Arts",
+    gal_tab_campus: "Campus & Restauration",
+    gal_view_photo: "Agrandir l'Image",
 
     // News & Events
     news_badge: "Restez Informé",

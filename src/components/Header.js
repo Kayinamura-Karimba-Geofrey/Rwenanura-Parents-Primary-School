@@ -54,6 +54,7 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <li><a href="#about" class="nav-link">${t('nav_about')}</a></li>
           <li><a href="#academics" class="nav-link">${t('nav_academics')}</a></li>
           <li><a href="#facilities" class="nav-link">${t('nav_campus')}</a></li>
+          <li><a href="#gallery" class="nav-link">${t('nav_gallery')}</a></li>
           <li><a href="#news" class="nav-link">${t('nav_news')}</a></li>
           <li><a href="#admissions" class="nav-link">${t('nav_admissions')}</a></li>
           <li><a href="#alumni" class="nav-link alumni-nav-link">${t('nav_alumni')}</a></li>

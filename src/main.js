@@ -1,6 +1,7 @@
 import './style.css';
 import './styles/components.css';
 import './styles/alumni.css';
+import './styles/gallery.css';
 
 import { createHeader } from './components/Header.js';
 import { createHero } from './components/Hero.js';
@@ -8,6 +9,7 @@ import { createStats } from './components/Stats.js';
 import { createAcademics } from './components/Academics.js';
 import { createAbout } from './components/About.js';
 import { createFacilities } from './components/Facilities.js';
+import { createGallery } from './components/Gallery.js';
 import { createNewsEvents } from './components/NewsEvents.js';
 import { createAdmissions } from './components/Admissions.js';
 import { createTuitionEstimator } from './components/TuitionEstimator.js';
@@ -42,7 +44,7 @@ function setupScrollReveal() {
   }, observerOptions);
 
   const elementsToReveal = document.querySelectorAll(
-    '.section-header, .program-card, .facility-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider, .faq-item, .alumni-pillar-card, .spotlight-card, .metric-pill'
+    '.section-header, .program-card, .facility-card, .gallery-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider, .faq-item, .alumni-pillar-card, .spotlight-card, .metric-pill'
   );
 
   elementsToReveal.forEach((el, idx) => {
@@ -108,6 +110,7 @@ function initApp() {
   app.appendChild(createAcademics(handleOpenApplyModal));
   app.appendChild(createAbout());
   app.appendChild(createFacilities());
+  app.appendChild(createGallery());
   app.appendChild(createNewsEvents());
   app.appendChild(createAlumniSection(handleOpenAlumniModal));
   app.appendChild(createAdmissions(handleOpenApplyModal));
