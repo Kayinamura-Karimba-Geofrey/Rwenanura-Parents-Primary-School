@@ -4,10 +4,18 @@ import {
   reactToAlumniMessage, 
   fetchAlumniChannels, 
   fetchAlumniMembers, 
-  registerAlumniMember,
-  getStoredAlumniProfile,
-  setStoredAlumniProfile
+  registerAlumniAccount,
+  loginUser
 } from '../data/api.js';
+
+import { 
+  getUserRole, 
+  getCurrentUser, 
+  isAlumni, 
+  isStaffOrAdmin, 
+  logoutUser, 
+  onAuthChange 
+} from '../data/userRole.js';
 
 export function createAlumniModal() {
   const modal = document.createElement('div');
@@ -15,19 +23,10 @@ export function createAlumniModal() {
   modal.id = 'alumni-chat-modal';
 
   let currentChannel = 'general';
-  let activeTab = 'chat'; // 'chat' | 'directory' | 'register'
+  let activeTab = 'chat'; // 'chat' | 'directory' | 'portal'
   let currentFilter = 'all';
   let pollInterval = null;
   let messagesList = [];
-
-  // Default / Stored user profile
-  let userProfile = getStoredAlumniProfile() || {
-    name: '',
-    type: 'OB', // 'OB' or 'OG'
-    classYear: 'Class of 2018',
-    profession: 'Alumni Member',
-    color: '#0d5c3a'
-  };
 
   modal.innerHTML = `
     <div class="modal-dialog alumni-dialog">
@@ -49,31 +48,21 @@ export function createAlumniModal() {
           </div>
         </div>
 
-        <div class="alumni-header-right">
-          <!-- Persona Pill Button -->
-          <button id="alumni-profile-btn" class="alumni-persona-pill" title="Click to edit your OB/OG profile">
-            <span class="persona-avatar" id="header-avatar-badge">${userProfile.type || 'OB'}</span>
-            <span class="persona-info">
-              <strong id="header-persona-name">${userProfile.name || 'Set Your Persona'}</strong>
-              <small id="header-persona-tag">${userProfile.name ? `${userProfile.type} • ${userProfile.classYear}` : 'Join the chat'}</small>
-            </span>
-            <span class="edit-icon">✏️</span>
-          </button>
-          
-          <button class="modal-close alumni-close-btn" aria-label="Close modal">&times;</button>
+        <div class="alumni-header-right" id="alumni-header-auth-slot">
+          <!-- Populated dynamically based on auth status -->
         </div>
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="alumni-nav-tabs">
+      <div class="alumni-nav-tabs" id="alumni-nav-tabs">
         <button class="alumni-tab-btn active" data-tab="chat">
-          <span>💬 Channels & Chat</span>
+          <span>💬 Live Lounge</span>
         </button>
         <button class="alumni-tab-btn" data-tab="directory">
           <span>👥 OBs & OGs Directory</span>
         </button>
-        <button class="alumni-tab-btn" data-tab="register">
-          <span>🎓 Join Network</span>
+        <button class="alumni-tab-btn" data-tab="portal" id="alumni-portal-tab-btn">
+          <span id="portal-tab-label">🎓 Alumni Portal</span>
         </button>
       </div>
 
@@ -136,40 +125,14 @@ export function createAlumniModal() {
             <button id="refresh-chat-btn" class="btn-chat-icon" title="Refresh messages">🔄</button>
           </div>
 
-          <!-- Messages Stream -->
+          <!-- Messages Stream (Visible to all) -->
           <div class="alumni-messages-feed" id="alumni-messages-feed">
             <div class="chat-loading-state">Loading alumni conversations...</div>
           </div>
 
-          <!-- Message Composer Area -->
-          <div class="alumni-composer-wrap">
-            <!-- Profile Prompt if not configured -->
-            <div id="persona-quick-bar" class="persona-quick-bar" style="${userProfile.name ? 'display: none;' : 'display: flex;'}">
-              <span>👋 You are currently posting as a guest.</span>
-              <button id="quick-set-persona" class="btn-link-action">Customize your OB/OG name & year &rarr;</button>
-            </div>
-
-            <!-- Quick Emoji Buttons -->
-            <div class="quick-reactions-bar">
-              <button class="reaction-tag" data-emoji="👏">👏 Cheers</button>
-              <button class="reaction-tag" data-emoji="🎓">🎓 Proud OB/OG</button>
-              <button class="reaction-tag" data-emoji="❤️">❤️ Love RPPS</button>
-              <button class="reaction-tag" data-emoji="🔥">🔥 High Five</button>
-              <button class="reaction-tag" data-emoji="🏆">🏆 Top School</button>
-            </div>
-
-            <form id="alumni-message-form" class="alumni-input-form">
-              <textarea 
-                id="alumni-message-input" 
-                rows="2" 
-                placeholder="Share a thought, reunion plan, or memory with fellow OBs & OGs... (Press Enter to send)"
-                required
-              ></textarea>
-              <button type="submit" id="btn-send-message" class="btn btn-gold btn-send-alumni">
-                <span>Send</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              </button>
-            </form>
+          <!-- Message Composer Area (Gated by Role) -->
+          <div class="alumni-composer-wrap" id="alumni-composer-wrap">
+            <!-- Rendered dynamically depending on whether user is authenticated -->
           </div>
         </div>
       </div>
@@ -196,147 +159,38 @@ export function createAlumniModal() {
         </div>
       </div>
 
-      <!-- TAB 3: REGISTER IN NETWORK -->
-      <div class="alumni-tab-content" id="tab-register-content">
-        <div class="alumni-register-card">
-          <div class="register-header">
-            <h4>🎓 Register in RPPS OBs & OGs Alumni Network</h4>
-            <p>Reconnect with your classmates, get invitations to school reunions, and mentor upcoming primary pupils.</p>
-          </div>
-
-          <form id="alumni-register-form" class="register-grid">
-            <div class="form-group">
-              <label>Full Name *</label>
-              <input type="text" id="reg-name" required placeholder="e.g. Sandra Uwase" />
-            </div>
-
-            <div class="form-group">
-              <label>I am an *</label>
-              <select id="reg-type" required>
-                <option value="OB">Old Boy (OB)</option>
-                <option value="OG" selected>Old Girl (OG)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Primary Graduation / Class Year *</label>
-              <input type="text" id="reg-year" required placeholder="e.g. Class of 2016" />
-            </div>
-
-            <div class="form-group">
-              <label>Current Profession / University / Work</label>
-              <input type="text" id="reg-profession" placeholder="e.g. Civil Engineer, Kigali" />
-            </div>
-
-            <div class="form-group">
-              <label>Current City / Country</label>
-              <input type="text" id="reg-location" placeholder="e.g. Nyagatare, Rwanda" />
-            </div>
-
-            <div class="form-group">
-              <label>Email Address</label>
-              <input type="email" id="reg-email" placeholder="e.g. sandra@example.com" />
-            </div>
-
-            <div class="form-group">
-              <label>Phone / WhatsApp Number</label>
-              <input type="tel" id="reg-phone" placeholder="e.g. +250 788 123 456" />
-            </div>
-
-            <div class="form-group" style="grid-column: 1 / -1;">
-              <label>Message / Memory to Current Pupils & Staff</label>
-              <textarea id="reg-bio" rows="3" placeholder="Share a few words of advice for current pupils or fond memories of your teachers..."></textarea>
-            </div>
-
-            <div class="form-actions" style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 0.75rem;">
-              <button type="submit" class="btn btn-primary" id="btn-submit-registration">
-                Register as RPPS Alumni 🎉
-              </button>
-            </div>
-          </form>
-
-          <div id="register-status-msg" style="display: none; margin-top: 1rem;"></div>
-        </div>
-      </div>
-
-      <!-- Persona Profile Setup Drawer/Modal Overlay -->
-      <div id="persona-edit-modal" class="persona-edit-overlay" style="display: none;">
-        <div class="persona-edit-box">
-          <div class="persona-edit-header">
-            <h4>Set Your Alumni Persona</h4>
-            <button id="close-persona-edit" class="btn-close-sm">&times;</button>
-          </div>
-          <p class="persona-edit-desc">This profile is displayed next to your messages in the live OBs & OGs chat room.</p>
-          
-          <form id="persona-edit-form">
-            <div class="form-group">
-              <label>Your Name *</label>
-              <input type="text" id="edit-persona-name" required placeholder="e.g. Patrick Mugisha" value="${userProfile.name || ''}" />
-            </div>
-
-            <div class="form-row-2">
-              <div class="form-group">
-                <label>Alumni Type *</label>
-                <select id="edit-persona-type">
-                  <option value="OB" ${userProfile.type === 'OB' ? 'selected' : ''}>Old Boy (OB)</option>
-                  <option value="OG" ${userProfile.type === 'OG' ? 'selected' : ''}>Old Girl (OG)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Class Year *</label>
-                <input type="text" id="edit-persona-year" required placeholder="e.g. Class of 2015" value="${userProfile.classYear || 'Class of 2018'}" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Profession / Title</label>
-              <input type="text" id="edit-persona-profession" placeholder="e.g. Software Developer, Kigali" value="${userProfile.profession || ''}" />
-            </div>
-
-            <div class="persona-save-actions">
-              <button type="submit" class="btn btn-primary" style="width: 100%;">Save Persona & Continue Chat</button>
-            </div>
-          </form>
+      <!-- TAB 3: ALUMNI PORTAL (ID CARD OR AUTH) -->
+      <div class="alumni-tab-content" id="tab-portal-content">
+        <div id="portal-content-container" style="padding: 1rem 0; overflow-y: auto;">
+          <!-- Dynamically populated: ID Card for logged in, or Login/Register forms for guests -->
         </div>
       </div>
     </div>
   `;
 
   // UI Element References
-  const closeBtn = modal.querySelector('.alumni-close-btn');
   const tabs = modal.querySelectorAll('.alumni-tab-btn');
   const tabContents = {
     chat: modal.querySelector('#tab-chat-content'),
     directory: modal.querySelector('#tab-directory-content'),
-    register: modal.querySelector('#tab-register-content')
+    portal: modal.querySelector('#tab-portal-content')
   };
+
+  const headerAuthSlot = modal.querySelector('#alumni-header-auth-slot');
+  const portalTabLabel = modal.querySelector('#portal-tab-label');
+  const composerWrap = modal.querySelector('#alumni-composer-wrap');
+  const portalContainer = modal.querySelector('#portal-content-container');
 
   const channelsContainer = modal.querySelector('#alumni-channels-container');
   const messagesFeed = modal.querySelector('#alumni-messages-feed');
-  const messageForm = modal.querySelector('#alumni-message-form');
-  const messageInput = modal.querySelector('#alumni-message-input');
   const searchInput = modal.querySelector('#chat-search-input');
   const refreshBtn = modal.querySelector('#refresh-chat-btn');
   const activeChannelLabel = modal.querySelector('#active-channel-label');
 
-  // Persona Modal References
-  const profileBtn = modal.querySelector('#alumni-profile-btn');
-  const personaEditOverlay = modal.querySelector('#persona-edit-modal');
-  const closePersonaBtn = modal.querySelector('#close-persona-edit');
-  const personaForm = modal.querySelector('#persona-edit-form');
-  const quickPersonaBtn = modal.querySelector('#quick-set-persona');
-  const personaQuickBar = modal.querySelector('#persona-quick-bar');
-
-  // Directory References
   const directoryGrid = modal.querySelector('#alumni-directory-grid');
   const directorySearchInput = modal.querySelector('#directory-search-input');
   const directoryFilters = modal.querySelectorAll('.filter-pill');
   const directoryStats = modal.querySelector('#directory-stats-summary');
-
-  // Registration References
-  const registerForm = modal.querySelector('#alumni-register-form');
-  const registerStatus = modal.querySelector('#register-status-msg');
 
   // Close handlers
   const closeModal = () => {
@@ -347,9 +201,10 @@ export function createAlumniModal() {
     }
   };
 
-  closeBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
+    if (e.target === modal || e.target.classList.contains('alumni-close-btn')) {
+      closeModal();
+    }
   });
 
   // Switch Tabs
@@ -369,6 +224,8 @@ export function createAlumniModal() {
         startPolling();
       } else if (activeTab === 'directory') {
         loadDirectory();
+      } else if (activeTab === 'portal') {
+        renderPortalView();
       }
     });
   });
@@ -388,15 +245,6 @@ export function createAlumniModal() {
       };
       activeChannelLabel.textContent = channelTitles[currentChannel] || `# ${currentChannel}`;
       loadMessages();
-    });
-  });
-
-  // Quick reactions click
-  modal.querySelectorAll('.reaction-tag').forEach(tag => {
-    tag.addEventListener('click', () => {
-      const emoji = tag.getAttribute('data-emoji');
-      messageInput.value = (messageInput.value.trim() ? messageInput.value.trim() + ' ' : '') + emoji + ' ';
-      messageInput.focus();
     });
   });
 
@@ -444,11 +292,10 @@ export function createAlumniModal() {
       applyFiltersAndRender();
       updateChannelCounts();
     } else if (!isBackground) {
-      messagesFeed.innerHTML = `<div class="chat-empty-state">Could not connect to the alumni chat server. Please ensure the backend is running.</div>`;
+      messagesFeed.innerHTML = `<div class="chat-empty-state">Could not connect to the alumni chat server.</div>`;
     }
   }
 
-  // Update counts
   async function updateChannelCounts() {
     const res = await fetchAlumniChannels();
     if (res.success && res.channels) {
@@ -465,7 +312,7 @@ export function createAlumniModal() {
         <div class="chat-empty-state">
           <div class="empty-icon">💬</div>
           <h4>No messages yet in this channel</h4>
-          <p>Be the first Old Boy or Old Girl to break the ice and share a greeting!</p>
+          <p>Be the first Old Boy or Old Girl to share a message or greeting!</p>
         </div>
       `;
       return;
@@ -481,7 +328,7 @@ export function createAlumniModal() {
 
       return `
         <div class="chat-message-item" data-id="${msg.id}">
-          <div class="message-avatar" style="background-color: ${msg.avatar_color && msg.avatar_color !== '#1e40af' && msg.avatar_color !== '#be185d' ? msg.avatar_color : (isOB ? '#0d5c3a' : '#d97706')};">
+          <div class="message-avatar" style="background-color: ${msg.avatar_color || (isOB ? '#0d5c3a' : '#d97706')};">
             ${initials}
           </div>
           <div class="message-content-wrap">
@@ -525,7 +372,6 @@ export function createAlumniModal() {
     }
   }
 
-  // Format timestamp
   function formatTimestamp(isoStr) {
     if (!isoStr) return '';
     try {
@@ -536,17 +382,6 @@ export function createAlumniModal() {
     }
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  // Polling loop
   function startPolling() {
     if (pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(() => {
@@ -555,51 +390,6 @@ export function createAlumniModal() {
       }
     }, 4000);
   }
-
-  // Handle Send Message
-  messageForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const content = messageInput.value.trim();
-    if (!content) return;
-
-    if (!userProfile.name) {
-      openPersonaEdit();
-      return;
-    }
-
-    const payload = {
-      channel: currentChannel,
-      authorName: userProfile.name,
-      authorType: userProfile.type,
-      classYear: userProfile.classYear,
-      profession: userProfile.profession,
-      avatarColor: userProfile.color,
-      content
-    };
-
-    const submitBtn = modal.querySelector('#btn-send-message');
-    submitBtn.disabled = true;
-
-    const res = await sendAlumniMessage(payload);
-
-    submitBtn.disabled = false;
-
-    if (res.success) {
-      messageInput.value = '';
-      await loadMessages(true);
-      messagesFeed.scrollTop = messagesFeed.scrollHeight;
-    } else {
-      alert(res.error || 'Failed to send message. Please try again.');
-    }
-  });
-
-  // Enter to send support
-  messageInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      messageForm.dispatchEvent(new Event('submit'));
-    }
-  });
 
   // Search input with debounce
   let searchTimeout = null;
@@ -612,65 +402,169 @@ export function createAlumniModal() {
 
   refreshBtn.addEventListener('click', () => loadMessages());
 
-  // Persona Edit Open/Close/Save
-  function openPersonaEdit() {
-    personaEditOverlay.style.display = 'flex';
-    modal.querySelector('#edit-persona-name').focus();
-  }
+  // -------------------------------------------------------------
+  // DYNAMIC HEADER, COMPOSER & PORTAL RENDERING
+  // -------------------------------------------------------------
+  function renderRoleBasedUI() {
+    const role = getUserRole();
+    const user = getCurrentUser();
+    const isAuth = isAlumni() || isStaffOrAdmin();
 
-  function closePersonaEdit() {
-    personaEditOverlay.style.display = 'none';
-  }
+    // 1. Header Right Slot
+    if (isAuth && user) {
+      const initials = (user.name || 'Alumni').substring(0, 2).toUpperCase();
+      const memberType = user.memberType || 'OB';
+      const roleBadge = role === 'alumni' ? memberType : (role === 'admin' ? 'ADMIN' : 'STAFF');
 
-  profileBtn.addEventListener('click', openPersonaEdit);
-  quickPersonaBtn.addEventListener('click', openPersonaEdit);
-  closePersonaBtn.addEventListener('click', closePersonaEdit);
-  personaEditOverlay.addEventListener('click', (e) => {
-    if (e.target === personaEditOverlay) closePersonaEdit();
-  });
+      headerAuthSlot.innerHTML = `
+        <button id="btn-header-profile" class="alumni-persona-pill" title="View your RPPS Alumni profile">
+          <span class="persona-avatar" style="background: ${user.avatarColor || (memberType === 'OB' ? '#0d5c3a' : '#d97706')};">${initials}</span>
+          <span class="persona-info">
+            <strong>${escapeHtml(user.name)}</strong>
+            <small>${roleBadge} • ${escapeHtml(user.classYear || 'Verified')}</small>
+          </span>
+        </button>
+        <button id="btn-header-logout" class="btn btn-outline btn-sm" title="Sign Out">Sign Out ⎋</button>
+        <button class="modal-close alumni-close-btn" aria-label="Close modal">&times;</button>
+      `;
 
-  personaForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = modal.querySelector('#edit-persona-name').value.trim();
-    const type = modal.querySelector('#edit-persona-type').value;
-    const classYear = modal.querySelector('#edit-persona-year').value.trim();
-    const profession = modal.querySelector('#edit-persona-profession').value.trim();
+      headerAuthSlot.querySelector('#btn-header-profile').addEventListener('click', () => {
+        tabs[2].click(); // switch to portal tab
+      });
 
-    if (!name || !classYear) return;
+      headerAuthSlot.querySelector('#btn-header-logout').addEventListener('click', () => {
+        logoutUser();
+      });
 
-    userProfile = {
-      name,
-      type,
-      classYear,
-      profession,
-      color: type === 'OB' ? '#0d5c3a' : '#d97706'
-    };
+      portalTabLabel.textContent = '🎓 My Alumni ID';
 
-    setStoredAlumniProfile(userProfile);
-    updatePersonaDisplay();
-    closePersonaEdit();
-  });
-
-  function updatePersonaDisplay() {
-    const avatarBadge = modal.querySelector('#header-avatar-badge');
-    const nameEl = modal.querySelector('#header-persona-name');
-    const tagEl = modal.querySelector('#header-persona-tag');
-
-    if (userProfile.name) {
-      avatarBadge.textContent = userProfile.type;
-      avatarBadge.style.backgroundColor = userProfile.color;
-      nameEl.textContent = userProfile.name;
-      tagEl.textContent = `${userProfile.type} • ${userProfile.classYear}`;
-      personaQuickBar.style.display = 'none';
     } else {
-      avatarBadge.textContent = 'OB';
-      nameEl.textContent = 'Set Your Persona';
-      tagEl.textContent = 'Join the chat';
-      personaQuickBar.style.display = 'flex';
+      // Visitor / Guest Header
+      headerAuthSlot.innerHTML = `
+        <button id="btn-header-login" class="btn btn-gold btn-sm" title="Sign in as an RPPS Alumnus">
+          <span>Alumni Sign In / Join 🎓</span>
+        </button>
+        <button class="modal-close alumni-close-btn" aria-label="Close modal">&times;</button>
+      `;
+
+      headerAuthSlot.querySelector('#btn-header-login').addEventListener('click', () => {
+        tabs[2].click();
+      });
+
+      portalTabLabel.textContent = '🎓 Sign In / Join';
+    }
+
+    // 2. Chat Composer Area
+    if (isAuth && user) {
+      composerWrap.innerHTML = `
+        <div class="quick-reactions-bar">
+          <button class="reaction-tag" data-emoji="👏">👏 Cheers</button>
+          <button class="reaction-tag" data-emoji="🎓">🎓 Proud OB/OG</button>
+          <button class="reaction-tag" data-emoji="❤️">❤️ Love RPPS</button>
+          <button class="reaction-tag" data-emoji="🔥">🔥 High Five</button>
+          <button class="reaction-tag" data-emoji="🏆">🏆 Top School</button>
+        </div>
+
+        <form id="alumni-message-form" class="alumni-input-form">
+          <textarea 
+            id="alumni-message-input" 
+            rows="2" 
+            placeholder="Share a message, reunion thought, or memory with fellow OBs & OGs... (Press Enter to send)"
+            required
+          ></textarea>
+          <button type="submit" id="btn-send-message" class="btn btn-gold btn-send-alumni">
+            <span>Send</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </form>
+      `;
+
+      // Emoji chips click
+      composerWrap.querySelectorAll('.reaction-tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+          const emoji = tag.getAttribute('data-emoji');
+          const input = composerWrap.querySelector('#alumni-message-input');
+          if (input) {
+            input.value = (input.value.trim() ? input.value.trim() + ' ' : '') + emoji + ' ';
+            input.focus();
+          }
+        });
+      });
+
+      // Submit message
+      const form = composerWrap.querySelector('#alumni-message-form');
+      const input = composerWrap.querySelector('#alumni-message-input');
+      const sendBtn = composerWrap.querySelector('#btn-send-message');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const content = input.value.trim();
+        if (!content) return;
+
+        sendBtn.disabled = true;
+        const res = await sendAlumniMessage({
+          channel: currentChannel,
+          content
+        });
+        sendBtn.disabled = false;
+
+        if (res.success) {
+          input.value = '';
+          await loadMessages(true);
+          messagesFeed.scrollTop = messagesFeed.scrollHeight;
+        } else {
+          alert(res.error || 'Failed to post message.');
+        }
+      });
+
+      // Enter to send
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          form.dispatchEvent(new Event('submit'));
+        }
+      });
+
+    } else {
+      // VISITOR GATED CALLOUT
+      composerWrap.innerHTML = `
+        <div class="chat-visitor-gated-box">
+          <div class="gated-lock-icon">🔒</div>
+          <div class="gated-content">
+            <h4>Alumni Live Chat is in Read-Only Mode</h4>
+            <p>You can read conversations between RPPS alumni. To participate, share stories, and message fellow Old Boys & Old Girls, please sign in or register your alumni profile.</p>
+          </div>
+          <div class="gated-actions">
+            <button class="btn btn-gold btn-sm trigger-goto-login">
+              Alumni Sign In
+            </button>
+            <button class="btn btn-outline-white btn-sm trigger-goto-register">
+              Join / Register
+            </button>
+          </div>
+        </div>
+      `;
+
+      composerWrap.querySelector('.trigger-goto-login').addEventListener('click', () => {
+        tabs[2].click();
+        renderPortalView('login');
+      });
+
+      composerWrap.querySelector('.trigger-goto-register').addEventListener('click', () => {
+        tabs[2].click();
+        renderPortalView('register');
+      });
+    }
+
+    // Re-render portal tab content if it's currently active
+    if (activeTab === 'portal') {
+      renderPortalView();
     }
   }
 
-  // Tab 2: Directory Loader
+  // -------------------------------------------------------------
+  // TAB 2: DIRECTORY LOADER & RENDERER
+  // -------------------------------------------------------------
   async function loadDirectory() {
     directoryGrid.innerHTML = '<div class="chat-loading-state">Loading alumni members directory...</div>';
     
@@ -681,9 +575,12 @@ export function createAlumniModal() {
 
     if (res.success && res.members) {
       const stats = res.stats || {};
+      const isAuth = res.isAuthorized;
+
       directoryStats.innerHTML = `
         <strong>${res.total || 0} Registered Alumni</strong> 
         (<span>👨 ${stats.obCount || 0} Old Boys</span> • <span>👩 ${stats.ogCount || 0} Old Girls</span>)
+        ${!isAuth ? '<span class="directory-guest-badge">🔒 Direct contacts masked for guests</span>' : '<span class="directory-auth-badge">✓ Full networking contacts unlocked</span>'}
       `;
 
       if (res.members.length === 0) {
@@ -702,6 +599,9 @@ export function createAlumniModal() {
         const badgeClass = isOB ? 'badge-ob' : 'badge-og';
         const color = isOB ? '#0d5c3a' : '#d97706';
         const initials = (member.name || 'Alumni').substring(0, 2).toUpperCase();
+
+        const cleanPhone = member.phone ? member.phone.replace(/[^0-9]/g, '') : '';
+        const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : null;
 
         return `
           <div class="alumni-member-card">
@@ -722,6 +622,22 @@ export function createAlumniModal() {
               ${member.profession ? `<div class="member-detail">💼 <strong>${escapeHtml(member.profession)}</strong></div>` : ''}
               ${member.location ? `<div class="member-detail">📍 ${escapeHtml(member.location)}</div>` : ''}
               ${member.bio ? `<p class="member-bio">"${escapeHtml(member.bio)}"</p>` : ''}
+              
+              <!-- Contact Details (Masked or Unmasked) -->
+              <div class="member-contact-strip">
+                ${member.isContactMasked ? `
+                  <div class="contact-masked-box">
+                    <span>🔒 Contact private to verified alumni</span>
+                    <button class="btn-link-action trigger-reveal-auth">Sign in to view</button>
+                  </div>
+                ` : `
+                  <div class="contact-unmasked-box">
+                    ${member.phone ? `<a href="tel:${escapeHtml(member.phone)}" class="contact-pill" title="Call">📞 ${escapeHtml(member.phone)}</a>` : ''}
+                    ${whatsappUrl ? `<a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="contact-pill contact-whatsapp" title="WhatsApp">💬 WhatsApp</a>` : ''}
+                    ${member.email ? `<a href="mailto:${escapeHtml(member.email)}" class="contact-pill" title="Email">✉️ Email</a>` : ''}
+                  </div>
+                `}
+              </div>
             </div>
 
             <div class="member-card-footer">
@@ -737,13 +653,23 @@ export function createAlumniModal() {
       directoryGrid.querySelectorAll('.btn-say-hi').forEach(btn => {
         btn.addEventListener('click', () => {
           const name = btn.getAttribute('data-name');
-          tabs.forEach(b => {
-            if (b.getAttribute('data-tab') === 'chat') b.click();
-          });
-          messageInput.value = `@${name} Greetings from fellow RPPS alumni! `;
-          messageInput.focus();
+          tabs[0].click(); // Go to chat
+          const input = composerWrap.querySelector('#alumni-message-input');
+          if (input) {
+            input.value = `@${name} Greetings from fellow RPPS alumni! `;
+            input.focus();
+          }
         });
       });
+
+      // Wire "Sign in to view" links
+      directoryGrid.querySelectorAll('.trigger-reveal-auth').forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabs[2].click();
+          renderPortalView('login');
+        });
+      });
+
     } else {
       directoryGrid.innerHTML = `<div class="chat-empty-state" style="grid-column: 1 / -1;">Failed to load directory.</div>`;
     }
@@ -759,7 +685,6 @@ export function createAlumniModal() {
     });
   });
 
-  // Directory search debounce
   let dirSearchTimeout = null;
   directorySearchInput.addEventListener('input', () => {
     clearTimeout(dirSearchTimeout);
@@ -768,98 +693,346 @@ export function createAlumniModal() {
     }, 350);
   });
 
-  // Tab 3: Registration Form Handler
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // -------------------------------------------------------------
+  // TAB 3: PORTAL VIEW (ID CARD FOR LOGGED-IN, LOGIN/SIGNUP FOR GUESTS)
+  // -------------------------------------------------------------
+  function renderPortalView(defaultSubTab = 'login') {
+    const role = getUserRole();
+    const user = getCurrentUser();
+    const isAuth = isAlumni() || isStaffOrAdmin();
 
-    const name = modal.querySelector('#reg-name').value.trim();
-    const memberType = modal.querySelector('#reg-type').value;
-    const classYear = modal.querySelector('#reg-year').value.trim();
-    const profession = modal.querySelector('#reg-profession').value.trim();
-    const location = modal.querySelector('#reg-location').value.trim();
-    const email = modal.querySelector('#reg-email').value.trim();
-    const phone = modal.querySelector('#reg-phone').value.trim();
-    const bio = modal.querySelector('#reg-bio').value.trim();
+    if (isAuth && user) {
+      // 1. DIGITAL ALUMNI MEMBERSHIP CARD
+      const isOB = (user.memberType || 'OB').toUpperCase() === 'OB';
+      const initials = (user.name || 'Alumni').substring(0, 2).toUpperCase();
 
-    if (!name || !memberType || !classYear) return;
+      portalContainer.innerHTML = `
+        <div class="alumni-id-card-wrapper">
+          <div class="alumni-id-card">
+            <div class="id-card-top">
+              <div class="id-card-brand">
+                <div class="logo-crest" style="width: 38px; height: 38px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>Rwenanura Parents Primary School</h4>
+                  <span>Official Alumni Association ID</span>
+                </div>
+              </div>
+              <div class="id-card-ribbon ${isOB ? 'ribbon-ob' : 'ribbon-og'}">
+                ${user.memberType || (role === 'admin' ? 'ADMIN' : 'OB')}
+              </div>
+            </div>
 
-    const submitBtn = modal.querySelector('#btn-submit-registration');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Registering...';
+            <div class="id-card-body">
+              <div class="id-avatar" style="background: ${user.avatarColor || (isOB ? '#0d5c3a' : '#d97706')};">
+                ${initials}
+              </div>
+              <div class="id-details">
+                <h3 class="id-name">${escapeHtml(user.name)}</h3>
+                <div class="id-meta-line">
+                  <span class="id-class-tag">${escapeHtml(user.classYear || 'Alumni')}</span>
+                  ${user.profession ? `<span class="id-prof-tag">• ${escapeHtml(user.profession)}</span>` : ''}
+                </div>
+                <div class="id-contact-grid">
+                  <div><strong>Email:</strong> ${escapeHtml(user.email)}</div>
+                  ${user.phone ? `<div><strong>Phone:</strong> ${escapeHtml(user.phone)}</div>` : ''}
+                  ${user.location ? `<div><strong>Location:</strong> ${escapeHtml(user.location)}</div>` : ''}
+                </div>
+                ${user.bio ? `<p class="id-quote">"${escapeHtml(user.bio)}"</p>` : ''}
+              </div>
+            </div>
 
-    const res = await registerAlumniMember({
-      name,
-      memberType,
-      classYear,
-      profession,
-      location,
-      email,
-      phone,
-      bio
-    });
+            <div class="id-card-footer">
+              <div class="id-card-status">
+                <span class="status-indicator"></span> Verified Community Member
+              </div>
+              <div class="id-card-school-motto">
+                "Light, Leadership & Excellence"
+              </div>
+            </div>
+          </div>
 
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Register as RPPS Alumni 🎉';
-
-    registerStatus.style.display = 'block';
-
-    if (res.success) {
-      registerStatus.className = 'status-alert-success';
-      registerStatus.innerHTML = `
-        <strong>🎉 Welcome to the RPPS Alumni Network, ${escapeHtml(name)}!</strong>
-        <p>Your profile is now recorded. We also updated your chat persona automatically.</p>
-        <button id="btn-jump-to-chat" class="btn btn-gold btn-sm" style="margin-top: 0.5rem;">Join the Alumni Chat Now 🚀</button>
+          <!-- Quick Portal Actions -->
+          <div class="id-card-actions">
+            <button class="btn btn-gold btn-jump-chat">
+              <span>Go to Live ChatUp 💬</span>
+            </button>
+            <button class="btn btn-outline btn-jump-dir">
+              <span>Browse Alumni Directory 👥</span>
+            </button>
+            <button class="btn btn-outline-danger btn-portal-logout">
+              <span>Sign Out ⎋</span>
+            </button>
+          </div>
+        </div>
       `;
 
-      // Set user profile persona automatically
-      userProfile = {
-        name,
-        type: memberType,
-        classYear,
-        profession,
-        color: memberType === 'OB' ? '#0d5c3a' : '#d97706'
-      };
-      setStoredAlumniProfile(userProfile);
-      updatePersonaDisplay();
-
-      modal.querySelector('#btn-jump-to-chat').addEventListener('click', () => {
+      portalContainer.querySelector('.btn-jump-chat').addEventListener('click', () => {
         tabs[0].click();
       });
 
-      registerForm.reset();
+      portalContainer.querySelector('.btn-jump-dir').addEventListener('click', () => {
+        tabs[1].click();
+      });
+
+      portalContainer.querySelector('.btn-portal-logout').addEventListener('click', () => {
+        logoutUser();
+      });
+
     } else {
-      registerStatus.className = 'status-alert-error';
-      registerStatus.textContent = res.error || 'Failed to submit registration. Please try again.';
+      // 2. GUEST: LOGIN / REGISTER FORMS
+      portalContainer.innerHTML = `
+        <div class="alumni-auth-container">
+          <div class="auth-subtabs-nav">
+            <button class="subtab-btn ${defaultSubTab === 'login' ? 'active' : ''}" data-subtab="login">
+              <span>Alumni Sign In</span>
+            </button>
+            <button class="subtab-btn ${defaultSubTab === 'register' ? 'active' : ''}" data-subtab="register">
+              <span>New Alumni Registration</span>
+            </button>
+          </div>
+
+          <div id="auth-status-alert" class="auth-status-alert" style="display: none;"></div>
+
+          <!-- SUBTAB A: ALUMNI SIGN IN -->
+          <div class="auth-subtab-pane ${defaultSubTab === 'login' ? 'active' : ''}" id="pane-login">
+            <form id="alumni-login-form" class="auth-form-card">
+              <div class="form-header">
+                <h4>Sign In to RPPS Alumni Network</h4>
+                <p>Enter your credentials to unlock chat posting, direct contacts, and networking.</p>
+              </div>
+
+              <div class="form-group">
+                <label>Registered Alumni Email *</label>
+                <input type="email" id="modal-login-email" required placeholder="e.g. emmanuel.m@gmail.com" />
+              </div>
+
+              <div class="form-group">
+                <label>Password *</label>
+                <input type="password" id="modal-login-password" required placeholder="••••••••" />
+              </div>
+
+              <div class="login-demo-helper">
+                💡 <strong>Quick Demo Credentials:</strong><br />
+                Email: <code>emmanuel.m@gmail.com</code> | Password: <code>Alumni@2026</code>
+              </div>
+
+              <button type="submit" id="btn-modal-login-submit" class="btn btn-gold btn-block">
+                Sign In to Alumni Network 🚀
+              </button>
+            </form>
+          </div>
+
+          <!-- SUBTAB B: NEW ALUMNI REGISTRATION -->
+          <div class="auth-subtab-pane ${defaultSubTab === 'register' ? 'active' : ''}" id="pane-register">
+            <form id="alumni-signup-form" class="auth-form-card">
+              <div class="form-header">
+                <h4>Register in RPPS Alumni Community</h4>
+                <p>Create your verified profile to reconnect with your graduating cohort.</p>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Full Name *</label>
+                  <input type="text" id="reg-name" required placeholder="e.g. Sandra Uwase" />
+                </div>
+
+                <div class="form-group">
+                  <label>I am an *</label>
+                  <select id="reg-type" required>
+                    <option value="OB">Old Boy (OB)</option>
+                    <option value="OG" selected>Old Girl (OG)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Class Graduation Year *</label>
+                  <input type="text" id="reg-year" required placeholder="e.g. Class of 2016" />
+                </div>
+
+                <div class="form-group">
+                  <label>Current Profession / Work</label>
+                  <input type="text" id="reg-profession" placeholder="e.g. Biomedical Scientist" />
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Email Address *</label>
+                  <input type="email" id="reg-email" required placeholder="e.g. sandra@example.com" />
+                </div>
+
+                <div class="form-group">
+                  <label>Create Password * (min 6 chars)</label>
+                  <input type="password" id="reg-password" required minlength="6" placeholder="••••••••" />
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Phone / WhatsApp Number</label>
+                  <input type="tel" id="reg-phone" placeholder="e.g. +250 788 123 456" />
+                </div>
+
+                <div class="form-group">
+                  <label>Current Location</label>
+                  <input type="text" id="reg-location" placeholder="e.g. Kigali, Rwanda" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Memory or Advice for Current Pupils</label>
+                <textarea id="reg-bio" rows="2" placeholder="Share a few words of advice or fond memories of your teachers..."></textarea>
+              </div>
+
+              <button type="submit" id="btn-modal-reg-submit" class="btn btn-primary btn-block">
+                Create Account & Join Network 🎉
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+
+      // Subtab switching
+      const subtabBtns = portalContainer.querySelectorAll('.subtab-btn');
+      const subtabPanes = portalContainer.querySelectorAll('.auth-subtab-pane');
+      const statusAlert = portalContainer.querySelector('#auth-status-alert');
+
+      subtabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          subtabBtns.forEach(b => b.classList.remove('active'));
+          subtabPanes.forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.getAttribute('data-subtab');
+          portalContainer.querySelector(`#pane-${target}`).classList.add('active');
+          statusAlert.style.display = 'none';
+        });
+      });
+
+      function showAlert(msg, isError = false) {
+        statusAlert.style.display = 'block';
+        statusAlert.className = `auth-status-alert ${isError ? 'alert-error' : 'alert-success'}`;
+        statusAlert.textContent = msg;
+      }
+
+      // Handle Sign In Submission
+      const loginForm = portalContainer.querySelector('#alumni-login-form');
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = portalContainer.querySelector('#modal-login-email').value.trim();
+        const password = portalContainer.querySelector('#modal-login-password').value;
+        const btn = portalContainer.querySelector('#btn-modal-login-submit');
+
+        btn.disabled = true;
+        btn.textContent = 'Authenticating...';
+
+        const res = await loginUser(email, password);
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Alumni Network 🚀';
+
+        if (res.success) {
+          showAlert('Welcome back! Switching to Live Lounge...', false);
+          setTimeout(() => {
+            tabs[0].click(); // jump to chat
+          }, 400);
+        } else {
+          showAlert(res.error || 'Invalid email or password.', true);
+        }
+      });
+
+      // Handle Registration Submission
+      const regForm = portalContainer.querySelector('#alumni-signup-form');
+      regForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = portalContainer.querySelector('#reg-name').value.trim();
+        const memberType = portalContainer.querySelector('#reg-type').value;
+        const classYear = portalContainer.querySelector('#reg-year').value.trim();
+        const profession = portalContainer.querySelector('#reg-profession').value.trim();
+        const email = portalContainer.querySelector('#reg-email').value.trim();
+        const password = portalContainer.querySelector('#reg-password').value;
+        const phone = portalContainer.querySelector('#reg-phone').value.trim();
+        const location = portalContainer.querySelector('#reg-location').value.trim();
+        const bio = portalContainer.querySelector('#reg-bio').value.trim();
+        const btn = portalContainer.querySelector('#btn-modal-reg-submit');
+
+        btn.disabled = true;
+        btn.textContent = 'Registering Account...';
+
+        const res = await registerAlumniAccount({
+          name,
+          memberType,
+          classYear,
+          profession,
+          email,
+          password,
+          phone,
+          location,
+          bio
+        });
+
+        btn.disabled = false;
+        btn.textContent = 'Create Account & Join Network 🎉';
+
+        if (res.success) {
+          showAlert(`Welcome to the RPPS Alumni Network, ${name}! Your account is now active.`, false);
+          setTimeout(() => {
+            tabs[0].click(); // jump to chat
+          }, 500);
+        } else {
+          showAlert(res.error || 'Failed to create account.', true);
+        }
+      });
+    }
+  }
+
+  // Initial UI Render
+  renderRoleBasedUI();
+
+  // Subscribe to auth state changes
+  onAuthChange(() => {
+    renderRoleBasedUI();
+    if (activeTab === 'directory') {
+      loadDirectory();
     }
   });
-
-  // Initial setup
-  updatePersonaDisplay();
 
   // Public open method
   modal.open = (targetTab = 'chat', targetChannel = null) => {
     modal.classList.add('active');
 
-    // Switch to target tab if specified
+    // Select tab
     if (targetTab && tabContents[targetTab]) {
       tabs.forEach(btn => {
         if (btn.getAttribute('data-tab') === targetTab) {
           btn.click();
         }
       });
+    } else {
+      tabs[0].click();
     }
 
-    // Switch to target channel if specified
+    // Select channel if applicable
     if (targetChannel) {
       const chBtn = channelsContainer.querySelector(`[data-channel="${targetChannel}"]`);
-      if (chBtn) {
-        chBtn.click();
-      }
-    } else if (activeTab === 'chat') {
-      loadMessages();
-      startPolling();
+      if (chBtn) chBtn.click();
     }
   };
 
   return modal;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

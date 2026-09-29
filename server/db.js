@@ -90,6 +90,18 @@ export function initDatabase() {
     console.log('👤 Default Admin Account Created: admin@rwenanura.ac.rw / Admin@2026');
   }
 
+  // Seed default alumni account if not exists
+  const alumniUser = db.prepare('SELECT id FROM users WHERE email = ?').get('emmanuel.m@gmail.com');
+  if (!alumniUser) {
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync('Alumni@2026', salt);
+    db.prepare(`
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `).run('Emmanuel Mugisha', 'emmanuel.m@gmail.com', hash, 'alumni');
+    console.log('🎓 Default Alumni Account Created: emmanuel.m@gmail.com / Alumni@2026');
+  }
+
   // 5. Alumni Messages Table (OBs & OGs Chat)
   db.exec(`
     CREATE TABLE IF NOT EXISTS alumni_messages (

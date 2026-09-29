@@ -22,6 +22,7 @@ import { createAlumniSection } from './components/AlumniSection.js';
 import { createFooter } from './components/Footer.js';
 
 import { getStoredToken } from './data/api.js';
+import { initUserRole } from './data/userRole.js';
 
 function setupScrollReveal() {
   const observerOptions = {
@@ -52,6 +53,7 @@ function setupScrollReveal() {
 }
 
 function initApp() {
+  initUserRole();
   const app = document.querySelector('#app');
   app.innerHTML = '';
 
@@ -83,8 +85,12 @@ function initApp() {
     }
   };
 
-  const handleAuthSuccess = () => {
-    adminDashboard.classList.add('active');
+  const handleAuthSuccess = (user) => {
+    if (user && user.role === 'alumni') {
+      alumniModal.open('portal');
+    } else {
+      adminDashboard.classList.add('active');
+    }
   };
 
   const handleLogout = () => {

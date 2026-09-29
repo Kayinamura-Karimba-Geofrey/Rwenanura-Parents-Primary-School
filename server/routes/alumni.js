@@ -1,5 +1,8 @@
 import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import db from '../db.js';
+import { authenticateToken, optionalAuthenticate, JWT_SECRET } from './auth.js';
 
 const router = express.Router();
 
@@ -48,21 +51,33 @@ router.get('/alumni/messages', (req, res) => {
   }
 });
 
-// POST /api/alumni/messages - Post a new message
-router.post('/alumni/messages', (req, res) => {
+// POST /api/alumni/messages - Post a new message (Requires Alumni or Staff Authentication)
+router.post('/alumni/messages', authenticateToken, (req, res) => {
   try {
-    const { channel = 'general', authorName, authorType, classYear, profession, avatarColor, content } = req.body;
-
-    if (!authorName || !content || !authorType || !classYear) {
-      return res.status(400).json({
+    const userRole = req.user.role;
+    if (userRole !== 'alumni' && userRole !== 'staff' && userRole !== 'admin') {
+      return res.status(403).json({
         success: false,
-        error: 'Author name, type (OB/OG), graduation class year, and message content are required.'
+        error: 'Only authenticated RPPS alumni or staff can post messages in this lounge.'
       });
     }
 
+    const { channel = 'general', content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message content cannot be empty.'
+      });
+    }
+
+    // Default to verified user token identity to prevent spoofing
+    const authorName = req.user.name || req.body.authorName || 'Alumni Member';
+    const authorType = (req.user.memberType || req.body.authorType || 'OB').toUpperCase() === 'OG' ? 'OG' : 'OB';
+    const classYear = req.user.classYear || req.body.classYear || 'Alumni';
+    const profession = req.user.profession || req.body.profession || '';
     const cleanChannel = VALID_CHANNELS.includes(channel) ? channel : 'general';
-    const cleanType = authorType.toUpperCase() === 'OG' ? 'OG' : 'OB';
-    const cleanColor = avatarColor && avatarColor !== '#1e40af' && avatarColor !== '#be185d' ? avatarColor : (cleanType === 'OB' ? '#0d5c3a' : '#d97706');
+    const cleanColor = req.user.avatarColor || req.body.avatarColor || (authorType === 'OB' ? '#0d5c3a' : '#d97706');
 
     const stmt = db.prepare(`
       INSERT INTO alumni_messages (channel, author_name, author_type, class_year, profession, avatar_color, content, likes_count)
@@ -72,7 +87,7 @@ router.post('/alumni/messages', (req, res) => {
     const info = stmt.run(
       cleanChannel,
       authorName.trim(),
-      cleanType,
+      authorType,
       classYear.trim(),
       profession ? profession.trim() : null,
       cleanColor,
@@ -81,7 +96,7 @@ router.post('/alumni/messages', (req, res) => {
 
     const newMessage = db.prepare('SELECT * FROM alumni_messages WHERE id = ?').get(info.lastInsertRowid);
 
-    console.log(`💬 New Alumni Chat: [${cleanType}] ${authorName} in #${cleanChannel}: "${content.substring(0, 40)}..."`);
+    console.log(`💬 New Alumni Chat: [${authorType}] ${authorName} in #${cleanChannel}: "${content.substring(0, 40)}..."`);
 
     res.status(201).json({
       success: true,
@@ -148,8 +163,8 @@ router.get('/alumni/channels', (req, res) => {
   }
 });
 
-// GET /api/alumni/members - Directory of Old Boys and Old Girls
-router.get('/alumni/members', (req, res) => {
+// GET /api/alumni/members - Directory of Old Boys and Old Girls (Masks private contacts for public guests)
+router.get('/alumni/members', optionalAuthenticate, (req, res) => {
   try {
     const { type, search } = req.query;
     let query = 'SELECT * FROM alumni_members';
@@ -178,11 +193,31 @@ router.get('/alumni/members', (req, res) => {
     const obCount = db.prepare("SELECT COUNT(*) as count FROM alumni_members WHERE member_type = 'OB'").get().count;
     const ogCount = db.prepare("SELECT COUNT(*) as count FROM alumni_members WHERE member_type = 'OG'").get().count;
 
+    // RBAC: Check if user is authenticated as alumni, staff, or admin
+    const isAuthorizedAlumniOrStaff = Boolean(req.user && (req.user.role === 'alumni' || req.user.role === 'staff' || req.user.role === 'admin'));
+
+    // Sanitize records if visitor / unauthenticated parent
+    const processedMembers = members.map(m => {
+      if (isAuthorizedAlumniOrStaff) {
+        return {
+          ...m,
+          isContactMasked: false
+        };
+      }
+      return {
+        ...m,
+        email: null,
+        phone: null,
+        isContactMasked: true
+      };
+    });
+
     res.json({
       success: true,
-      total: members.length,
+      isAuthorized: isAuthorizedAlumniOrStaff,
+      total: processedMembers.length,
       stats: { obCount, ogCount, totalCount: obCount + ogCount },
-      members
+      members: processedMembers
     });
   } catch (err) {
     console.error('Error fetching alumni directory:', err);
@@ -190,10 +225,10 @@ router.get('/alumni/members', (req, res) => {
   }
 });
 
-// POST /api/alumni/members - Register in Alumni Network
+// POST /api/alumni/members - Register in Alumni Network (with optional password for instant account creation)
 router.post('/alumni/members', (req, res) => {
   try {
-    const { name, email, phone, memberType, classYear, profession, location, bio } = req.body;
+    const { name, email, phone, memberType, classYear, profession, location, bio, password } = req.body;
 
     if (!name || !memberType || !classYear) {
       return res.status(400).json({
@@ -203,6 +238,7 @@ router.post('/alumni/members', (req, res) => {
     }
 
     const cleanType = memberType.toUpperCase() === 'OG' ? 'OG' : 'OB';
+    const cleanEmail = email ? email.trim().toLowerCase() : null;
 
     const stmt = db.prepare(`
       INSERT INTO alumni_members (name, email, phone, member_type, class_year, profession, location, bio)
@@ -211,7 +247,7 @@ router.post('/alumni/members', (req, res) => {
 
     const result = stmt.run(
       name.trim(),
-      email ? email.trim() : null,
+      cleanEmail,
       phone ? phone.trim() : null,
       cleanType,
       classYear.trim(),
@@ -224,10 +260,42 @@ router.post('/alumni/members', (req, res) => {
 
     console.log(`🎓 New Alumni Member Registered: [${cleanType}] ${name} (${classYear})`);
 
+    let token = null;
+    let userObj = null;
+
+    // If password provided and email exists, also create a login user account
+    if (password && cleanEmail) {
+      const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail);
+      if (!existingUser) {
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(password, salt);
+        const userInsert = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
+        const uInfo = userInsert.run(name.trim(), cleanEmail, hash, 'alumni');
+        
+        userObj = {
+          id: uInfo.lastInsertRowid,
+          name: name.trim(),
+          email: cleanEmail,
+          role: 'alumni',
+          memberType: cleanType,
+          classYear: classYear.trim(),
+          profession: profession ? profession.trim() : '',
+          location: location ? location.trim() : '',
+          phone: phone ? phone.trim() : '',
+          bio: bio ? bio.trim() : '',
+          avatarColor: cleanType === 'OB' ? '#0d5c3a' : '#d97706'
+        };
+
+        token = jwt.sign(userObj, JWT_SECRET, { expiresIn: '14d' });
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: 'Welcome to the RPPS OBs & OGs Alumni Network!',
-      member: newMember
+      member: newMember,
+      token,
+      user: userObj
     });
   } catch (err) {
     console.error('Error registering alumni:', err);

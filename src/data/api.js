@@ -17,11 +17,27 @@ export function getStoredUser() {
 export function setAuthSession(token, user) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (typeof window !== 'undefined') {
+    if (document.body) {
+      document.body.setAttribute('data-user-role', user?.role || 'visitor');
+    }
+    window.dispatchEvent(new CustomEvent('rpps-auth-state-change', {
+      detail: { role: user?.role || 'visitor', user }
+    }));
+  }
 }
 
 export function clearAuthSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  if (typeof window !== 'undefined') {
+    if (document.body) {
+      document.body.setAttribute('data-user-role', 'visitor');
+    }
+    window.dispatchEvent(new CustomEvent('rpps-auth-state-change', {
+      detail: { role: 'visitor', user: null }
+    }));
+  }
 }
 
 function getAuthHeaders() {
@@ -275,7 +291,7 @@ export async function sendAlumniMessage(messageData) {
   try {
     return await apiRequest('/api/alumni/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(messageData)
     });
   } catch (err) {
@@ -311,7 +327,9 @@ export async function fetchAlumniMembers(type = '', search = '') {
     if (search && search.trim()) params.append('search', search.trim());
 
     const query = params.toString() ? `?${params.toString()}` : '';
-    return await apiRequest(`/api/alumni/members${query}`);
+    return await apiRequest(`/api/alumni/members${query}`, {
+      headers: getAuthHeaders()
+    });
   } catch (err) {
     console.error('fetchAlumniMembers error:', err);
     return { success: false, members: [], stats: {} };
@@ -320,14 +338,37 @@ export async function fetchAlumniMembers(type = '', search = '') {
 
 export async function registerAlumniMember(memberData) {
   try {
-    return await apiRequest('/api/alumni/members', {
+    const data = await apiRequest('/api/alumni/members', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(memberData)
     });
+
+    if (data.success && data.token && data.user) {
+      setAuthSession(data.token, data.user);
+    }
+    return data;
   } catch (err) {
     console.error('registerAlumniMember error:', err);
     return { success: false, error: err.message || 'Failed to register alumni member' };
+  }
+}
+
+export async function registerAlumniAccount(accountData) {
+  try {
+    const data = await apiRequest('/api/auth/alumni-register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(accountData)
+    });
+
+    if (data.success && data.token && data.user) {
+      setAuthSession(data.token, data.user);
+    }
+    return data;
+  } catch (err) {
+    console.error('registerAlumniAccount error:', err);
+    return { success: false, error: err.message || 'Failed to register alumni account' };
   }
 }
 

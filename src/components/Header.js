@@ -1,4 +1,5 @@
 import { schoolInfo } from '../data/schoolData.js';
+import { getUserRole, getCurrentUser, onAuthChange, logoutUser } from '../data/userRole.js';
 
 export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal, onOpenAlumniModal) {
   const header = document.createElement('header');
@@ -23,27 +24,8 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           </div>
         </div>
         
-        <div class="top-bar-actions">
-          <button class="top-util-link parent-track-trigger" title="Check your admission application status">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <span>Track Application</span>
-          </button>
-          <span class="util-divider">|</span>
-          <button class="top-util-link alumni-top-trigger" title="OBs & OGs Alumni Network">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-            <span>Alumni Network</span>
-          </button>
-          <span class="util-divider">|</span>
-          <button class="top-util-link admin-modal-trigger" title="Staff Portal Login">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>Staff Portal</span>
-          </button>
-          <span class="util-divider">|</span>
-          <div class="lang-selector">
-            <button class="lang-btn active" data-lang="en">EN</button>
-            <button class="lang-btn" data-lang="rw">RW</button>
-            <button class="lang-btn" data-lang="fr">FR</button>
-          </div>
+        <div class="top-bar-actions" id="top-bar-actions-container">
+          <!-- Dynamically populated based on role -->
         </div>
       </div>
     </div>
@@ -92,31 +74,144 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
     </nav>
   `;
 
-  // Attach event listeners
+  const topActionsContainer = header.querySelector('#top-bar-actions-container');
+
+  function renderTopBarActions() {
+    const role = getUserRole();
+    const user = getCurrentUser();
+
+    if (role === 'alumni' && user) {
+      const shortName = (user.name || 'Alumnus').split(' ')[0];
+      const memberType = user.memberType || 'OB';
+      topActionsContainer.innerHTML = `
+        <button class="top-util-link parent-track-trigger" title="Check your admission application status">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Track Application</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link alumni-top-trigger user-auth-badge" title="RPPS Alumni: ${escapeHtml(user.name)}">
+          <span class="badge-role-tag badge-${memberType.toLowerCase()}">${memberType}</span>
+          <span>Hi, ${escapeHtml(shortName)}</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link alumni-chat-quick" title="Open Live OBs & OGs ChatUp">
+          <span>ChatUp 💬</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link logout-trigger" title="Sign out of Alumni Network">
+          <span>Sign Out ⎋</span>
+        </button>
+        <span class="util-divider">|</span>
+        <div class="lang-selector">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="rw">RW</button>
+          <button class="lang-btn" data-lang="fr">FR</button>
+        </div>
+      `;
+    } else if ((role === 'staff' || role === 'admin') && user) {
+      const shortName = (user.name || 'Staff').split(' ')[0];
+      topActionsContainer.innerHTML = `
+        <button class="top-util-link parent-track-trigger" title="Check your admission application status">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Track Application</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link admin-modal-trigger user-auth-badge" title="RPPS Staff: ${escapeHtml(user.name)}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>${user.role === 'admin' ? 'Admin' : 'Staff'}: ${escapeHtml(shortName)}</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link alumni-top-trigger" title="Alumni Network">
+          <span>Alumni Lounge 🎓</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link logout-trigger" title="Sign out of Staff Portal">
+          <span>Sign Out ⎋</span>
+        </button>
+        <span class="util-divider">|</span>
+        <div class="lang-selector">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="rw">RW</button>
+          <button class="lang-btn" data-lang="fr">FR</button>
+        </div>
+      `;
+    } else {
+      // Default: Public Visitor / Prospective Parent View
+      topActionsContainer.innerHTML = `
+        <button class="top-util-link parent-track-trigger" title="Check your admission application status">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Track Application</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link alumni-top-trigger" title="OBs & OGs Alumni Network">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <span>Alumni Network</span>
+        </button>
+        <span class="util-divider">|</span>
+        <button class="top-util-link admin-modal-trigger" title="Staff Portal Login">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Staff Portal</span>
+        </button>
+        <span class="util-divider">|</span>
+        <div class="lang-selector">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="rw">RW</button>
+          <button class="lang-btn" data-lang="fr">FR</button>
+        </div>
+      `;
+    }
+
+    // Bind event listeners on top bar buttons
+    const trackBtn = topActionsContainer.querySelector('.parent-track-trigger');
+    const alumniBtn = topActionsContainer.querySelector('.alumni-top-trigger');
+    const alumniChatBtn = topActionsContainer.querySelector('.alumni-chat-quick');
+    const adminBtn = topActionsContainer.querySelector('.admin-modal-trigger');
+    const logoutBtn = topActionsContainer.querySelector('.logout-trigger');
+
+    if (trackBtn && onOpenTrackModal) trackBtn.addEventListener('click', onOpenTrackModal);
+    if (alumniBtn && onOpenAlumniModal) alumniBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
+    if (alumniChatBtn && onOpenAlumniModal) alumniChatBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
+    if (adminBtn && onOpenAdminModal) adminBtn.addEventListener('click', onOpenAdminModal);
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        logoutUser();
+      });
+    }
+
+    // Language switcher feedback
+    topActionsContainer.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        topActionsContainer.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  }
+
+  // Initial render
+  renderTopBarActions();
+
+  // Subscribe to role/auth changes
+  onAuthChange(() => {
+    renderTopBarActions();
+  });
+
+  // Attach navbar listeners
   const applyBtn = header.querySelector('.apply-now-btn');
-  const trackBtn = header.querySelector('.parent-track-trigger');
-  const adminBtn = header.querySelector('.admin-modal-trigger');
-  const alumniTopBtn = header.querySelector('.alumni-top-trigger');
   const alumniNavLink = header.querySelector('.alumni-nav-link');
   
   if (applyBtn && onOpenApplyModal) applyBtn.addEventListener('click', onOpenApplyModal);
-  if (trackBtn && onOpenTrackModal) trackBtn.addEventListener('click', onOpenTrackModal);
-  if (adminBtn && onOpenAdminModal) adminBtn.addEventListener('click', onOpenAdminModal);
   
-  if (onOpenAlumniModal) {
-    if (alumniTopBtn) alumniTopBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
-    if (alumniNavLink) {
-      alumniNavLink.addEventListener('click', (e) => {
-        const sec = document.querySelector('#alumni');
-        if (sec) {
-          e.preventDefault();
-          sec.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          e.preventDefault();
-          onOpenAlumniModal('chat', 'general');
-        }
-      });
-    }
+  if (alumniNavLink && onOpenAlumniModal) {
+    alumniNavLink.addEventListener('click', (e) => {
+      const sec = document.querySelector('#alumni');
+      if (sec) {
+        e.preventDefault();
+        sec.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        e.preventDefault();
+        onOpenAlumniModal('chat', 'general');
+      }
+    });
   }
 
   const mobileBtn = header.querySelector('#mobile-menu-btn');
@@ -136,14 +231,15 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
     });
   });
 
-  // Language button switcher feedback
-  const langBtns = header.querySelectorAll('.lang-btn');
-  langBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      langBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-
   return header;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

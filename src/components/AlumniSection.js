@@ -1,4 +1,5 @@
 import { fetchAlumniMembers } from '../data/api.js';
+import { getUserRole, getCurrentUser, onAuthChange } from '../data/userRole.js';
 
 export function createAlumniSection(onOpenAlumniModal) {
   const section = document.createElement('section');
@@ -117,77 +118,85 @@ export function createAlumniSection(onOpenAlumniModal) {
         </div>
 
         <div class="spotlight-cards-grid" id="alumni-spotlight-cards">
-          <!-- Default loaded cards -->
-          <div class="spotlight-card">
-            <div class="spotlight-avatar ob-avatar">EM</div>
-            <div class="spotlight-info">
-              <h4>Emmanuel Mugisha</h4>
-              <span class="spotlight-role">Civil Engineer • Class of 2016 (OB)</span>
-              <p class="spotlight-quote">
-                "The discipline, English fluency, and mathematical foundations I gained at RPPS shaped my entire engineering career."
-              </p>
-            </div>
-          </div>
-
-          <div class="spotlight-card">
-            <div class="spotlight-avatar og-avatar">GU</div>
-            <div class="spotlight-info">
-              <h4>Grace Uwase</h4>
-              <span class="spotlight-role">Biomedical Scientist • Class of 2018 (OG)</span>
-              <p class="spotlight-quote">
-                "RPPS gave me the confidence to lead and excel in science. Proud to see our school still leading Nyagatare district!"
-              </p>
-            </div>
-          </div>
-
-          <div class="spotlight-card">
-            <div class="spotlight-avatar og-avatar">DM</div>
-            <div class="spotlight-info">
-              <h4>Diane Mukamana</h4>
-              <span class="spotlight-role">Software Developer • Class of 2019 (OG)</span>
-              <p class="spotlight-quote">
-                "To all current pupils: embrace technology and reading. RPPS teachers will guide you to reach any dream in Rwanda."
-              </p>
-            </div>
-          </div>
+          <!-- Loaded dynamically -->
         </div>
       </div>
 
-      <!-- Bottom Registration Callout Banner -->
-      <div class="alumni-cta-banner">
-        <div class="cta-content">
-          <div class="cta-badge">Join the Legacy</div>
-          <h3>Are you an Old Boy or Old Girl of RPPS?</h3>
-          <p>Register your current profession and class year to stay connected, receive event invitations, and inspire current primary pupils.</p>
-        </div>
-        <div class="cta-actions">
-          <button class="btn btn-gold btn-lg trigger-register-btn">
-            <span>Register as RPPS Alumni 🎉</span>
-          </button>
-          <button class="btn btn-outline-white btn-lg trigger-chat-btn-2">
-            <span>Enter Alumni Chatroom 🚀</span>
-          </button>
-        </div>
+      <!-- Bottom Registration Callout Banner (Role-Dynamic) -->
+      <div class="alumni-cta-banner" id="alumni-cta-banner-container">
+        <!-- Rendered based on auth state -->
       </div>
     </div>
   `;
 
-  // Attach button triggers to open the modal on specific tabs & channels
+  const bannerContainer = section.querySelector('#alumni-cta-banner-container');
+
+  function renderBanner() {
+    const role = getUserRole();
+    const user = getCurrentUser();
+
+    if (role === 'alumni' && user) {
+      bannerContainer.innerHTML = `
+        <div class="cta-content">
+          <div class="cta-badge">Verified Member: ${escapeHtml(user.memberType || 'OB')}</div>
+          <h3>Welcome back, ${escapeHtml(user.name)}!</h3>
+          <p>You are authenticated with the ${escapeHtml(user.classYear || 'Alumni Cohort')}. Reconnect in real-time, plan the 2026 reunion, or explore the full alumni contact directory.</p>
+        </div>
+        <div class="cta-actions">
+          <button class="btn btn-gold btn-lg trigger-chat-action">
+            <span>Open Alumni Lounge 💬</span>
+          </button>
+          <button class="btn btn-outline-white btn-lg trigger-directory-action">
+            <span>Full Directory (500+) 👥</span>
+          </button>
+        </div>
+      `;
+
+      const chatAction = bannerContainer.querySelector('.trigger-chat-action');
+      const dirAction = bannerContainer.querySelector('.trigger-directory-action');
+      if (chatAction && onOpenAlumniModal) chatAction.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
+      if (dirAction && onOpenAlumniModal) dirAction.addEventListener('click', () => onOpenAlumniModal('directory'));
+
+    } else {
+      bannerContainer.innerHTML = `
+        <div class="cta-content">
+          <div class="cta-badge">Join the Legacy</div>
+          <h3>Are you an Old Boy or Old Girl of RPPS?</h3>
+          <p>Authenticate or register your profile to unlock full directory contacts, network with classmates, and post in the live chat lounge.</p>
+        </div>
+        <div class="cta-actions">
+          <button class="btn btn-gold btn-lg trigger-register-action">
+            <span>Alumni Sign In / Register 🎉</span>
+          </button>
+          <button class="btn btn-outline-white btn-lg trigger-chat-action">
+            <span>Preview Chatroom 💬</span>
+          </button>
+        </div>
+      `;
+
+      const regAction = bannerContainer.querySelector('.trigger-register-action');
+      const chatAction = bannerContainer.querySelector('.trigger-chat-action');
+      if (regAction && onOpenAlumniModal) regAction.addEventListener('click', () => onOpenAlumniModal('portal'));
+      if (chatAction && onOpenAlumniModal) chatAction.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
+    }
+  }
+
+  // Initial render
+  renderBanner();
+  onAuthChange(() => renderBanner());
+
+  // Attach button triggers to open the modal
   const chatBtn = section.querySelector('.trigger-chat-btn');
-  const chatBtn2 = section.querySelector('.trigger-chat-btn-2');
   const reunionBtn = section.querySelector('.trigger-reunion-btn');
   const directoryBtn = section.querySelector('.trigger-directory-btn');
-  const registerBtn = section.querySelector('.trigger-register-btn');
 
   if (onOpenAlumniModal) {
     if (chatBtn) chatBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
-    if (chatBtn2) chatBtn2.addEventListener('click', () => onOpenAlumniModal('chat', 'general'));
     if (reunionBtn) reunionBtn.addEventListener('click', () => onOpenAlumniModal('chat', 'reunions'));
     if (directoryBtn) directoryBtn.addEventListener('click', () => onOpenAlumniModal('directory'));
-    if (registerBtn) registerBtn.addEventListener('click', () => onOpenAlumniModal('register'));
   }
 
-  // Load dynamic members from database if available
+  // Load dynamic members from database
   fetchAlumniMembers('', '').then(res => {
     if (res.success && res.members && res.members.length > 0) {
       const container = section.querySelector('#alumni-spotlight-cards');

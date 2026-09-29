@@ -1390,3 +1390,510 @@
   border-color: #ffffff;
   transform: translateY(-2px);
 }
+
+/* ==========================================================================
+   ROLE-BASED ACCESS CONTROL (RBAC) STYLING - APPROACH C
+   ========================================================================== */
+
+/* 1. Header Role Badges */
+.user-auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  color: var(--primary) !important;
+}
+
+.badge-role-tag {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+.badge-role-tag.badge-ob {
+  background: #0d5c3a;
+}
+
+.badge-role-tag.badge-og {
+  background: #d97706;
+}
+
+/* 2. Gated Chat Lounge Box for Visitors */
+.chat-visitor-gated-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.gated-lock-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.gated-content h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 0.25rem 0;
+}
+
+.gated-content p {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.gated-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.btn-outline-navy {
+  background: transparent;
+  color: var(--navy);
+  border: 1px solid var(--navy);
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline-navy:hover {
+  background: var(--navy);
+  color: #ffffff;
+}
+
+/* 3. Directory Contact Masking */
+.directory-guest-badge {
+  font-size: 0.72rem;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+.directory-auth-badge {
+  font-size: 0.72rem;
+  background: #d1fae5;
+  color: #065f46;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+.member-contact-strip {
+  margin-top: 0.6rem;
+}
+
+.contact-masked-box {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-link-action {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-link-action:hover {
+  color: var(--gold);
+}
+
+.contact-unmasked-box {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  background: #f1f5f9;
+  color: var(--navy);
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.contact-pill:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.contact-pill.contact-whatsapp {
+  background: rgba(37, 211, 102, 0.12);
+  color: #059669;
+  border-color: rgba(37, 211, 102, 0.3);
+}
+
+.contact-pill.contact-whatsapp:hover {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+/* 4. Digital Alumni ID Card */
+.alumni-id-card-wrapper {
+  max-width: 580px;
+  margin: 0.5rem auto 1.5rem auto;
+}
+
+.alumni-id-card {
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #d97706;
+  padding: 1.5rem;
+  box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.3);
+  position: relative;
+}
+
+.id-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.id-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.id-card-brand h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.id-card-brand span {
+  font-size: 0.72rem;
+  color: #d97706;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.id-card-ribbon {
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ribbon-ob {
+  background: #0d5c3a;
+  color: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.ribbon-og {
+  background: #d97706;
+  color: #ffffff;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.id-card-body {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.id-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  border: 3px solid #d97706;
+  flex-shrink: 0;
+}
+
+.id-details {
+  flex: 1;
+}
+
+.id-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem 0;
+  color: #ffffff;
+}
+
+.id-meta-line {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  margin-bottom: 0.65rem;
+}
+
+.id-class-tag {
+  color: #d97706;
+  font-weight: 700;
+}
+
+.id-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 1rem;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-bottom: 0.65rem;
+}
+
+.id-contact-grid strong {
+  color: #cbd5e1;
+}
+
+.id-quote {
+  font-style: italic;
+  color: #e2e8f0;
+  font-size: 0.84rem;
+  margin: 0.5rem 0 0 0;
+  border-left: 2px solid #d97706;
+  padding-left: 0.65rem;
+  line-height: 1.4;
+}
+
+.id-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 0.85rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.id-card-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.id-card-school-motto {
+  font-style: italic;
+  color: #d97706;
+  font-weight: 600;
+}
+
+.id-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 0.55rem 1.15rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline-danger:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* 5. Alumni Auth Subtabs & Forms */
+.alumni-auth-container {
+  max-width: 580px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.auth-subtabs-nav {
+  display: flex;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.25rem;
+}
+
+.subtab-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border: none;
+  background: none;
+  color: var(--gray-600);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.subtab-btn:hover {
+  color: var(--navy);
+}
+
+.subtab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
+.auth-subtab-pane {
+  display: none;
+}
+
+.auth-subtab-pane.active {
+  display: block;
+}
+
+.auth-form-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.auth-form-card .form-header {
+  margin-bottom: 1.25rem;
+}
+
+.auth-form-card .form-header h4 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 0.25rem 0;
+}
+
+.auth-form-card .form-header p {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.login-demo-helper {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--gray-600);
+  margin: 1rem 0;
+}
+
+.login-demo-helper code {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.auth-status-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.auth-status-alert.alert-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.auth-status-alert.alert-success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .chat-visitor-gated-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .id-card-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .id-contact-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
