@@ -50,6 +50,7 @@ export function createFooter() {
           <h4>${t('footer_info_title')}</h4>
           <ul class="footer-links">
             <li><a href="#news">${t('nav_news')}</a></li>
+            <li><a href="#calendar">${t('nav_calendar')}</a></li>
             <li><a href="#testimonials">${t('test_badge')}</a></li>
             <li><a href="#tuition-calculator">${t('calc_badge')}</a></li>
             <li><a href="#about">${t('headteacher_title')}</a></li>
