@@ -9,6 +9,74 @@ const router = express.Router();
 // Supported Alumni Channels
 const VALID_CHANNELS = ['general', 'reunions', 'mentorship', 'memories'];
 
+// Active Server-Sent Events (SSE) Subscribers for Real-Time Streaming
+const sseSubscribers = new Set();
+
+export function broadcastSSE(eventType, data) {
+  const payload = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseSubscribers) {
+    try {
+      client.res.write(payload);
+    } catch (e) {
+      sseSubscribers.delete(client);
+    }
+  }
+}
+
+// GET /api/alumni/stream - Real-Time Server-Sent Events (SSE) Stream
+router.get('/alumni/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  const client = { id: Date.now() + Math.random(), res };
+  sseSubscribers.add(client);
+
+  // Send initial connection event
+  res.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', onlineCount: sseSubscribers.size })}\n\n`);
+
+  // Broadcast updated online count to all clients
+  broadcastSSE('online_count', { count: sseSubscribers.size });
+
+  // 20-second heartbeat to keep connection alive across proxies/firewalls
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': keepalive\n\n');
+    } catch (e) {
+      clearInterval(heartbeat);
+      sseSubscribers.delete(client);
+    }
+  }, 20000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    sseSubscribers.delete(client);
+    broadcastSSE('online_count', { count: sseSubscribers.size });
+  });
+});
+
+// POST /api/alumni/typing - Broadcast typing indicators to channel participants
+router.post('/alumni/typing', optionalAuthenticate, (req, res) => {
+  try {
+    const { channel = 'general', isTyping = true } = req.body;
+    const authorName = req.user ? req.user.name : (req.body.authorName || 'An Alumnus');
+    const authorType = req.user ? (req.user.memberType || 'OB') : (req.body.authorType || 'OB');
+
+    broadcastSSE('typing_status', {
+      channel,
+      authorName,
+      authorType,
+      isTyping: Boolean(isTyping)
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
 // GET /api/alumni/messages - Fetch messages for alumni chat
 router.get('/alumni/messages', (req, res) => {
   try {
@@ -98,6 +166,9 @@ router.post('/alumni/messages', authenticateToken, (req, res) => {
 
     console.log(`💬 New Alumni Chat: [${authorType}] ${authorName} in #${cleanChannel}: "${content.substring(0, 40)}..."`);
 
+    // Broadcast in real-time to all connected alumni clients
+    broadcastSSE('new_message', newMessage);
+
     res.status(201).json({
       success: true,
       message: 'Message posted successfully',
@@ -121,6 +192,12 @@ router.post('/alumni/messages/:id/react', (req, res) => {
     }
 
     const updated = db.prepare('SELECT id, likes_count FROM alumni_messages WHERE id = ?').get(id);
+
+    // Broadcast reaction update in real-time to all connected alumni clients
+    broadcastSSE('reaction_update', {
+      messageId: Number(id),
+      likesCount: updated.likes_count
+    });
 
     res.json({
       success: true,

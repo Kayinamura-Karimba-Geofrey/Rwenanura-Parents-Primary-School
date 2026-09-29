@@ -320,6 +320,62 @@ export async function fetchAlumniChannels() {
   }
 }
 
+export async function sendAlumniTypingStatus(channel = 'general', isTyping = true) {
+  try {
+    return await apiRequest('/api/alumni/typing', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ channel, isTyping })
+    });
+  } catch (err) {
+    return { success: false };
+  }
+}
+
+export function connectAlumniStream(onEvent, onError) {
+  if (typeof window === 'undefined' || typeof EventSource === 'undefined') {
+    return () => {};
+  }
+
+  const es = new EventSource('/api/alumni/stream');
+
+  es.addEventListener('new_message', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      onEvent('new_message', data);
+    } catch (err) {}
+  });
+
+  es.addEventListener('reaction_update', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      onEvent('reaction_update', data);
+    } catch (err) {}
+  });
+
+  es.addEventListener('typing_status', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      onEvent('typing_status', data);
+    } catch (err) {}
+  });
+
+  es.addEventListener('online_count', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      onEvent('online_count', data);
+    } catch (err) {}
+  });
+
+  es.onerror = (err) => {
+    if (onError) onError(err);
+  };
+
+  return () => {
+    es.close();
+  };
+}
+
 export async function fetchAlumniMembers(type = '', search = '') {
   try {
     const params = new URLSearchParams();

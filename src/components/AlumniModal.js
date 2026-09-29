@@ -5,7 +5,9 @@ import {
   fetchAlumniChannels, 
   fetchAlumniMembers, 
   registerAlumniAccount,
-  loginUser
+  loginUser,
+  sendAlumniTypingStatus,
+  connectAlumniStream
 } from '../data/api.js';
 
 import { 
@@ -112,6 +114,10 @@ export function createAlumniModal() {
           <!-- Search / Filter subbar -->
           <div class="alumni-search-subbar">
             <span id="active-channel-label" class="channel-tag-label"># General Lounge</span>
+            <span class="live-status-pill" id="chat-live-status">
+              <span class="live-dot"></span>
+              <span id="chat-online-count">Live</span>
+            </span>
             <div class="chat-search-wrap">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input type="text" id="chat-search-input" placeholder="Search alumni messages..." />
@@ -128,6 +134,14 @@ export function createAlumniModal() {
           <!-- Messages Stream (Visible to all) -->
           <div class="alumni-messages-feed" id="alumni-messages-feed">
             <div class="chat-loading-state">Loading alumni conversations...</div>
+          </div>
+
+          <!-- Real-Time Typing Indicator Bubble -->
+          <div class="chat-typing-indicator" id="chat-typing-indicator" style="display: none;">
+            <span class="typing-dots">
+              <span></span><span></span><span></span>
+            </span>
+            <span class="typing-text" id="chat-typing-text">Someone is typing...</span>
           </div>
 
           <!-- Message Composer Area (Gated by Role) -->
@@ -199,6 +213,12 @@ export function createAlumniModal() {
       clearInterval(pollInterval);
       pollInterval = null;
     }
+    if (streamDisconnect) {
+      streamDisconnect();
+      streamDisconnect = null;
+    }
+    if (typingEmitTimeout) clearTimeout(typingEmitTimeout);
+    sendAlumniTypingStatus(currentChannel, false);
   };
 
   modal.addEventListener('click', (e) => {
@@ -221,11 +241,18 @@ export function createAlumniModal() {
 
       if (activeTab === 'chat') {
         loadMessages();
+        setupRealtimeStream();
         startPolling();
-      } else if (activeTab === 'directory') {
-        loadDirectory();
-      } else if (activeTab === 'portal') {
-        renderPortalView();
+      } else {
+        if (streamDisconnect) {
+          streamDisconnect();
+          streamDisconnect = null;
+        }
+        if (activeTab === 'directory') {
+          loadDirectory();
+        } else if (activeTab === 'portal') {
+          renderPortalView();
+        }
       }
     });
   });
@@ -382,13 +409,136 @@ export function createAlumniModal() {
     }
   }
 
+  function playMessageChime() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.36);
+    } catch (e) {
+      // AudioContext blocked until gesture or unsupported, ignore
+    }
+  }
+
+  let streamDisconnect = null;
+  let typingHideTimer = null;
+  let typingEmitTimeout = null;
+
+  function setupRealtimeStream() {
+    if (streamDisconnect) streamDisconnect();
+
+    streamDisconnect = connectAlumniStream((eventType, data) => {
+      if (eventType === 'new_message') {
+        handleIncomingMessage(data);
+      } else if (eventType === 'reaction_update') {
+        handleIncomingReaction(data);
+      } else if (eventType === 'typing_status') {
+        handleIncomingTyping(data);
+      } else if (eventType === 'online_count') {
+        handleIncomingOnlineCount(data);
+      }
+    });
+  }
+
+  function handleIncomingMessage(msg) {
+    if (!msg) return;
+
+    // Avoid duplicate message in array
+    const exists = messagesList.some(m => m.id === msg.id);
+    if (!exists) {
+      messagesList.push(msg);
+    }
+
+    // Refresh channel counts
+    updateChannelCounts();
+
+    // If message is in currently viewed channel
+    if (msg.channel === currentChannel) {
+      hideTypingIndicator();
+
+      const wasAtBottom = messagesFeed.scrollHeight - messagesFeed.clientHeight <= messagesFeed.scrollTop + 120;
+      const currentUser = getCurrentUser();
+      if (!currentUser || currentUser.name !== msg.author_name) {
+        playMessageChime();
+      }
+
+      applyFiltersAndRender();
+
+      if (wasAtBottom) {
+        messagesFeed.scrollTop = messagesFeed.scrollHeight;
+      }
+    }
+  }
+
+  function handleIncomingReaction(data) {
+    if (!data || !data.messageId) return;
+
+    const target = messagesList.find(m => m.id === data.messageId);
+    if (target) {
+      target.likes_count = data.likesCount;
+    }
+
+    const cheerBtn = messagesFeed.querySelector(`.btn-reaction-cheer[data-msg-id="${data.messageId}"]`);
+    if (cheerBtn) {
+      const countSpan = cheerBtn.querySelector('.cheer-count');
+      if (countSpan) countSpan.textContent = data.likesCount;
+      cheerBtn.classList.add('cheer-pop');
+      setTimeout(() => cheerBtn.classList.remove('cheer-pop'), 450);
+    }
+  }
+
+  function handleIncomingTyping(data) {
+    if (!data || data.channel !== currentChannel) return;
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.name === data.authorName) return;
+
+    const typingEl = modal.querySelector('#chat-typing-indicator');
+    const typingText = modal.querySelector('#chat-typing-text');
+    if (!typingEl || !typingText) return;
+
+    if (data.isTyping) {
+      typingText.textContent = `${data.authorName} (${data.authorType}) is typing...`;
+      typingEl.style.display = 'flex';
+
+      if (typingHideTimer) clearTimeout(typingHideTimer);
+      typingHideTimer = setTimeout(() => {
+        typingEl.style.display = 'none';
+      }, 3000);
+    } else {
+      typingEl.style.display = 'none';
+      if (typingHideTimer) clearTimeout(typingHideTimer);
+    }
+  }
+
+  function hideTypingIndicator() {
+    const typingEl = modal.querySelector('#chat-typing-indicator');
+    if (typingEl) typingEl.style.display = 'none';
+    if (typingHideTimer) clearTimeout(typingHideTimer);
+  }
+
+  function handleIncomingOnlineCount(data) {
+    const onlineCountEl = modal.querySelector('#chat-online-count');
+    if (onlineCountEl && data && data.count !== undefined) {
+      onlineCountEl.textContent = `${data.count} Online`;
+    }
+  }
+
   function startPolling() {
     if (pollInterval) clearInterval(pollInterval);
+    // Slow background sync every 15s to complement instant SSE
     pollInterval = setInterval(() => {
       if (modal.classList.contains('active') && activeTab === 'chat') {
         loadMessages(true);
       }
-    }, 4000);
+    }, 15000);
   }
 
   // Search input with debounce
@@ -491,15 +641,26 @@ export function createAlumniModal() {
         });
       });
 
+      // Typing indicator emit
+      input.addEventListener('input', () => {
+        sendAlumniTypingStatus(currentChannel, true);
+        clearTimeout(typingEmitTimeout);
+        typingEmitTimeout = setTimeout(() => {
+          sendAlumniTypingStatus(currentChannel, false);
+        }, 1800);
+      });
+
       // Submit message
       const form = composerWrap.querySelector('#alumni-message-form');
-      const input = composerWrap.querySelector('#alumni-message-input');
       const sendBtn = composerWrap.querySelector('#btn-send-message');
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const content = input.value.trim();
         if (!content) return;
+
+        clearTimeout(typingEmitTimeout);
+        sendAlumniTypingStatus(currentChannel, false);
 
         sendBtn.disabled = true;
         const res = await sendAlumniMessage({
@@ -510,7 +671,8 @@ export function createAlumniModal() {
 
         if (res.success) {
           input.value = '';
-          await loadMessages(true);
+          // Message will be instantly pushed via SSE; fallback ensures local sync
+          handleIncomingMessage(res.data);
           messagesFeed.scrollTop = messagesFeed.scrollHeight;
         } else {
           alert(res.error || 'Failed to post message.');
@@ -1021,6 +1183,10 @@ export function createAlumniModal() {
     if (targetChannel) {
       const chBtn = channelsContainer.querySelector(`[data-channel="${targetChannel}"]`);
       if (chBtn) chBtn.click();
+    }
+
+    if (activeTab === 'chat') {
+      setupRealtimeStream();
     }
   };
 
