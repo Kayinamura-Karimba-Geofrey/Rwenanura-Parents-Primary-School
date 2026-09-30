@@ -79,9 +79,9 @@ export function createAdminModal() {
       <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; box-shadow: var(--shadow-sm);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
           <div>
-            <span style="background: var(--navy); color: var(--gold); font-family: monospace; font-weight: 700; font-size: 0.8rem; padding: 0.15rem 0.5rem; border-radius: 4px;">${app.tracking_code}</span>
-            <strong style="font-size: 1.05rem; margin-left: 0.5rem; color: var(--navy);">${app.child_name}</strong>
-            <span style="font-size: 0.85rem; color: var(--gray-500);">(${app.grade})</span>
+            <span style="background: var(--navy); color: var(--gold); font-family: monospace; font-weight: 700; font-size: 0.8rem; padding: 0.15rem 0.5rem; border-radius: 4px;">${escapeHtml(app.tracking_code)}</span>
+            <strong style="font-size: 1.05rem; margin-left: 0.5rem; color: var(--navy);">${escapeHtml(app.child_name)}</strong>
+            <span style="font-size: 0.85rem; color: var(--gray-500);">(${escapeHtml(app.grade)})</span>
           </div>
 
           <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -98,13 +98,13 @@ export function createAdminModal() {
         </div>
 
         <div style="font-size: 0.88rem; color: var(--gray-600); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; background: var(--gray-100); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm);">
-          <div>👤 <strong>Parent:</strong> ${app.parent_name}</div>
-          <div>📞 <strong>Phone:</strong> ${app.phone}</div>
-          <div>✉️ <strong>Email:</strong> ${app.email || 'N/A'}</div>
+          <div>👤 <strong>Parent:</strong> ${escapeHtml(app.parent_name)}</div>
+          <div>📞 <strong>Phone:</strong> ${escapeHtml(app.phone)}</div>
+          <div>✉️ <strong>Email:</strong> ${escapeHtml(app.email || 'N/A')}</div>
           <div>🕒 <strong>Submitted:</strong> ${new Date(app.created_at).toLocaleString()}</div>
         </div>
 
-        ${app.notes ? `<div style="font-size: 0.82rem; color: var(--gray-600); font-style: italic;">📝 Note: "${app.notes}"</div>` : ''}
+        ${app.notes ? `<div style="font-size: 0.82rem; color: var(--gray-600); font-style: italic;">📝 Note: "${escapeHtml(app.notes)}"</div>` : ''}
       </div>
     `).join('');
 
@@ -146,6 +146,16 @@ export function createAdminModal() {
       renderList();
     });
   });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
   // Load when opened
   const observer = new MutationObserver(() => {

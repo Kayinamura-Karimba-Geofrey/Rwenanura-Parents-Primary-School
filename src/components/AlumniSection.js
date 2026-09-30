@@ -198,7 +198,7 @@ export function createAlumniSection(onOpenAlumniModal) {
       container.innerHTML = top3.map(m => {
         const isOB = m.member_type === 'OB';
         const avatarClass = isOB ? 'ob-avatar' : 'og-avatar';
-        const initials = (m.name || 'Alumni').substring(0, 2).toUpperCase();
+        const initials = escapeHtml((m.name || 'Alumni').substring(0, 2).toUpperCase());
         return `
           <div class="spotlight-card">
             <div class="spotlight-avatar ${avatarClass}">${initials}</div>

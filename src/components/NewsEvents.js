@@ -21,21 +21,21 @@ export function createNewsEvents() {
           ${items.map(item => `
             <div class="news-card">
               <div class="news-date-badge">
-                <span class="day">${item.date.day}</span>
-                <span class="month">${item.date.month}</span>
-                <span style="font-size: 0.75rem; opacity: 0.8;">${item.date.year}</span>
+                <span class="day">${escapeHtml(item.date.day)}</span>
+                <span class="month">${escapeHtml(item.date.month)}</span>
+                <span style="font-size: 0.75rem; opacity: 0.8;">${escapeHtml(item.date.year)}</span>
               </div>
 
               <div class="news-content">
                 <div class="news-meta">
-                  <span class="badge" style="font-size: 0.7rem; padding: 0.15rem 0.5rem; margin-bottom: 0;">${item.category}</span>
-                  <span>• ${item.time}</span>
+                  <span class="badge" style="font-size: 0.7rem; padding: 0.15rem 0.5rem; margin-bottom: 0;">${escapeHtml(item.category)}</span>
+                  <span>• ${escapeHtml(item.time)}</span>
                 </div>
-                <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--navy);">${item.title}</h3>
-                <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 1rem;">${item.summary}</p>
+                <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--navy);">${escapeHtml(item.title)}</h3>
+                <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 1rem;">${escapeHtml(item.summary)}</p>
                 
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: var(--gray-500); font-weight: 500;">
-                  <span>📍 ${item.location}</span>
+                  <span>📍 ${escapeHtml(item.location)}</span>
                   <button class="read-news-btn" style="color: var(--primary); font-weight: 700;">${t('news_read_more')}</button>
                 </div>
               </div>
@@ -64,4 +64,14 @@ export function createNewsEvents() {
   });
 
   return section;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

@@ -355,8 +355,8 @@ export function createAlumniModal() {
 
       return `
         <div class="chat-message-item" data-id="${msg.id}">
-          <div class="message-avatar" style="background-color: ${msg.avatar_color || (isOB ? '#0d5c3a' : '#d97706')};">
-            ${initials}
+          <div class="message-avatar" style="background-color: ${escapeHtml(msg.avatar_color || (isOB ? '#0d5c3a' : '#d97706'))};">
+            ${escapeHtml(initials)}
           </div>
           <div class="message-content-wrap">
             <div class="message-header-line">
@@ -431,6 +431,7 @@ export function createAlumniModal() {
   let streamDisconnect = null;
   let typingHideTimer = null;
   let typingEmitTimeout = null;
+  let typingEmitLastSent = 0;
 
   function setupRealtimeStream() {
     if (streamDisconnect) streamDisconnect();
@@ -505,7 +506,7 @@ export function createAlumniModal() {
     if (!typingEl || !typingText) return;
 
     if (data.isTyping) {
-      typingText.textContent = `${data.authorName} (${data.authorType}) is typing...`;
+      typingText.textContent = `${sanitizeText(data.authorName)} (${sanitizeText(data.authorType)}) is typing...`;
       typingEl.style.display = 'flex';
 
       if (typingHideTimer) clearTimeout(typingHideTimer);
@@ -568,7 +569,7 @@ export function createAlumniModal() {
 
       headerAuthSlot.innerHTML = `
         <button id="btn-header-profile" class="alumni-persona-pill" title="View your RPPS Alumni profile">
-          <span class="persona-avatar" style="background: ${user.avatarColor || (memberType === 'OB' ? '#0d5c3a' : '#d97706')};">${initials}</span>
+          <span class="persona-avatar" style="background: ${escapeHtml(user.avatarColor || (memberType === 'OB' ? '#0d5c3a' : '#d97706'))};">${escapeHtml(initials)}</span>
           <span class="persona-info">
             <strong>${escapeHtml(user.name)}</strong>
             <small>${roleBadge} • ${escapeHtml(user.classYear || 'Verified')}</small>
@@ -641,9 +642,15 @@ export function createAlumniModal() {
         });
       });
 
-      // Typing indicator emit
+      // Typing indicator emit (throttled to 1 event/second instead of firing
+      // per keystroke, which hammered the server and risked hitting the
+      // server-side typing rate limit)
       input.addEventListener('input', () => {
-        sendAlumniTypingStatus(currentChannel, true);
+        const now = Date.now();
+        if (!typingEmitLastSent || now - typingEmitLastSent >= 1000) {
+          typingEmitLastSent = now;
+          sendAlumniTypingStatus(currentChannel, true);
+        }
         clearTimeout(typingEmitTimeout);
         typingEmitTimeout = setTimeout(() => {
           sendAlumniTypingStatus(currentChannel, false);
@@ -760,7 +767,7 @@ export function createAlumniModal() {
         const isOB = member.member_type === 'OB';
         const badgeClass = isOB ? 'badge-ob' : 'badge-og';
         const color = isOB ? '#0d5c3a' : '#d97706';
-        const initials = (member.name || 'Alumni').substring(0, 2).toUpperCase();
+        const initials = escapeHtml((member.name || 'Alumni').substring(0, 2).toUpperCase());
 
         const cleanPhone = member.phone ? member.phone.replace(/[^0-9]/g, '') : '';
         const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : null;
@@ -890,8 +897,8 @@ export function createAlumniModal() {
             </div>
 
             <div class="id-card-body">
-              <div class="id-avatar" style="background: ${user.avatarColor || (isOB ? '#0d5c3a' : '#d97706')};">
-                ${initials}
+              <div class="id-avatar" style="background: ${escapeHtml(user.avatarColor || (isOB ? '#0d5c3a' : '#d97706'))};">
+                ${escapeHtml(initials)}
               </div>
               <div class="id-details">
                 <h3 class="id-name">${escapeHtml(user.name)}</h3>
@@ -978,11 +985,6 @@ export function createAlumniModal() {
                 <input type="password" id="modal-login-password" required placeholder="••••••••" />
               </div>
 
-              <div class="login-demo-helper">
-                💡 <strong>Quick Demo Credentials:</strong><br />
-                Email: <code>emmanuel.m@gmail.com</code> | Password: <code>Alumni@2026</code>
-              </div>
-
               <button type="submit" id="btn-modal-login-submit" class="btn btn-gold btn-block">
                 Sign In to Alumni Network 🚀
               </button>
@@ -1031,8 +1033,8 @@ export function createAlumniModal() {
                 </div>
 
                 <div class="form-group">
-                  <label>Create Password * (min 6 chars)</label>
-                  <input type="password" id="reg-password" required minlength="6" placeholder="••••••••" />
+                  <label>Create Password * (min 8 chars)</label>
+                  <input type="password" id="reg-password" required minlength="8" placeholder="••••••••" />
                 </div>
               </div>
 
@@ -1201,4 +1203,8 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function sanitizeText(str) {
+  return typeof str === 'string' ? str.substring(0, 120) : '';
 }

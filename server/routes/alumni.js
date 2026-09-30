@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../db.js';
@@ -6,8 +7,42 @@ import { authenticateToken, optionalAuthenticate, JWT_SECRET } from './auth.js';
 
 const router = express.Router();
 
+// Rate limiters for abuse-prone endpoints
+const messageLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  message: { success: false, error: 'Sending too many messages. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const typingLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 150,
+  message: { success: false },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const memberRegisterLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Too many registration attempts from this IP address. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Supported Alumni Channels
 const VALID_CHANNELS = ['general', 'reunions', 'mentorship', 'memories'];
+
+// Only allow hex colors; anything else falls back to the channel default.
+// avatar_color is interpolated directly into a CSS style attribute on the
+// client, so it must never contain arbitrary characters.
+function sanitizeColor(value, fallback = '#0d5c3a') {
+  return typeof value === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(value) ? value : fallback;
+}
+
+const MAX_MESSAGE_LEN = 1000;
 
 // Active Server-Sent Events (SSE) Subscribers for Real-Time Streaming
 const sseSubscribers = new Set();
@@ -15,6 +50,10 @@ const sseSubscribers = new Set();
 export function broadcastSSE(eventType, data) {
   const payload = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const client of sseSubscribers) {
+    if (client.res.writableEnded || client.res.destroyed) {
+      sseSubscribers.delete(client);
+      continue;
+    }
     try {
       client.res.write(payload);
     } catch (e) {
@@ -23,8 +62,27 @@ export function broadcastSSE(eventType, data) {
   }
 }
 
+// SECURITY: cap concurrent SSE connections per IP so a single client cannot
+// exhaust server file descriptors / memory by opening thousands of streams.
+const MAX_SSE_PER_IP = 3;
+const sseConnectionsByIp = new Map();
+
+function trackSseConnection(ip, delta) {
+  const current = (sseConnectionsByIp.get(ip) || 0) + delta;
+  if (current <= 0) {
+    sseConnectionsByIp.delete(ip);
+  } else {
+    sseConnectionsByIp.set(ip, current);
+  }
+}
+
 // GET /api/alumni/stream - Real-Time Server-Sent Events (SSE) Stream
 router.get('/alumni/stream', (req, res) => {
+  const clientIp = req.ip || 'unknown';
+  if ((sseConnectionsByIp.get(clientIp) || 0) >= MAX_SSE_PER_IP) {
+    return res.status(429).json({ success: false, error: 'Too many live connections from this network.' });
+  }
+
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
@@ -33,6 +91,7 @@ router.get('/alumni/stream', (req, res) => {
 
   const client = { id: Date.now() + Math.random(), res };
   sseSubscribers.add(client);
+  trackSseConnection(clientIp, 1);
 
   // Send initial connection event
   res.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', onlineCount: sseSubscribers.size })}\n\n`);
@@ -53,16 +112,19 @@ router.get('/alumni/stream', (req, res) => {
   req.on('close', () => {
     clearInterval(heartbeat);
     sseSubscribers.delete(client);
+    trackSseConnection(clientIp, -1);
     broadcastSSE('online_count', { count: sseSubscribers.size });
   });
 });
 
 // POST /api/alumni/typing - Broadcast typing indicators to channel participants
-router.post('/alumni/typing', optionalAuthenticate, (req, res) => {
+// SECURITY: requires authentication; an open endpoint allowed anyone to spoof
+// arbitrary names in other users' browsers via SSE.
+router.post('/alumni/typing', typingLimiter, authenticateToken, (req, res) => {
   try {
-    const { channel = 'general', isTyping = true } = req.body;
-    const authorName = req.user ? req.user.name : (req.body.authorName || 'An Alumnus');
-    const authorType = req.user ? (req.user.memberType || 'OB') : (req.body.authorType || 'OB');
+    const { channel = 'general', isTyping = true } = req.body || {};
+    const authorName = req.user.name;
+    const authorType = req.user.memberType || 'OB';
 
     broadcastSSE('typing_status', {
       channel,
@@ -81,6 +143,10 @@ router.post('/alumni/typing', optionalAuthenticate, (req, res) => {
 router.get('/alumni/messages', (req, res) => {
   try {
     const { channel, search, limit = 100 } = req.query;
+    // Cap the page size; also guard against negative LIMIT values (SQLite
+    // treats negative LIMIT as "no limit").
+    const parsedLimit = Number.parseInt(limit, 10);
+    const safeLimit = Number.isInteger(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 500) : 100;
 
     let query = 'SELECT * FROM alumni_messages';
     const params = [];
@@ -103,7 +169,7 @@ router.get('/alumni/messages', (req, res) => {
     }
 
     query += ' ORDER BY id ASC LIMIT ?';
-    params.push(Number(limit) || 100);
+    params.push(safeLimit);
 
     const stmt = db.prepare(query);
     const messages = stmt.all(...params);
@@ -120,7 +186,7 @@ router.get('/alumni/messages', (req, res) => {
 });
 
 // POST /api/alumni/messages - Post a new message (Requires Alumni or Staff Authentication)
-router.post('/alumni/messages', authenticateToken, (req, res) => {
+router.post('/alumni/messages', messageLimiter, authenticateToken, (req, res) => {
   try {
     const userRole = req.user.role;
     if (userRole !== 'alumni' && userRole !== 'staff' && userRole !== 'admin') {
@@ -132,20 +198,24 @@ router.post('/alumni/messages', authenticateToken, (req, res) => {
 
     const { channel = 'general', content } = req.body;
 
-    if (!content || !content.trim()) {
+    if (!content || typeof content !== 'string' || !content.trim()) {
       return res.status(400).json({
         success: false,
         error: 'Message content cannot be empty.'
       });
     }
 
-    // Default to verified user token identity to prevent spoofing
-    const authorName = req.user.name || req.body.authorName || 'Alumni Member';
-    const authorType = (req.user.memberType || req.body.authorType || 'OB').toUpperCase() === 'OG' ? 'OG' : 'OB';
-    const classYear = req.user.classYear || req.body.classYear || 'Alumni';
-    const profession = req.user.profession || req.body.profession || '';
+    if (content.trim().length > MAX_MESSAGE_LEN) {
+      return res.status(400).json({ success: false, error: `Message cannot exceed ${MAX_MESSAGE_LEN} characters.` });
+    }
+
+    // Always trust the verified token identity over client-supplied fields
+    const authorName = req.user.name || 'Alumni Member';
+    const authorType = (req.user.memberType || 'OB').toUpperCase() === 'OG' ? 'OG' : 'OB';
+    const classYear = req.user.classYear || 'Alumni';
+    const profession = req.user.profession || '';
     const cleanChannel = VALID_CHANNELS.includes(channel) ? channel : 'general';
-    const cleanColor = req.user.avatarColor || req.body.avatarColor || (authorType === 'OB' ? '#0d5c3a' : '#d97706');
+    const cleanColor = sanitizeColor(req.user.avatarColor, authorType === 'OB' ? '#0d5c3a' : '#d97706');
 
     const stmt = db.prepare(`
       INSERT INTO alumni_messages (channel, author_name, author_type, class_year, profession, avatar_color, content, likes_count)
@@ -181,21 +251,25 @@ router.post('/alumni/messages', authenticateToken, (req, res) => {
 });
 
 // POST /api/alumni/messages/:id/react - Like/Cheer a message
-router.post('/alumni/messages/:id/react', (req, res) => {
+router.post('/alumni/messages/:id/react', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
+    const msgId = Number.parseInt(id, 10);
+    if (!Number.isInteger(msgId)) {
+      return res.status(400).json({ success: false, error: 'Invalid message id.' });
+    }
     const stmt = db.prepare('UPDATE alumni_messages SET likes_count = likes_count + 1 WHERE id = ?');
-    const result = stmt.run(id);
+    const result = stmt.run(msgId);
 
     if (result.changes === 0) {
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
 
-    const updated = db.prepare('SELECT id, likes_count FROM alumni_messages WHERE id = ?').get(id);
+    const updated = db.prepare('SELECT id, likes_count FROM alumni_messages WHERE id = ?').get(msgId);
 
     // Broadcast reaction update in real-time to all connected alumni clients
     broadcastSSE('reaction_update', {
-      messageId: Number(id),
+      messageId: msgId,
       likesCount: updated.likes_count
     });
 
@@ -253,9 +327,10 @@ router.get('/alumni/members', optionalAuthenticate, (req, res) => {
       params.push(type);
     }
 
-    if (search && search.trim()) {
+    if (search && typeof search === 'string' && search.trim()) {
       conditions.push('(name LIKE ? OR class_year LIKE ? OR profession LIKE ? OR location LIKE ?)');
-      const term = `%${search.trim()}%`;
+      // Escape LIKE wildcards so a user can't probe the whole table with '%'
+      const term = '%' + search.trim().replace(/[\\%_]/g, m => '\\' + m) + '%';
       params.push(term, term, term, term);
     }
 
@@ -303,7 +378,7 @@ router.get('/alumni/members', optionalAuthenticate, (req, res) => {
 });
 
 // POST /api/alumni/members - Register in Alumni Network (with optional password for instant account creation)
-router.post('/alumni/members', (req, res) => {
+router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
   try {
     const { name, email, phone, memberType, classYear, profession, location, bio, password } = req.body;
 
@@ -316,6 +391,11 @@ router.post('/alumni/members', (req, res) => {
 
     const cleanType = memberType.toUpperCase() === 'OG' ? 'OG' : 'OB';
     const cleanEmail = email ? email.trim().toLowerCase() : null;
+
+    // If a password is provided, an account is created; enforce the policy.
+    if (password && (typeof password !== 'string' || password.length < 8)) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
+    }
 
     const stmt = db.prepare(`
       INSERT INTO alumni_members (name, email, phone, member_type, class_year, profession, location, bio)

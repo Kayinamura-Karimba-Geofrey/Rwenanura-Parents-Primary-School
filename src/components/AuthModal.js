@@ -42,11 +42,6 @@ export function createAuthModal(onAuthSuccess) {
           <input type="password" id="login-password" required placeholder="••••••••" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
         </div>
 
-        <div style="background: var(--gray-100); padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.8rem; color: var(--gray-600);">
-          💡 <strong>Default Admin Credentials:</strong><br />
-          Email: <code style="color: var(--primary);">admin@rwenanura.ac.rw</code> | Password: <code style="color: var(--primary);">Admin@2026</code>
-        </div>
-
         <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
           Sign In to Dashboard
         </button>
@@ -67,15 +62,12 @@ export function createAuthModal(onAuthSuccess) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Password *</label>
-            <input type="password" id="signup-password" required minlength="6" placeholder="Min 6 chars" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
+            <input type="password" id="signup-password" required minlength="8" placeholder="Min 8 chars" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
           </div>
 
           <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Role Level</label>
-            <select id="signup-role" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem; background: white;">
-              <option value="staff">School Staff</option>
-              <option value="admin">Administrator</option>
-            </select>
+            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Account Type</label>
+            <input type="text" value="School Staff" disabled style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem; background: var(--gray-100); color: var(--gray-500);" />
           </div>
         </div>
 
@@ -157,7 +149,9 @@ export function createAuthModal(onAuthSuccess) {
     const name = modal.querySelector('#signup-name').value;
     const email = modal.querySelector('#signup-email').value;
     const password = modal.querySelector('#signup-password').value;
-    const role = modal.querySelector('#signup-role').value;
+    // Server always assigns 'staff' for public signups; admin promotion is
+    // done by an existing administrator via the /api/auth/promote endpoint.
+    const role = 'staff';
     const btn = modal.querySelector('#signup-submit-btn');
 
     btn.disabled = true;

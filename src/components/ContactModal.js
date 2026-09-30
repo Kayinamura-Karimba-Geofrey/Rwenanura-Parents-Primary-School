@@ -107,8 +107,8 @@ export function createContactModal() {
       feedbackEl.style.border = '1px solid var(--primary-light)';
       feedbackEl.innerHTML = `
         <strong>🎉 Application Submitted!</strong><br />
-        Tracking Code: <strong>${response.trackingCode}</strong><br />
-        <span style="font-size: 0.82rem; color: var(--gray-600);">We have recorded your application for ${childName} (${grade}). Our admissions office will contact you shortly!</span>
+        Tracking Code: <strong>${escapeHtml(response.trackingCode)}</strong><br />
+        <span style="font-size: 0.82rem; color: var(--gray-600);">We have recorded your application for ${escapeHtml(childName)} (${escapeHtml(grade)}). Our admissions office will contact you shortly!</span>
       `;
       form.reset();
     } else {
@@ -124,4 +124,14 @@ export function createContactModal() {
   });
 
   return modal;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

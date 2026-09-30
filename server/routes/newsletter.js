@@ -1,18 +1,34 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import db from '../db.js';
+import { authenticateToken, requireRole } from './auth.js';
 
 const router = express.Router();
 
+const subscribeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Too many subscribe attempts from this IP address. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // POST /api/newsletter - Subscribe parent email to bulletin
-router.post('/newsletter', (req, res) => {
+router.post('/newsletter', subscribeLimiter, (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email || !email.includes('@')) {
+    if (!email || typeof email !== 'string' || !EMAIL_RE.test(email)) {
       return res.status(400).json({
         success: false,
         error: 'Please provide a valid email address.'
       });
+    }
+
+    if (email.trim().length > 200) {
+      return res.status(400).json({ success: false, error: 'Email address is too long.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -42,8 +58,9 @@ router.post('/newsletter', (req, res) => {
   }
 });
 
-// GET /api/newsletter - List subscribers
-router.get('/newsletter', (req, res) => {
+// GET /api/newsletter - List subscribers (staff/admin only).
+// SECURITY: subscriber PII must never be served without authentication.
+router.get('/newsletter', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
     const subscribers = db.prepare('SELECT * FROM subscribers ORDER BY id DESC').all();
     res.json({ success: true, count: subscribers.length, subscribers });

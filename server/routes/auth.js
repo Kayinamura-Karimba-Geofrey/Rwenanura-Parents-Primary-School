@@ -5,7 +5,19 @@ import rateLimit from 'express-rate-limit';
 import db from '../db.js';
 
 const router = express.Router();
-export const JWT_SECRET = process.env.JWT_SECRET || 'rwenanura-secret-key-2026';
+
+// SECURITY: JWT secret must be provided via environment. Refuse to boot with a
+// known/predictable secret, otherwise tokens can be forged by anyone who reads
+// the source code.
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32 || /your_jwt_secret|secret-key|change/i.test(JWT_SECRET)) {
+  console.error('❌ FATAL: Refusing to start. Set a strong JWT_SECRET (32+ random chars) in the .env file.');
+  process.exit(1);
+}
+
+export { JWT_SECRET };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Rate Limiter for Login Attempts (Max 10 attempts per 15 mins)
 const loginLimiter = rateLimit({
@@ -16,7 +28,15 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Middleware to verify JWT token
+// Rate limit account creation to slow automated abuse
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { success: false, error: 'Too many registration attempts from this IP address. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware to optionally verify JWT token without rejecting guests
 export function optionalAuthenticate(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -55,24 +75,39 @@ export function authenticateToken(req, res, next) {
   });
 }
 
+// RBAC middleware: restrict an endpoint to specific roles.
+// The role claim is verified against the database to honor live role changes.
+export function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'You do not have permission to perform this action.' });
+    }
+    const dbUser = db.prepare('SELECT role FROM users WHERE id = ?').get(req.user.id);
+    if (!dbUser || !roles.includes(dbUser.role)) {
+      return res.status(403).json({ success: false, error: 'You do not have permission to perform this action.' });
+    }
+    next();
+  };
+}
+
 // POST /api/auth/alumni-register - Register new Alumni account
-router.post('/auth/alumni-register', (req, res) => {
+router.post('/auth/alumni-register', registerLimiter, (req, res) => {
   try {
     const { name, email, password, memberType, classYear, profession, location, phone, bio } = req.body;
 
     if (!name || !email || !password || !memberType || !classYear) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Full name, email, password, alumni type (OB/OG), and graduating class year are required.' 
+      return res.status(400).json({
+        success: false,
+        error: 'Full name, email, password, alumni type (OB/OG), and graduating class year are required.'
       });
     }
 
-    if (!email.includes('@')) {
+    if (!EMAIL_RE.test(String(email))) {
       return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long.' });
+    if (typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -87,7 +122,7 @@ router.post('/auth/alumni-register', (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(password, salt);
 
-    // 1. Create User account with role 'alumni'
+    // 1. Create User account with role 'alumni' (role is NEVER taken from the request)
     const insertUser = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
     const userInfo = insertUser.run(name.trim(), cleanEmail, passwordHash, 'alumni');
     const userId = userInfo.lastInsertRowid;
@@ -96,7 +131,7 @@ router.post('/auth/alumni-register', (req, res) => {
     const existingMember = db.prepare('SELECT id FROM alumni_members WHERE email = ?').get(cleanEmail);
     if (existingMember) {
       db.prepare(`
-        UPDATE alumni_members 
+        UPDATE alumni_members
         SET name = ?, phone = ?, member_type = ?, class_year = ?, profession = ?, location = ?, bio = ?
         WHERE id = ?
       `).run(
@@ -155,21 +190,22 @@ router.post('/auth/alumni-register', (req, res) => {
   }
 });
 
-// POST /api/auth/signup - Register new staff account
-router.post('/auth/signup', (req, res) => {
+// POST /api/auth/signup - Register new STAFF account (public requests always
+// get role 'staff'; promoting anyone to 'admin' requires an existing admin).
+router.post('/auth/signup', registerLimiter, (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, error: 'Name, email, and password are required.' });
     }
 
-    if (!email.includes('@')) {
+    if (!EMAIL_RE.test(String(email))) {
       return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long.' });
+    if (typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -182,7 +218,10 @@ router.post('/auth/signup', (req, res) => {
 
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(password, salt);
-    const userRole = role === 'admin' ? 'admin' : (role === 'alumni' ? 'alumni' : 'staff');
+
+    // SECURITY: role is fixed to 'staff' for public signups. A client-supplied
+    // role is ignored, otherwise anyone could self-register as admin.
+    const userRole = 'staff';
 
     const stmt = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
     const info = stmt.run(name.trim(), cleanEmail, passwordHash, userRole);
@@ -207,6 +246,31 @@ router.post('/auth/signup', (req, res) => {
   }
 });
 
+// POST /api/auth/promote - Promote an existing staff/alumni user to admin.
+// Only callable by an existing administrator.
+router.post('/auth/promote', authenticateToken, requireRole('admin'), (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !EMAIL_RE.test(String(email))) {
+      return res.status(400).json({ success: false, error: 'A valid email address is required.' });
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const user = db.prepare('SELECT id, role FROM users WHERE email = ?').get(cleanEmail);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'No user found with that email.' });
+    }
+    if (user.role === 'admin') {
+      return res.status(400).json({ success: false, error: 'User is already an administrator.' });
+    }
+    db.prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', user.id);
+    console.log(`🛡️ Admin promotion: ${cleanEmail} is now an administrator (promoted by ${req.user.email})`);
+    res.json({ success: true, message: `${cleanEmail} has been promoted to administrator.` });
+  } catch (err) {
+    console.error('Promotion error:', err);
+    res.status(500).json({ success: false, error: 'Failed to promote user.' });
+  }
+});
+
 // POST /api/auth/login - Authenticate staff/admin/alumni
 router.post('/auth/login', loginLimiter, (req, res) => {
   try {
@@ -216,15 +280,15 @@ router.post('/auth/login', loginLimiter, (req, res) => {
       return res.status(400).json({ success: false, error: 'Please enter both email and password.' });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = String(email).trim().toLowerCase();
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(cleanEmail);
 
-    if (!user) {
-      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
-    }
+    // Uniform error + constant-ish work factor: run a dummy compare even when
+    // the user doesn't exist so response timing doesn't reveal valid emails.
+    const passwordHash = user ? user.password_hash : '$2a$10$C6UzMDM.H6dfI/f/IKcEeO7ZbKqFsOpbDfLZbKaQRU-u3v0tF8S0m';
+    const validPassword = bcrypt.compareSync(String(password), passwordHash);
 
-    const validPassword = bcrypt.compareSync(password, user.password_hash);
-    if (!validPassword) {
+    if (!user || !validPassword) {
       return res.status(401).json({ success: false, error: 'Invalid email or password.' });
     }
 

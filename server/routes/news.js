@@ -1,8 +1,25 @@
 import express from 'express';
 import db from '../db.js';
-import { authenticateToken } from './auth.js';
+import { authenticateToken, requireRole } from './auth.js';
 
 const router = express.Router();
+
+// Length caps for all free-text news fields
+const MAX_LEN = {
+  title: 200,
+  type: 10,
+  category: 60,
+  day: 2,
+  month: 3,
+  year: 4,
+  time: 60,
+  location: 120,
+  summary: 1000,
+};
+
+function capped(value, max) {
+  return String(value).trim().substring(0, max);
+}
 
 // GET /api/news - Fetch all news & events from database
 router.get('/news', (req, res) => {
@@ -49,15 +66,15 @@ router.post('/news', authenticateToken, (req, res) => {
     `);
 
     const info = stmt.run(
-      title.trim(),
-      type || 'news',
-      category.trim(),
-      day.toString().padStart(2, '0'),
-      month.toUpperCase().substring(0, 3),
-      (year || new Date().getFullYear()).toString(),
-      time || 'All Day',
-      location || 'School Campus',
-      summary.trim()
+      capped(title, MAX_LEN.title),
+      capped(type || 'news', MAX_LEN.type),
+      capped(category, MAX_LEN.category),
+      capped(day.toString().padStart(2, '0'), MAX_LEN.day),
+      capped(month.toUpperCase().substring(0, 3), MAX_LEN.month),
+      capped((year || new Date().getFullYear()).toString(), MAX_LEN.year),
+      capped(time || 'All Day', MAX_LEN.time),
+      capped(location || 'School Campus', MAX_LEN.location),
+      capped(summary, MAX_LEN.summary)
     );
 
     console.log(`📢 New Article Published: "${title}" (${category})`);
@@ -75,11 +92,15 @@ router.post('/news', authenticateToken, (req, res) => {
 });
 
 // DELETE /api/news/:id - Delete news item or event (Protected Admin)
-router.delete('/news/:id', authenticateToken, (req, res) => {
+router.delete('/news/:id', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
     const { id } = req.params;
+    const newsId = Number.parseInt(id, 10);
+    if (!Number.isInteger(newsId)) {
+      return res.status(400).json({ success: false, error: 'Invalid article id.' });
+    }
     const stmt = db.prepare('DELETE FROM news_events WHERE id = ?');
-    const result = stmt.run(id);
+    const result = stmt.run(newsId);
 
     if (result.changes === 0) {
       return res.status(404).json({ success: false, error: 'Article not found.' });

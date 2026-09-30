@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 
@@ -75,31 +76,31 @@ export function initDatabase() {
     )
   `);
 
-  // Seed default admin user if no users exist
+  // SECURITY: default accounts are seeded only when explicitly requested via
+  // environment variables, and passwords are never hardcoded in source. When
+  // no password is provided, a random one is generated and printed once to the
+  // server console (never committed, never shown in the UI).
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
   if (userCount === 0) {
-    const adminEmail = 'admin@rwenanura.ac.rw';
+    const adminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@rwenanura.ac.rw').toLowerCase();
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD || crypto.randomBytes(12).toString('base64url');
     const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync('Admin@2026', salt);
+    const hash = bcrypt.hashSync(adminPassword, salt);
 
     const insertAdmin = db.prepare(`
       INSERT INTO users (name, email, password_hash, role)
       VALUES (?, ?, ?, ?)
     `);
     insertAdmin.run('Super Admin', adminEmail, hash, 'admin');
-    console.log('👤 Default Admin Account Created: admin@rwenanura.ac.rw / Admin@2026');
-  }
 
-  // Seed default alumni account if not exists
-  const alumniUser = db.prepare('SELECT id FROM users WHERE email = ?').get('emmanuel.m@gmail.com');
-  if (!alumniUser) {
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync('Alumni@2026', salt);
-    db.prepare(`
-      INSERT INTO users (name, email, password_hash, role)
-      VALUES (?, ?, ?, ?)
-    `).run('Emmanuel Mugisha', 'emmanuel.m@gmail.com', hash, 'alumni');
-    console.log('🎓 Default Alumni Account Created: emmanuel.m@gmail.com / Alumni@2026');
+    console.log('👤 Default Admin Account Created:');
+    console.log(`   Email: ${adminEmail}`);
+    if (process.env.SEED_ADMIN_PASSWORD) {
+      console.log('   Password: (loaded from SEED_ADMIN_PASSWORD env var)');
+    } else {
+      console.log(`   Password: ${adminPassword}`);
+      console.log('   ⚠️  Copy this password now — it will not be shown again.');
+    }
   }
 
   // 5. Alumni Messages Table (OBs & OGs Chat)

@@ -71,14 +71,14 @@ export function createTrackModal() {
         <div style="background: var(--gray-50); border: 1px solid var(--gray-300); border-radius: var(--radius-md); padding: 1.25rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-200); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
             <div>
-              <span style="font-family: monospace; font-weight: 700; color: var(--navy); font-size: 0.85rem;">${app.tracking_code}</span>
-              <h4 style="font-size: 1.2rem; color: var(--navy); margin-top: 0.15rem;">${app.child_name}</h4>
-              <p style="font-size: 0.82rem; color: var(--gray-600); margin: 0;">Grade: <strong>${app.grade}</strong></p>
+              <span style="font-family: monospace; font-weight: 700; color: var(--navy); font-size: 0.85rem;">${escapeHtml(app.tracking_code)}</span>
+              <h4 style="font-size: 1.2rem; color: var(--navy); margin-top: 0.15rem;">${escapeHtml(app.child_name)}</h4>
+              <p style="font-size: 0.82rem; color: var(--gray-600); margin: 0;">Grade: <strong>${escapeHtml(app.grade)}</strong></p>
             </div>
             
             <div style="background: ${badgeBg}; color: ${badgeColor}; padding: 0.45rem 0.85rem; border-radius: var(--radius-full); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.35rem;">
               <span>${statusIcon}</span>
-              <span>${app.status}</span>
+              <span>${escapeHtml(app.status)}</span>
             </div>
           </div>
 
@@ -91,11 +91,21 @@ export function createTrackModal() {
     } else {
       resultDiv.innerHTML = `
         <div style="background: rgba(220, 38, 38, 0.08); border: 1px solid #fca5a5; color: #dc2626; padding: 1rem; border-radius: var(--radius-sm); font-size: 0.88rem; text-align: center;">
-          ❌ ${res.error || 'Tracking code not found.'}
+          ❌ ${escapeHtml(res.error || 'Tracking code not found.')}
         </div>
       `;
     }
   });
 
   return modal;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

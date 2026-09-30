@@ -311,7 +311,7 @@ export function createAdminDashboard(onLogout) {
       return `
         <div style="flex: 1; min-width: 110px; background: var(--gray-50); border: 1px solid var(--gray-200); padding: 0.5rem; border-radius: 4px;">
           <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.25rem;">
-            <span>${grade}</span>
+            <span>${escapeHtml(grade)}</span>
             <span style="color: var(--primary);">${count} (${pct}%)</span>
           </div>
           <div style="width: 100%; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden;">
@@ -329,14 +329,20 @@ export function createAdminDashboard(onLogout) {
     }
 
     const headers = ['Tracking Code', 'Pupil Name', 'Grade Level', 'Parent Name', 'Phone', 'Email', 'Status', 'Date Submitted'];
+    // SECURITY: neutralize CSV formula injection (=, +, -, @ prefixes) so a
+    // crafted application can't execute as a formula when opened in Excel.
+    const sanitizeCell = (v) => {
+      const s = String(v == null ? '' : v);
+      return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    };
     const rows = applications.map(a => [
-      `"${a.tracking_code || ''}"`,
-      `"${a.child_name || ''}"`,
-      `"${a.grade || ''}"`,
-      `"${a.parent_name || ''}"`,
-      `"${a.phone || ''}"`,
-      `"${a.email || ''}"`,
-      `"${a.status || ''}"`,
+      `"${sanitizeCell(a.tracking_code)}"`,
+      `"${sanitizeCell(a.child_name)}"`,
+      `"${sanitizeCell(a.grade)}"`,
+      `"${sanitizeCell(a.parent_name)}"`,
+      `"${sanitizeCell(a.phone)}"`,
+      `"${sanitizeCell(a.email)}"`,
+      `"${sanitizeCell(a.status)}"`,
       `"${new Date(a.created_at).toLocaleDateString()}"`
     ]);
 
@@ -375,9 +381,9 @@ export function createAdminDashboard(onLogout) {
       <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
           <div>
-            <span style="background: var(--navy); color: var(--gold); font-family: monospace; font-weight: 700; font-size: 0.78rem; padding: 0.15rem 0.45rem; border-radius: 3px;">${app.tracking_code}</span>
-            <strong style="font-size: 1rem; margin-left: 0.5rem; color: var(--navy);">${app.child_name}</strong>
-            <span style="font-size: 0.82rem; color: var(--gray-500);">(${app.grade})</span>
+            <span style="background: var(--navy); color: var(--gold); font-family: monospace; font-weight: 700; font-size: 0.78rem; padding: 0.15rem 0.45rem; border-radius: 3px;">${escapeHtml(app.tracking_code)}</span>
+            <strong style="font-size: 1rem; margin-left: 0.5rem; color: var(--navy);">${escapeHtml(app.child_name)}</strong>
+            <span style="font-size: 0.82rem; color: var(--gray-500);">(${escapeHtml(app.grade)})</span>
           </div>
 
           <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -394,13 +400,13 @@ export function createAdminDashboard(onLogout) {
         </div>
 
         <div style="font-size: 0.82rem; color: var(--gray-600); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.4rem; background: var(--gray-100); padding: 0.5rem 0.75rem; border-radius: 4px;">
-          <div>👤 <strong>Parent:</strong> ${app.parent_name}</div>
-          <div>📞 <strong>Phone:</strong> ${app.phone}</div>
-          <div>✉️ <strong>Email:</strong> ${app.email || 'N/A'}</div>
+          <div>👤 <strong>Parent:</strong> ${escapeHtml(app.parent_name)}</div>
+          <div>📞 <strong>Phone:</strong> ${escapeHtml(app.phone)}</div>
+          <div>✉️ <strong>Email:</strong> ${escapeHtml(app.email || 'N/A')}</div>
           <div>🕒 <strong>Date:</strong> ${new Date(app.created_at).toLocaleDateString()}</div>
         </div>
 
-        ${app.notes ? `<div style="font-size: 0.8rem; color: var(--gray-600); font-style: italic;">📝 Notes: "${app.notes}"</div>` : ''}
+        ${app.notes ? `<div style="font-size: 0.8rem; color: var(--gray-600); font-style: italic;">📝 Notes: "${escapeHtml(app.notes)}"</div>` : ''}
       </div>
     `).join('');
 
@@ -489,11 +495,11 @@ export function createAdminDashboard(onLogout) {
       <div style="background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center;">
         <div>
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-            <span class="badge" style="font-size: 0.68rem; padding: 0.1rem 0.4rem;">${item.category}</span>
-            <span style="font-size: 0.78rem; color: var(--gray-500);">${item.date.day} ${item.date.month} ${item.date.year}</span>
+            <span class="badge" style="font-size: 0.68rem; padding: 0.1rem 0.4rem;">${escapeHtml(item.category)}</span>
+            <span style="font-size: 0.78rem; color: var(--gray-500);">${escapeHtml(item.date.day)} ${escapeHtml(item.date.month)} ${escapeHtml(item.date.year)}</span>
           </div>
-          <strong style="color: var(--navy); font-size: 0.95rem;">${item.title}</strong>
-          <p style="font-size: 0.82rem; color: var(--gray-600); margin: 0.2rem 0 0 0;">${item.summary}</p>
+          <strong style="color: var(--navy); font-size: 0.95rem;">${escapeHtml(item.title)}</strong>
+          <p style="font-size: 0.82rem; color: var(--gray-600); margin: 0.2rem 0 0 0;">${escapeHtml(item.summary)}</p>
         </div>
 
         <button class="delete-news-btn" data-id="${item.id}" style="color: #dc2626; border: 1px solid #fee2e2; background: #fef2f2; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
@@ -539,7 +545,7 @@ export function createAdminDashboard(onLogout) {
           ${subscribers.map((sub, idx) => `
             <tr style="border-bottom: 1px solid var(--gray-200);">
               <td style="padding: 0.6rem 0.85rem; color: var(--gray-500);">${idx + 1}</td>
-              <td style="padding: 0.6rem 0.85rem; font-weight: 600; color: var(--navy);">${sub.email}</td>
+              <td style="padding: 0.6rem 0.85rem; font-weight: 600; color: var(--navy);">${escapeHtml(sub.email)}</td>
               <td style="padding: 0.6rem 0.85rem; color: var(--gray-500);">${new Date(sub.subscribed_at).toLocaleString()}</td>
             </tr>
           `).join('')}
@@ -563,4 +569,14 @@ export function createAdminDashboard(onLogout) {
   observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
 
   return modal;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

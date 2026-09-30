@@ -25,7 +25,7 @@ import { createAlumniModal } from './components/AlumniModal.js';
 import { createAlumniSection } from './components/AlumniSection.js';
 import { createFooter } from './components/Footer.js';
 
-import { getStoredToken } from './data/api.js';
+import { getStoredToken, checkAuthMe, clearAuthSession } from './data/api.js';
 import { initUserRole } from './data/userRole.js';
 import { onLanguageChange } from './data/i18n.js';
 
@@ -59,6 +59,18 @@ function setupScrollReveal() {
 
 function initApp() {
   initUserRole();
+
+  // SECURITY: validate the stored session against the server on load so
+  // expired tokens and revoked/downgraded roles can't keep granting access
+  // to admin UI state from localStorage.
+  if (getStoredToken()) {
+    checkAuthMe().then(res => {
+      if (!res.success) {
+        clearAuthSession();
+      }
+    });
+  }
+
   const app = document.querySelector('#app');
   app.innerHTML = '';
 
