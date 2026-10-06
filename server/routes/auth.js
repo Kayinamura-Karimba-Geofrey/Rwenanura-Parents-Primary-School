@@ -379,7 +379,7 @@ router.post('/auth/promote', authenticateToken, requireRole('admin'), (req, res)
       return res.status(400).json({ success: false, error: 'User is already an administrator.' });
     }
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', user.id);
-    console.log(`🛡️ Admin promotion: ${cleanEmail} is now an administrator (promoted by ${req.user.email})`);
+    console.log(`🛡️ User #${user.id} promoted to admin (by user #${req.user.id})`);
     res.json({ success: true, message: `${cleanEmail} has been promoted to administrator.` });
   } catch (err) {
     console.error('Promotion error:', err);
@@ -430,7 +430,7 @@ router.post('/auth/users/:id/approve', authenticateToken, requireRole('staff', '
     }
     const newRole = REGISTERABLE_ROLES.includes(target.requested_role) ? target.requested_role : 'staff';
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(newRole, userId);
-    console.log(`✅ Approved ${target.email} as ${newRole} (by ${req.user.email})`);
+    console.log(`✅ User #${target.id} approved as ${newRole} (by user #${req.user.id})`);
     res.json({ success: true, role: newRole, message: `${target.email} approved as ${newRole}.` });
   } catch (err) {
     console.error('Approve error:', err);
@@ -457,7 +457,7 @@ router.patch('/auth/users/:id/role', authenticateToken, requireRole('admin'), (r
       return res.status(404).json({ success: false, error: 'Account not found.' });
     }
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
-    console.log(`🛡️ Role change: ${target.email} ${target.role} -> ${role} (by ${req.user.email})`);
+    console.log(`🛡️ User #${target.id} role ${target.role} -> ${role} (by user #${req.user.id})`);
     res.json({ success: true, message: `${target.email} is now ${role}.` });
   } catch (err) {
     console.error('Role change error:', err);
@@ -661,7 +661,7 @@ router.post('/auth/login', loginLimiter, (req, res) => {
 
     startSession(res, userObj);
 
-    console.log(`🔐 User Logged In: ${user.name} (${user.email}) [${user.role}]`);
+    console.log(`🔐 User #${user.id} logged in [${user.role}]`);
 
     res.json({
       success: true,
