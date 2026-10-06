@@ -84,11 +84,12 @@ async function apiRequest(path, options = {}) {
 
 // ----------------- AUTH APIS -----------------
 
-export async function loginUser(email, password) {
+// identifier: an email address or (for pupils) a username
+export async function loginUser(identifier, password) {
   try {
     const data = await apiRequest('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ identifier, password })
     });
 
     if (data.success && data.user) {
@@ -103,11 +104,11 @@ export async function loginUser(email, password) {
 
 // Public registration for students and staff. Accounts are created as
 // 'pending' and return no session until they are approved.
-export async function registerUser({ accountType, name, email, password, classLevel }) {
+export async function registerUser({ accountType, name, email, username, password, classLevel }) {
   try {
     return await apiRequest('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ accountType, name, email, password, classLevel })
+      body: JSON.stringify({ accountType, name, email, username, password, classLevel })
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -183,6 +184,14 @@ export async function approveUser(id) {
       method: 'POST'});
   } catch (err) {
     return { success: false, error: err.message || 'Failed to approve account' };
+  }
+}
+
+export async function issueTemporaryPassword(id) {
+  try {
+    return await apiRequest(`/api/auth/users/${id}/reset-password`, { method: 'POST' });
+  } catch (err) {
+    return { success: false, error: err.message || 'Failed to reset password' };
   }
 }
 
