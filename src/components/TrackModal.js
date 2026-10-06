@@ -19,7 +19,7 @@ export function createTrackModal() {
 
       <form id="track-form" style="margin-bottom: 1.25rem;">
         <div class="track-input-row">
-          <input type="text" id="track-code-input" required placeholder="e.g. RPPS-2026-4289" style="flex: 1; padding: 0.8rem 1rem; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 0.95rem; font-family: monospace; font-weight: 700; text-transform: uppercase;" />
+          <input type="text" id="track-code-input" required placeholder="e.g. RPPS-2026-a1b2c3d4e5f6a7b8" style="flex: 1; padding: 0.8rem 1rem; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 0.95rem; font-family: monospace; font-weight: 700; text-transform: uppercase;" />
           <button type="submit" class="btn btn-primary" style="padding: 0.8rem 1.25rem;">
             Check Status
           </button>
@@ -96,6 +96,13 @@ export function createTrackModal() {
       `;
     }
   });
+
+  // Open with a code already filled in and looked up (links in status emails)
+  modal.openWithCode = (code) => {
+    modal.querySelector('#track-code-input').value = code;
+    modal.classList.add('active');
+    form.requestSubmit();
+  };
 
   return modal;
 }
