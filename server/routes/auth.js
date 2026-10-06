@@ -28,8 +28,6 @@ const MAX_PASSWORD_LEN = 128;
 const MAX_NAME_LEN = 120;
 const MAX_EMAIL_LEN = 200;
 
-const MANAGEABLE_ROLES = ['pending', 'staff', 'admin'];
-
 // Real hash of a random value, used to equalize login timing for unknown emails.
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
 
@@ -245,56 +243,79 @@ router.post('/auth/alumni-register', registerLimiter, (req, res) => {
   }
 });
 
-// POST /api/auth/signup - Request a STAFF account (created as 'pending';
-// an existing admin approves it from the management console).
+// Accounts that self-register through the public form. Both start as
+// 'pending' with no session; staff accounts are approved by an admin, student
+// accounts by staff or an admin.
+const REGISTERABLE_ROLES = ['student', 'staff'];
+const CLASS_LEVELS = ['Nursery 1', 'Nursery 2', 'Nursery 3', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+
+function createPendingAccount(req, res, requestedRole) {
+  const { name, email, password, classLevel } = req.body || {};
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, error: 'Name, email, and password are required.' });
+  }
+
+  if (!isValidName(name)) {
+    return res.status(400).json({ success: false, error: `Name must be at most ${MAX_NAME_LEN} characters.` });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
+  }
+
+  if (!isValidPassword(password)) {
+    return res.status(400).json({ success: false, error: `Password must be between 8 and ${MAX_PASSWORD_LEN} characters long.` });
+  }
+
+  if (requestedRole === 'student' && !CLASS_LEVELS.includes(classLevel)) {
+    return res.status(400).json({ success: false, error: 'Please select a valid class.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail);
+  if (existing) {
+    return res.status(400).json({ success: false, error: 'An account with this email already exists.' });
+  }
+
+  const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+
+  // SECURITY: the stored role is always 'pending'; the requested role is only
+  // applied when an authorized user approves the account.
+  db.prepare(`
+    INSERT INTO users (name, email, password_hash, role, requested_role, class_level)
+    VALUES (?, ?, ?, 'pending', ?, ?)
+  `).run(name.trim(), cleanEmail, passwordHash, requestedRole, requestedRole === 'student' ? classLevel : null);
+
+  console.log(`👤 New ${requestedRole} signup awaiting approval: ${name} (${cleanEmail})`);
+
+  const approver = requestedRole === 'student' ? 'A staff member' : 'An administrator';
+  return res.status(201).json({
+    success: true,
+    pendingApproval: true,
+    message: `Registration received. ${approver} must approve your account before you can sign in.`
+  });
+}
+
+// POST /api/auth/register - Public registration for students and staff
+router.post('/auth/register', registerLimiter, (req, res) => {
+  try {
+    const { accountType } = req.body || {};
+    if (!REGISTERABLE_ROLES.includes(accountType)) {
+      return res.status(400).json({ success: false, error: 'Account type must be student or staff.' });
+    }
+    return createPendingAccount(req, res, accountType);
+  } catch (err) {
+    console.error('Register error:', err);
+    res.status(500).json({ success: false, error: 'Failed to create account.' });
+  }
+});
+
+// POST /api/auth/signup - Legacy staff signup (same as register with accountType=staff)
 router.post('/auth/signup', registerLimiter, (req, res) => {
   try {
-    const { name, email, password } = req.body || {};
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, error: 'Name, email, and password are required.' });
-    }
-
-    if (!isValidName(name)) {
-      return res.status(400).json({ success: false, error: `Name must be at most ${MAX_NAME_LEN} characters.` });
-    }
-
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
-    }
-
-    if (!isValidPassword(password)) {
-      return res.status(400).json({ success: false, error: `Password must be between 8 and ${MAX_PASSWORD_LEN} characters long.` });
-    }
-
-    const cleanEmail = email.trim().toLowerCase();
-
-    // Check if user already exists
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail);
-    if (existing) {
-      return res.status(400).json({ success: false, error: 'An account with this email already exists.' });
-    }
-
-    const salt = bcrypt.genSaltSync(10);
-    const passwordHash = bcrypt.hashSync(password, salt);
-
-    // SECURITY: public signups start as 'pending' and get no session. Staff
-    // can read every family's application (children's names, parent phones),
-    // so an administrator must approve the account before it grants access.
-    // A client-supplied role is always ignored.
-    const userRole = 'pending';
-
-    const stmt = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-    stmt.run(name.trim(), cleanEmail, passwordHash, userRole);
-
-    console.log(`👤 New Staff Signup Awaiting Approval: ${name} (${cleanEmail})`);
-
-    res.status(201).json({
-      success: true,
-      pendingApproval: true,
-      message: 'Account request submitted. An administrator must approve it before you can sign in.'
-    });
-
+    return createPendingAccount(req, res, 'staff');
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).json({ success: false, error: 'Failed to create user account.' });
@@ -326,12 +347,29 @@ router.post('/auth/promote', authenticateToken, requireRole('admin'), (req, res)
   }
 });
 
-// GET /api/auth/users - List staff/admin accounts and pending requests (admin only)
-router.get('/auth/users', authenticateToken, requireRole('admin'), (req, res) => {
+// Account management permissions:
+//  - admins manage every school account (pending, student, staff, admin)
+//  - staff manage student accounts and pending student registrations only
+const ADMIN_MANAGEABLE_ROLES = ['pending', 'student', 'staff', 'admin'];
+
+function isStudentAccount(user) {
+  return user.role === 'student' || (user.role === 'pending' && user.requested_role === 'student');
+}
+
+function canManage(actor, target) {
+  if (!ADMIN_MANAGEABLE_ROLES.includes(target.role)) return false;
+  if (actor.role === 'admin') return true;
+  return actor.role === 'staff' && isStudentAccount(target);
+}
+
+// GET /api/auth/users - List school accounts the caller may manage
+router.get('/auth/users', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
-    const users = db.prepare(
-      "SELECT id, name, email, role, created_at FROM users WHERE role IN ('pending', 'staff', 'admin') ORDER BY CASE role WHEN 'pending' THEN 0 ELSE 1 END, id DESC"
-    ).all();
+    const users = db.prepare(`
+      SELECT id, name, email, role, requested_role, class_level, created_at FROM users
+      WHERE role IN ('pending', 'student', 'staff', 'admin')
+      ORDER BY CASE role WHEN 'pending' THEN 0 ELSE 1 END, id DESC
+    `).all().filter(u => canManage(req.user, u) || u.id === req.user.id);
     res.json({ success: true, users });
   } catch (err) {
     console.error('List users error:', err);
@@ -339,7 +377,28 @@ router.get('/auth/users', authenticateToken, requireRole('admin'), (req, res) =>
   }
 });
 
-// PATCH /api/auth/users/:id/role - Approve, demote or promote an account (admin only)
+// POST /api/auth/users/:id/approve - Grant a pending account its requested role
+router.post('/auth/users/:id/approve', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
+  try {
+    const userId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user id.' });
+    }
+    const target = db.prepare('SELECT id, email, role, requested_role FROM users WHERE id = ?').get(userId);
+    if (!target || target.role !== 'pending' || !canManage(req.user, target)) {
+      return res.status(404).json({ success: false, error: 'Pending account not found.' });
+    }
+    const newRole = REGISTERABLE_ROLES.includes(target.requested_role) ? target.requested_role : 'staff';
+    db.prepare('UPDATE users SET role = ? WHERE id = ?').run(newRole, userId);
+    console.log(`✅ Approved ${target.email} as ${newRole} (by ${req.user.email})`);
+    res.json({ success: true, role: newRole, message: `${target.email} approved as ${newRole}.` });
+  } catch (err) {
+    console.error('Approve error:', err);
+    res.status(500).json({ success: false, error: 'Failed to approve account.' });
+  }
+});
+
+// PATCH /api/auth/users/:id/role - Change a school account's role (admin only)
 router.patch('/auth/users/:id/role', authenticateToken, requireRole('admin'), (req, res) => {
   try {
     const userId = Number.parseInt(req.params.id, 10);
@@ -347,15 +406,15 @@ router.patch('/auth/users/:id/role', authenticateToken, requireRole('admin'), (r
     if (!Number.isInteger(userId)) {
       return res.status(400).json({ success: false, error: 'Invalid user id.' });
     }
-    if (!MANAGEABLE_ROLES.includes(role)) {
-      return res.status(400).json({ success: false, error: `Role must be one of: ${MANAGEABLE_ROLES.join(', ')}` });
+    if (!ADMIN_MANAGEABLE_ROLES.includes(role)) {
+      return res.status(400).json({ success: false, error: `Role must be one of: ${ADMIN_MANAGEABLE_ROLES.join(', ')}` });
     }
     if (userId === req.user.id) {
       return res.status(400).json({ success: false, error: 'You cannot change your own role.' });
     }
     const target = db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(userId);
-    if (!target || !MANAGEABLE_ROLES.includes(target.role)) {
-      return res.status(404).json({ success: false, error: 'Staff account not found.' });
+    if (!target || !ADMIN_MANAGEABLE_ROLES.includes(target.role)) {
+      return res.status(404).json({ success: false, error: 'Account not found.' });
     }
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
     console.log(`🛡️ Role change: ${target.email} ${target.role} -> ${role} (by ${req.user.email})`);
@@ -366,8 +425,8 @@ router.patch('/auth/users/:id/role', authenticateToken, requireRole('admin'), (r
   }
 });
 
-// DELETE /api/auth/users/:id - Reject a pending request or remove a staff account (admin only)
-router.delete('/auth/users/:id', authenticateToken, requireRole('admin'), (req, res) => {
+// DELETE /api/auth/users/:id - Reject a pending registration or remove an account
+router.delete('/auth/users/:id', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
     const userId = Number.parseInt(req.params.id, 10);
     if (!Number.isInteger(userId)) {
@@ -376,10 +435,11 @@ router.delete('/auth/users/:id', authenticateToken, requireRole('admin'), (req, 
     if (userId === req.user.id) {
       return res.status(400).json({ success: false, error: 'You cannot delete your own account.' });
     }
-    const result = db.prepare("DELETE FROM users WHERE id = ? AND role IN ('pending', 'staff', 'admin')").run(userId);
-    if (result.changes === 0) {
-      return res.status(404).json({ success: false, error: 'Staff account not found.' });
+    const target = db.prepare('SELECT id, role, requested_role FROM users WHERE id = ?').get(userId);
+    if (!target || !canManage(req.user, target)) {
+      return res.status(404).json({ success: false, error: 'Account not found.' });
     }
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId);
     res.json({ success: true, message: 'Account removed.' });
   } catch (err) {
     console.error('Delete user error:', err);
@@ -409,11 +469,14 @@ router.post('/auth/login', loginLimiter, (req, res) => {
     }
 
     if (user.role === 'pending') {
-      return res.status(403).json({ success: false, error: 'Your staff account is awaiting administrator approval.' });
+      const approver = user.requested_role === 'student' ? 'school staff' : 'an administrator';
+      return res.status(403).json({ success: false, error: `Your account is awaiting approval by ${approver}.` });
     }
 
     let extraData = {};
-    if (user.role === 'alumni') {
+    if (user.role === 'student') {
+      extraData = { classLevel: user.class_level || '' };
+    } else if (user.role === 'alumni') {
       const member = db.prepare('SELECT * FROM alumni_members WHERE email = ?').get(cleanEmail);
       if (member) {
         extraData = {
@@ -456,13 +519,15 @@ router.post('/auth/login', loginLimiter, (req, res) => {
 // GET /api/auth/me - Fetch current authenticated user
 router.get('/auth/me', authenticateToken, (req, res) => {
   try {
-    const user = db.prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?').get(req.user.id);
+    const user = db.prepare('SELECT id, name, email, role, class_level, created_at FROM users WHERE id = ?').get(req.user.id);
     if (!user) {
       return res.status(404).json({ success: false, error: 'User account not found.' });
     }
 
     let extraData = {};
-    if (user.role === 'alumni') {
+    if (user.role === 'student') {
+      extraData = { classLevel: user.class_level || '' };
+    } else if (user.role === 'alumni') {
       const member = db.prepare('SELECT * FROM alumni_members WHERE email = ?').get(user.email);
       if (member) {
         extraData = {
@@ -477,9 +542,10 @@ router.get('/auth/me', authenticateToken, (req, res) => {
       }
     }
 
+    const { class_level, ...profile } = user;
     res.json({
       success: true,
-      user: { ...user, ...extraData }
+      user: { ...profile, ...extraData }
     });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Server error' });
