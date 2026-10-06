@@ -1,0 +1,388 @@
+/* Alumni modal: portal tab (membership ID card, sign-in and registration) */
+
+/* TAB 3: Registration Card */
+
+.alumni-register-card {
+  max-width: 680px;
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: 1rem;
+  width: 100%;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.register-header h4 {
+  font-size: 1.25rem;
+  color: var(--navy);
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+
+.register-header p {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+}
+
+.register-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.register-grid .form-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin-bottom: 0.25rem;
+}
+
+.register-grid .form-group input,
+.register-grid .form-group select,
+.register-grid .form-group textarea {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.status-alert-success {
+  background: var(--primary-subtle);
+  border: 1px solid var(--primary-border);
+  color: var(--primary);
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.status-alert-error {
+  background: var(--danger-subtle);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-dark);
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+/* 4. Digital Alumni ID Card */
+
+.alumni-id-card-wrapper {
+  max-width: 580px;
+  margin: 0.5rem auto 1.5rem auto;
+}
+
+.alumni-id-card {
+  background: var(--navy);
+  color: var(--white);
+  border-radius: 16px;
+  border: 2px solid var(--gold);
+  padding: 1.5rem;
+  box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.3);
+  position: relative;
+}
+
+.id-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.id-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.id-card-brand h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.2;
+}
+
+.id-card-brand span {
+  font-size: 0.72rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.id-card-ribbon {
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ribbon-ob {
+  background: var(--primary);
+  color: var(--white);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.ribbon-og {
+  background: var(--gold);
+  color: var(--white);
+  border: 1px solid rgba(217, 119, 6, 0.5);
+}
+
+.id-card-body {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.id-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--white);
+  border: 3px solid var(--gold);
+  flex-shrink: 0;
+}
+
+.id-details {
+  flex: 1;
+}
+
+.id-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem 0;
+  color: var(--white);
+}
+
+.id-meta-line {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--gray-300);
+  margin-bottom: 0.65rem;
+}
+
+.id-class-tag {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.id-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 1rem;
+  font-size: 0.82rem;
+  color: var(--gray-400);
+  margin-bottom: 0.65rem;
+}
+
+.id-contact-grid strong {
+  color: var(--gray-300);
+}
+
+.id-quote {
+  font-style: italic;
+  color: var(--gray-200);
+  font-size: 0.84rem;
+  margin: 0.5rem 0 0 0;
+  border-left: 2px solid var(--gold);
+  padding-left: 0.65rem;
+  line-height: 1.4;
+}
+
+.id-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 0.85rem;
+  font-size: 0.78rem;
+  color: var(--gray-400);
+}
+
+.id-card-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  box-shadow: 0 0 6px var(--primary-light);
+}
+
+.id-card-school-motto {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.id-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 0.55rem 1.15rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline-danger:hover {
+  background: var(--primary);
+  color: var(--white);
+}
+
+/* 5. Alumni Auth Subtabs & Forms */
+
+.alumni-auth-container {
+  max-width: 580px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.auth-subtabs-nav {
+  display: flex;
+  border-bottom: 2px solid var(--gray-200);
+  margin-bottom: 1.25rem;
+}
+
+.subtab-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border: none;
+  background: none;
+  color: var(--gray-600);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.subtab-btn:hover {
+  color: var(--navy);
+}
+
+.subtab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
+.auth-subtab-pane {
+  display: none;
+}
+
+.auth-subtab-pane.active {
+  display: block;
+}
+
+.auth-form-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.auth-form-card .form-header {
+  margin-bottom: 1.25rem;
+}
+
+.auth-form-card .form-header h4 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 0.25rem 0;
+}
+
+.auth-form-card .form-header p {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.login-demo-helper {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--gray-600);
+  margin: 1rem 0;
+}
+
+.login-demo-helper code {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.auth-status-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.auth-status-alert.alert-error {
+  background: var(--danger-subtle);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+.auth-status-alert.alert-success {
+  background: var(--primary-subtle);
+  color: var(--primary-light);
+  border: 1px solid var(--primary-border);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .register-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .id-card-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .id-contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
