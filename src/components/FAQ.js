@@ -62,7 +62,7 @@ export function createFAQ() {
             ${t('faq_guide_desc')}
           </p>
 
-          <button id="download-prospectus-btn" class="btn btn-gold" style="width: 100%;">
+          <button id="download-prospectus-btn" class="btn btn-primary" style="width: 100%;">
             📥 ${t('faq_guide_btn')}
           </button>
         </div>
