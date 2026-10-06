@@ -1,7 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import db from '../db.js';
-import { authenticateToken, optionalAuthenticate, validateAlumniProfile } from './auth.js';
+import { authenticateToken, optionalAuthenticate, requireRole, validateAlumniProfile } from './auth.js';
 
 const router = express.Router();
 
@@ -392,9 +392,12 @@ router.get('/alumni/members', optionalAuthenticate, (req, res) => {
   }
 });
 
-// POST /api/alumni/members - Add a directory entry (no login account; alumni
-// accounts are created via /api/auth/alumni-register with email verification)
-router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
+// POST /api/alumni/members - Add a directory entry (staff/admin only).
+// Graduates list themselves through /api/auth/alumni-register, which only
+// publishes the profile after email verification. This endpoint is for staff
+// adding graduates who have no account; it was previously open to anyone,
+// allowing fake or impersonating directory entries.
+router.post('/alumni/members', memberRegisterLimiter, authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
     const { name, email, phone, memberType, classYear, profession, location, bio } = req.body || {};
 
@@ -417,6 +420,10 @@ router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
     const cleanType = memberType.toUpperCase() === 'OG' ? 'OG' : 'OB';
     const cleanEmail = email ? email.trim().toLowerCase() : null;
 
+    if (cleanEmail && db.prepare('SELECT id FROM alumni_members WHERE email = ?').get(cleanEmail)) {
+      return res.status(400).json({ success: false, error: 'A directory entry with this email already exists.' });
+    }
+
     const stmt = db.prepare(`
       INSERT INTO alumni_members (name, email, phone, member_type, class_year, profession, location, bio)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -435,7 +442,7 @@ router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
 
     const newMember = db.prepare('SELECT * FROM alumni_members WHERE id = ?').get(result.lastInsertRowid);
 
-    console.log(`🎓 New Alumni Member Registered: [${cleanType}] ${name} (${classYear})`);
+    console.log(`🎓 Directory entry #${newMember.id} added by staff user #${req.user.id}`);
 
     res.status(201).json({
       success: true,
