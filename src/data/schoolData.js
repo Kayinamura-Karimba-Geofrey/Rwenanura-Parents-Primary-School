@@ -22,7 +22,7 @@ export const schoolInfo = {
     name: "Mr. Geofrey K. Kayinamura",
     title: "Headteacher & Academic Director",
     message: "At Rwenanura Parents Primary School, we believe every child is born with unique potential. Our dedicated team of educators fosters an environment where academic rigor meets character building, critical thinking, and holistic development. We prepare young minds to lead in a dynamic world while remaining deeply grounded in sound ethical values.",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
+    image: "/images/headteacher.jpg"
   }
 };
 
@@ -34,7 +34,7 @@ export const heroSlides = [
     badge: "Welcome to RPPS",
     ctaPrimary: "Explore Admissions",
     ctaSecondary: "Schedule a Campus Tour",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80"
+    image: "/images/hero-1.jpg"
   },
   {
     id: 2,
@@ -43,7 +43,7 @@ export const heroSlides = [
     badge: "Academic Excellence",
     ctaPrimary: "View Academic Programs",
     ctaSecondary: "Meet Our Educators",
-    image: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1600&q=80"
+    image: "/images/hero-2.jpg"
   },
   {
     id: 3,
@@ -52,7 +52,7 @@ export const heroSlides = [
     badge: "Innovation & Technology",
     ctaPrimary: "Discover Facilities",
     ctaSecondary: "Join Innovation Club",
-    image: "https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1600&q=80"
+    image: "/images/hero-3.jpg"
   },
   {
     id: 4,
@@ -61,7 +61,7 @@ export const heroSlides = [
     badge: "Holistic Development",
     ctaPrimary: "Campus Life",
     ctaSecondary: "Apply Now",
-    image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1600&q=80"
+    image: "/images/hero-4.jpg"
   }
 ];
 
@@ -84,7 +84,7 @@ export const academicPrograms = [
       "Art, Music & Creative Movement",
       "Character & Social Etiquette Development"
     ],
-    image: "https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?auto=format&fit=crop&w=800&q=80"
+    image: "/images/program-nursery.jpg"
   },
   {
     id: "lower-primary",
@@ -97,7 +97,7 @@ export const academicPrograms = [
       "Foundational Science & Technology Skills",
       "Guided Reading & Storytelling Sessions"
     ],
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80"
+    image: "/images/program-lower-primary.jpg"
   },
   {
     id: "upper-primary",
@@ -110,7 +110,7 @@ export const academicPrograms = [
       "French & ICT Practical Computer Modules",
       "Debate, Leadership & Science Fair Competitions"
     ],
-    image: "https://images.unsplash.com/photo-1526976668912-1a811878dd37?auto=format&fit=crop&w=800&q=80"
+    image: "/images/program-upper-primary.jpg"
   },
   {
     id: "stem-club",
@@ -123,7 +123,7 @@ export const academicPrograms = [
       "Eco-Club & School Garden Projects",
       "Math Quiz Olympiad Club"
     ],
-    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
+    image: "/images/program-stem-club.jpg"
   }
 ];
 
@@ -161,42 +161,42 @@ export const campusFacilities = [
     category: "Academic",
     title: "Modern ICT Computer Lab",
     description: "Equipped with high-speed internet, age-appropriate computer workstations, and educational software for digital literacy.",
-    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
+    image: "/images/facility-ict-lab.jpg"
   },
   {
     id: "library",
     category: "Academic",
     title: "Resourceful Children's Library",
     description: "Thousands of English, Kinyarwanda, and French books, storybooks, reference materials, and quiet reading nooks.",
-    image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80"
+    image: "/images/facility-library.jpg"
   },
   {
     id: "sports-ground",
     category: "Extracurricular",
     title: "Sports Pitch & Athletics Oval",
     description: "Spacious green fields for football, volleyball, athletics, physical education, and outdoor recreational play.",
-    image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80"
+    image: "/images/facility-sports-ground.jpg"
   },
   {
     id: "science-lab",
     category: "Academic",
     title: "Interactive Science Lab",
     description: "Safe, hands-on science discovery room equipped with models, microscopes, and experimental apparatus.",
-    image: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=80"
+    image: "/images/facility-science-lab.jpg"
   },
   {
     id: "dining-hall",
     category: "Wellness",
     title: "Hygienic Dining & Nutrition Hall",
     description: "Clean dining facility providing balanced, nutritious mid-day hot meals prepared fresh daily for all pupils.",
-    image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=800&q=80"
+    image: "/images/facility-dining-hall.jpg"
   },
   {
     id: "nursery-playground",
     category: "Early Years",
     title: "Safe Early Years Outdoor Playground",
     description: "Dedicated, secure playground equipped with soft safety surfacing, swings, slides, and sensory play modules.",
-    image: "https://images.unsplash.com/photo-1522661067900-ab829854a57f?auto=format&fit=crop&w=800&q=80"
+    image: "/images/facility-nursery-playground.jpg"
   }
 ];
 
@@ -210,7 +210,7 @@ export const newsAndEvents = [
     location: "School Main Hall",
     title: "Annual STEM & Science Discovery Fair 2026",
     summary: "Pupils from P1 to P6 present innovative science models, environmental projects, and coding demonstrations to parents and guests.",
-    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
+    image: "/images/news-1.jpg"
   },
   {
     id: 2,
@@ -221,7 +221,7 @@ export const newsAndEvents = [
     location: "Nyagatare District",
     title: "RPPS Top Ranked in District Mock PLE Examinations",
     summary: "Our Primary 6 candidates scored 100% first grade passes in the recent regional pre-national examination series.",
-    image: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80"
+    image: "/images/news-2.jpg"
   },
   {
     id: 3,
@@ -232,7 +232,7 @@ export const newsAndEvents = [
     location: "Sports Stadium",
     title: "Inter-House Sports & Cultural Competition",
     summary: "A thrilling day of track events, relay races, traditional Rwandan dance, and inter-house athletics competition.",
-    image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80"
+    image: "/images/news-3.jpg"
   },
   {
     id: 4,
@@ -243,7 +243,7 @@ export const newsAndEvents = [
     location: "Rwenanura Campus",
     title: "Open Day & New Pupil Orientation 2027",
     summary: "Prospective parents and children are invited to explore classrooms, meet teachers, and tour our facilities.",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80"
+    image: "/images/news-4.jpg"
   }
 ];
 
@@ -276,20 +276,20 @@ export const testimonials = [
     quote: "Sending my two daughters to Rwenanura Parents Primary School was the best decision. Their confidence, spoken English, and math skills have grown tremendously. The teachers truly care about each child.",
     author: "Mrs. Claudine Mukamana",
     role: "Parent of P3 & P5 Pupils",
-    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80"
+    avatar: "/images/testimonial-1.jpg"
   },
   {
     id: 2,
     quote: "I love RPPS because we have computers to practice coding, a big library with fun storybooks, and my teachers always help me understand science experiments!",
     author: "Kevin Manzi",
     role: "Primary 6 Head Boy",
-    avatar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=200&q=80"
+    avatar: "/images/testimonial-2.jpg"
   },
   {
     id: 3,
     quote: "The academic standards at RPPS are outstanding. The school balances discipline, spiritual and moral guidance, and high examination performance seamlessly.",
     author: "Dr. Jean-Claude Habimana",
     role: "Parent Association Member",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
+    avatar: "/images/testimonial-3.jpg"
   }
 ];
