@@ -34,6 +34,7 @@ import { isSignedIn, getStoredUser, checkAuthMe, verifyEmail } from './data/api.
 import { initUserRole } from './data/userRole.js';
 import { onLanguageChange } from './data/i18n.js';
 import { resetScope, onCleanup } from './utils/lifecycle.js';
+import { enhanceModal } from './utils/modal.js';
 
 function setupScrollReveal() {
   const observerOptions = {
@@ -162,6 +163,10 @@ function initApp() {
   currentTrackModal = trackModal;
   currentInfoModal = createInfoModal();
   app.appendChild(currentInfoModal);
+
+  // Dialog semantics, Escape to close, focus trap and focus return
+  [contactModal, trackModal, authModal, adminDashboard, currentInfoModal].forEach(m => enhanceModal(m));
+  enhanceModal(alumniModal, { close: () => alumniModal.close() });
 
   // Initialize Scroll Reveal Animations
   setupScrollReveal();
