@@ -23,7 +23,7 @@ export function generateICalString(events, lang = 'en') {
 
   const nowStr = formatIcalDate(new Date().toISOString());
 
-  let ics = [
+  const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Rwenanura Parents Primary School//Academic Calendar 2026-2027//EN',
