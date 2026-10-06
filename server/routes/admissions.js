@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import rateLimit from 'express-rate-limit';
 import db from '../db.js';
 import { authenticateToken, requireRole } from './auth.js';
+import { sendApplicationReceivedEmail, sendApplicationStatusEmail, sendNewApplicationAlert } from '../mailer.js';
 
 const router = express.Router();
 
@@ -25,6 +26,7 @@ const MAX_LEN = {
 };
 
 const VALID_STATUSES = ['Pending', 'Under Review', 'Approved'];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Helper to generate an unguessable tracking code. A 4-digit guessable number
 // lets anyone enumerate other families' application statuses; 128 bits of
@@ -80,6 +82,12 @@ router.post('/applications', applicationLimiter, (req, res) => {
     );
 
     console.log(`📝 New Admission Application Received: ${trackingCode}`);
+
+    const details = { parentName: parentName.trim(), childName: childName.trim(), grade: grade.trim(), trackingCode };
+    if (email && EMAIL_RE.test(String(email).trim())) {
+      sendApplicationReceivedEmail(String(email).trim(), details);
+    }
+    sendNewApplicationAlert(details);
 
     res.status(201).json({
       success: true,
@@ -167,11 +175,21 @@ router.patch('/applications/:id', authenticateToken, requireRole('staff', 'admin
       return res.status(400).json({ success: false, error: 'Invalid application id' });
     }
 
-    const stmt = db.prepare('UPDATE applications SET status = ? WHERE id = ?');
-    const result = stmt.run(status, appId);
-
-    if (result.changes === 0) {
+    const application = db.prepare('SELECT * FROM applications WHERE id = ?').get(appId);
+    if (!application) {
       return res.status(404).json({ success: false, error: 'Application not found' });
+    }
+
+    db.prepare('UPDATE applications SET status = ? WHERE id = ?').run(status, appId);
+
+    // Tell the family, but only when the status actually changed
+    if (application.status !== status && application.email) {
+      sendApplicationStatusEmail(application.email, {
+        parentName: application.parent_name,
+        childName: application.child_name,
+        status,
+        trackingCode: application.tracking_code
+      });
     }
 
     res.json({ success: true, message: `Application status updated to ${status}` });
