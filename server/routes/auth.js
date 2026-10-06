@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import db from '../db.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../mailer.js';
 
 const router = express.Router();
 
@@ -61,12 +62,47 @@ export function validateAlumniProfile(fields) {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Single-use email tokens (verification / password reset)
+// ---------------------------------------------------------------------------
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+// Issue a fresh token, replacing any earlier one for the same purpose.
+function issueToken(userId, purpose, ttlMs, payload = null) {
+  const token = crypto.randomBytes(32).toString('base64url');
+  db.prepare('DELETE FROM auth_tokens WHERE user_id = ? AND purpose = ?').run(userId, purpose);
+  db.prepare('INSERT INTO auth_tokens (user_id, purpose, token_hash, payload, expires_at) VALUES (?, ?, ?, ?, ?)')
+    .run(userId, purpose, hashToken(token), payload ? JSON.stringify(payload) : null, Date.now() + ttlMs);
+  return token;
+}
+
+// Look up and delete (consume) a token; returns the row or null if invalid/expired.
+function consumeToken(token, purpose) {
+  if (typeof token !== 'string' || token.length < 20 || token.length > 100) return null;
+  const row = db.prepare('SELECT * FROM auth_tokens WHERE token_hash = ? AND purpose = ?').get(hashToken(token), purpose);
+  if (!row) return null;
+  db.prepare('DELETE FROM auth_tokens WHERE id = ?').run(row.id);
+  return row.expires_at >= Date.now() ? row : null;
+}
+
+function startEmailVerification(userId, email, name, payload = null) {
+  const token = issueToken(userId, 'verify', VERIFY_TOKEN_TTL_MS, payload);
+  sendVerificationEmail(email, name, token);
+}
+
 // Re-read the account on every authenticated request so deleted accounts and
 // role changes (approval, demotion) take effect immediately instead of when
 // the 14-day token expires.
 function attachLiveUser(req, decoded) {
-  const dbUser = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(decoded.id);
+  const dbUser = db.prepare('SELECT id, name, email, role, password_changed_at FROM users WHERE id = ?').get(decoded.id);
   if (!dbUser || dbUser.role === 'pending') return false;
+  // Sessions issued before the last password reset are revoked.
+  if (dbUser.password_changed_at && decoded.iat < Math.floor(dbUser.password_changed_at / 1000)) return false;
   req.user = { ...decoded, name: dbUser.name, email: dbUser.email, role: dbUser.role };
   return true;
 }
@@ -172,70 +208,32 @@ router.post('/auth/alumni-register', registerLimiter, (req, res) => {
       return res.status(400).json({ success: false, error: 'An account with this email already exists. Please log in.' });
     }
 
-    const salt = bcrypt.genSaltSync(10);
-    const passwordHash = bcrypt.hashSync(password, salt);
+    const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 
-    // 1. Create User account with role 'alumni' (role is NEVER taken from the request)
-    const insertUser = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-    const userInfo = insertUser.run(name.trim(), cleanEmail, passwordHash, 'alumni');
-    const userId = userInfo.lastInsertRowid;
+    // Role is NEVER taken from the request. The account stays unverified and
+    // the directory profile is only written once the email is confirmed, so
+    // nobody can claim (and overwrite) another graduate's listing.
+    const userInfo = db.prepare('INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, ?, 0)')
+      .run(name.trim(), cleanEmail, passwordHash, 'alumni');
 
-    // 2. Insert or update into alumni_members directory
-    const existingMember = db.prepare('SELECT id FROM alumni_members WHERE email = ?').get(cleanEmail);
-    if (existingMember) {
-      db.prepare(`
-        UPDATE alumni_members
-        SET name = ?, phone = ?, member_type = ?, class_year = ?, profession = ?, location = ?, bio = ?
-        WHERE id = ?
-      `).run(
-        name.trim(),
-        phone ? phone.trim() : null,
-        cleanType,
-        classYear.trim(),
-        profession ? profession.trim() : null,
-        location ? location.trim() : null,
-        bio ? bio.trim() : null,
-        existingMember.id
-      );
-    } else {
-      db.prepare(`
-        INSERT INTO alumni_members (name, email, phone, member_type, class_year, profession, location, bio)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        name.trim(),
-        cleanEmail,
-        phone ? phone.trim() : null,
-        cleanType,
-        classYear.trim(),
-        profession ? profession.trim() : null,
-        location ? location.trim() : null,
-        bio ? bio.trim() : null
-      );
-    }
+    startEmailVerification(userInfo.lastInsertRowid, cleanEmail, name.trim(), {
+      alumniProfile: {
+        name: name.trim(),
+        memberType: cleanType,
+        classYear: classYear.trim(),
+        profession: profession ? profession.trim() : null,
+        location: location ? location.trim() : null,
+        phone: phone ? phone.trim() : null,
+        bio: bio ? bio.trim() : null
+      }
+    });
 
-    const userObj = {
-      id: userId,
-      name: name.trim(),
-      email: cleanEmail,
-      role: 'alumni',
-      memberType: cleanType,
-      classYear: classYear.trim(),
-      profession: profession ? profession.trim() : '',
-      location: location ? location.trim() : '',
-      phone: phone ? phone.trim() : '',
-      bio: bio ? bio.trim() : '',
-      avatarColor: cleanType === 'OB' ? '#0d5c3a' : '#d97706'
-    };
-
-    const token = jwt.sign(userObj, JWT_SECRET, { expiresIn: '14d' });
-
-    console.log(`🎓 New Alumni Registered & Logged In: [${cleanType}] ${name} (${cleanEmail})`);
+    console.log(`🎓 New alumni registration awaiting email verification (user #${userInfo.lastInsertRowid})`);
 
     res.status(201).json({
       success: true,
-      message: 'Welcome to the RPPS OBs & OGs Alumni Network!',
-      token,
-      user: userObj
+      pendingVerification: true,
+      message: 'Almost done! We sent a confirmation link to your email. Open it to activate your alumni account.'
     });
   } catch (err) {
     console.error('Alumni register error:', err);
@@ -283,18 +281,21 @@ function createPendingAccount(req, res, requestedRole) {
 
   // SECURITY: the stored role is always 'pending'; the requested role is only
   // applied when an authorized user approves the account.
-  db.prepare(`
-    INSERT INTO users (name, email, password_hash, role, requested_role, class_level)
-    VALUES (?, ?, ?, 'pending', ?, ?)
+  const info = db.prepare(`
+    INSERT INTO users (name, email, password_hash, role, requested_role, class_level, email_verified)
+    VALUES (?, ?, ?, 'pending', ?, ?, 0)
   `).run(name.trim(), cleanEmail, passwordHash, requestedRole, requestedRole === 'student' ? classLevel : null);
 
-  console.log(`👤 New ${requestedRole} signup awaiting approval: ${name} (${cleanEmail})`);
+  startEmailVerification(info.lastInsertRowid, cleanEmail, name.trim());
 
-  const approver = requestedRole === 'student' ? 'A staff member' : 'An administrator';
+  console.log(`👤 New ${requestedRole} signup awaiting verification/approval (user #${info.lastInsertRowid})`);
+
+  const approver = requestedRole === 'student' ? 'a staff member' : 'an administrator';
   return res.status(201).json({
     success: true,
     pendingApproval: true,
-    message: `Registration received. ${approver} must approve your account before you can sign in.`
+    pendingVerification: true,
+    message: `Registration received. Confirm your email using the link we sent you; ${approver} will then approve your account.`
   });
 }
 
@@ -447,6 +448,118 @@ router.delete('/auth/users/:id', authenticateToken, requireRole('staff', 'admin'
   }
 });
 
+// Same generic reply whether or not the email exists, so these endpoints
+// can't be used to discover registered addresses.
+const GENERIC_EMAIL_REPLY = 'If an account exists for that email, we have sent it a message with further instructions.';
+
+// Separate counters per endpoint, so requesting a few reset emails never
+// blocks actually setting the new password.
+function emailActionLimiter(max) {
+  return rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max,
+    message: { success: false, error: 'Too many requests. Please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+}
+
+// POST /api/auth/verify-email - Confirm an email address with a token
+router.post('/auth/verify-email', (req, res) => {
+  try {
+    const row = consumeToken((req.body || {}).token, 'verify');
+    if (!row) {
+      return res.status(400).json({ success: false, error: 'This confirmation link is invalid or has expired. Request a new one from the sign-in form.' });
+    }
+    const user = db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(row.user_id);
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'This account no longer exists.' });
+    }
+    db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(user.id);
+
+    // Alumni: publish the directory profile now that the email is proven.
+    const profile = row.payload ? JSON.parse(row.payload).alumniProfile : null;
+    if (profile) {
+      const existing = db.prepare('SELECT id FROM alumni_members WHERE email = ?').get(user.email);
+      const values = [profile.name, profile.phone, profile.memberType, profile.classYear, profile.profession, profile.location, profile.bio];
+      if (existing) {
+        db.prepare('UPDATE alumni_members SET name = ?, phone = ?, member_type = ?, class_year = ?, profession = ?, location = ?, bio = ? WHERE id = ?')
+          .run(...values, existing.id);
+      } else {
+        db.prepare('INSERT INTO alumni_members (name, phone, member_type, class_year, profession, location, bio, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+          .run(...values, user.email);
+      }
+    }
+
+    const message = user.role === 'pending'
+      ? 'Email confirmed! Your account will be usable once it has been approved by the school.'
+      : 'Email confirmed! You can now sign in.';
+    res.json({ success: true, message });
+  } catch (err) {
+    console.error('Verify email error:', err);
+    res.status(500).json({ success: false, error: 'Failed to confirm email.' });
+  }
+});
+
+// POST /api/auth/resend-verification - Send a new confirmation link
+router.post('/auth/resend-verification', emailActionLimiter(5), (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (isValidEmail(email)) {
+      const user = db.prepare('SELECT id, name, email, email_verified FROM users WHERE email = ?').get(email.trim().toLowerCase());
+      if (user && !user.email_verified) {
+        // Keep any alumni profile payload from the original registration.
+        const previous = db.prepare("SELECT payload FROM auth_tokens WHERE user_id = ? AND purpose = 'verify'").get(user.id);
+        startEmailVerification(user.id, user.email, user.name, previous && previous.payload ? JSON.parse(previous.payload) : null);
+      }
+    }
+    res.json({ success: true, message: GENERIC_EMAIL_REPLY });
+  } catch (err) {
+    console.error('Resend verification error:', err);
+    res.status(500).json({ success: false, error: 'Failed to send confirmation email.' });
+  }
+});
+
+// POST /api/auth/forgot-password - Email a password reset link
+router.post('/auth/forgot-password', emailActionLimiter(5), (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (isValidEmail(email)) {
+      const user = db.prepare('SELECT id, name, email FROM users WHERE email = ?').get(email.trim().toLowerCase());
+      if (user) {
+        const token = issueToken(user.id, 'reset', RESET_TOKEN_TTL_MS);
+        sendPasswordResetEmail(user.email, user.name, token);
+      }
+    }
+    res.json({ success: true, message: GENERIC_EMAIL_REPLY });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ success: false, error: 'Failed to start password reset.' });
+  }
+});
+
+// POST /api/auth/reset-password - Set a new password using a reset token
+router.post('/auth/reset-password', emailActionLimiter(10), (req, res) => {
+  try {
+    const { token, password } = req.body || {};
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ success: false, error: `Password must be between 8 and ${MAX_PASSWORD_LEN} characters long.` });
+    }
+    const row = consumeToken(token, 'reset');
+    if (!row) {
+      return res.status(400).json({ success: false, error: 'This reset link is invalid or has expired. Please request a new one.' });
+    }
+    // Receiving the reset email also proves ownership of the address.
+    // password_changed_at revokes every session issued before now.
+    db.prepare('UPDATE users SET password_hash = ?, email_verified = 1, password_changed_at = ? WHERE id = ?')
+      .run(bcrypt.hashSync(password, bcrypt.genSaltSync(10)), Date.now(), row.user_id);
+    res.json({ success: true, message: 'Your password has been changed. You can now sign in.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ success: false, error: 'Failed to reset password.' });
+  }
+});
+
 // POST /api/auth/login - Authenticate staff/admin/alumni
 router.post('/auth/login', loginLimiter, (req, res) => {
   try {
@@ -466,6 +579,14 @@ router.post('/auth/login', loginLimiter, (req, res) => {
 
     if (!user || !validPassword) {
       return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+    }
+
+    if (!user.email_verified) {
+      return res.status(403).json({
+        success: false,
+        code: 'EMAIL_NOT_VERIFIED',
+        error: 'Please confirm your email address first. Check your inbox for the confirmation link.'
+      });
     }
 
     if (user.role === 'pending') {
