@@ -24,16 +24,25 @@ db.pragma('foreign_keys = ON');
 // Initialize Database Tables
 export function initDatabase() {
   // 1. Users Table (Authentication)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
+  // email is optional because pupils may sign in with a username instead;
+  // every account has at least one of the two (enforced by the API).
+  const USERS_TABLE_SQL = (name) => `
+    CREATE TABLE IF NOT EXISTS ${name} (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
+      email TEXT UNIQUE,
+      username TEXT UNIQUE,
       password_hash TEXT NOT NULL,
       role TEXT DEFAULT 'staff',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      requested_role TEXT,
+      class_level TEXT,
+      email_verified INTEGER NOT NULL DEFAULT 0,
+      password_changed_at INTEGER,
+      session_version INTEGER NOT NULL DEFAULT 0
     )
-  `);
+  `;
+  db.exec(USERS_TABLE_SQL('users'));
 
   // Migrations for databases created before student accounts existed:
   // requested_role holds the role a pending registration asked for, and
@@ -51,9 +60,30 @@ export function initDatabase() {
     db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0');
     db.exec('UPDATE users SET email_verified = 1');
   }
-  // Sessions issued before this time are rejected (set on password reset).
+  // Time of the last password change (informational).
   if (!userColumns.includes('password_changed_at')) {
     db.exec('ALTER TABLE users ADD COLUMN password_changed_at INTEGER');
+  }
+  // Incremented on password reset; sessions carrying an older value are rejected.
+  if (!userColumns.includes('session_version')) {
+    db.exec('ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0');
+  }
+  // Older databases declared email NOT NULL and had no username column.
+  // SQLite cannot relax a constraint in place, so rebuild the table once,
+  // keeping every row and id.
+  const emailColumn = db.prepare('PRAGMA table_info(users)').all().find(c => c.name === 'email');
+  if (emailColumn.notnull || !userColumns.includes('username')) {
+    const columns = 'id, name, email, password_hash, role, created_at, requested_role, class_level, email_verified, password_changed_at, session_version';
+    db.pragma('foreign_keys = OFF');
+    db.transaction(() => {
+      db.exec('DROP TABLE IF EXISTS users_migrated');
+      db.exec(USERS_TABLE_SQL('users_migrated'));
+      db.exec(`INSERT INTO users_migrated (${columns}) SELECT ${columns} FROM users`);
+      db.exec('DROP TABLE users');
+      db.exec('ALTER TABLE users_migrated RENAME TO users');
+    })();
+    db.pragma('foreign_keys = ON');
+    console.log('🔧 Migrated users table (optional email, usernames)');
   }
 
   // Single-use email verification / password reset tokens. Only a SHA-256
