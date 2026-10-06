@@ -1494,35 +1494,7 @@
   }
 }
 
-/* 5. Admin Dashboard Responsive Elements */
-.admin-dash-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.admin-form-grid-3 {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
-}
-
-.admin-form-grid-4 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.5fr;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
-}
-
-@media (max-width: 700px) {
-  .admin-form-grid-3, .admin-form-grid-4 {
-    grid-template-columns: 1fr;
-  }
-}
-
+/* 5. Admin dashboard styles live in styles/dashboard.css */
 /* 6. Universal Modal Dialog Responsiveness */
 @media (max-width: 600px) {
   .modal-backdrop {
