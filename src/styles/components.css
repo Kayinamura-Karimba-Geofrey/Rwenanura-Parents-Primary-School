@@ -590,6 +590,11 @@
   font-weight: 600;
 }
 
+.auth-optional {
+  font-weight: 400;
+  color: var(--gray-500);
+}
+
 .auth-help {
   font-size: 0.88rem;
   color: var(--gray-600);
