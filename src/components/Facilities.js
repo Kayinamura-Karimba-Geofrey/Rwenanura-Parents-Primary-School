@@ -34,7 +34,7 @@ export function createFacilities() {
     return items.map(fac => `
       <div class="facility-card">
         <div class="facility-img">
-          <img src="${fac.image}" alt="${fac.title}" loading="lazy" />
+          <img src="${fac.image}" alt="${fac.title}" loading="lazy" decoding="async" />
         </div>
         <div class="facility-content">
           <div class="badge badge-gold badge-sm">${fac.category}</div>
