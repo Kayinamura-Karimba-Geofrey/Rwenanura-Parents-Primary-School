@@ -62,7 +62,7 @@ export function createAcademics(onOpenApplyModal) {
                 `).join('')}
               </ul>
 
-              <button class="btn btn-outline learn-program-btn" style="margin-top: auto; width: 100%;">
+              <button class="btn btn-outline btn-block learn-program-btn">
                 <span>${t('btn_apply_program')}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
