@@ -1,4 +1,3 @@
-import { quickStats } from '../data/schoolData.js';
 import { t } from '../data/i18n.js';
 import { onCleanup } from '../utils/lifecycle.js';
 
