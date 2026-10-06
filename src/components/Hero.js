@@ -45,7 +45,7 @@ export function createHero(onOpenApplyModal) {
     <!-- Background Carousel Slider -->
     <div class="hero-slider">
       ${localizedSlides.map((slide, index) => `
-        <div class="hero-slide ${index === 0 ? 'active' : ''}" style="background-image: url('${slide.image}');" data-index="${index}">
+        <div class="hero-slide ${index === 0 ? 'active' : ''}" data-bg="${slide.image}" data-index="${index}">
           <div class="hero-overlay"></div>
         </div>
       `).join('')}
@@ -104,9 +104,20 @@ export function createHero(onOpenApplyModal) {
 
   ctaBtn.addEventListener('click', onOpenApplyModal);
 
+  // Slide photos are large: load each one only when it is about to be shown
+  function loadSlideImage(i) {
+    const slide = slides[(i + slides.length) % slides.length];
+    if (slide && slide.dataset.bg) {
+      slide.style.backgroundImage = `url('${slide.dataset.bg}')`;
+      delete slide.dataset.bg;
+    }
+  }
+
   function goToSlide(index) {
     currentSlide = (index + localizedSlides.length) % localizedSlides.length;
     const slideData = localizedSlides[currentSlide];
+    loadSlideImage(currentSlide);
+    loadSlideImage(currentSlide + 1);
 
     slides.forEach((s, i) => {
       s.classList.toggle('active', i === currentSlide);
@@ -153,6 +164,12 @@ export function createHero(onOpenApplyModal) {
       startAutoplay();
     });
   });
+
+  // First photo now; the second once the page has finished loading so the
+  // first automatic transition is smooth.
+  loadSlideImage(0);
+  if (document.readyState === 'complete') loadSlideImage(1);
+  else window.addEventListener('load', () => loadSlideImage(1), { once: true });
 
   startAutoplay();
 
