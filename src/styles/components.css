@@ -1608,6 +1608,19 @@
   margin-bottom: 0.5rem;
 }
 
+/* Two-column form rows (application form, alumni registration) */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Shared modal header */
 .modal-head-centered {
   text-align: center;
