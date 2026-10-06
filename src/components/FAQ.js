@@ -3,9 +3,8 @@ import { schoolInfo } from '../data/schoolData.js';
 
 export function createFAQ() {
   const section = document.createElement('section');
-  section.className = 'section';
+  section.className = 'section section-white';
   section.id = 'faq';
-  section.style.backgroundColor = 'var(--white)';
 
   const faqs = [
     {
@@ -41,14 +40,14 @@ export function createFAQ() {
       <div class="faq-layout-grid">
         
         <!-- Accordion Items -->
-        <div class="faq-accordion" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div class="faq-accordion">
           ${faqs.map((faq, idx) => `
-            <div class="faq-item" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden; transition: var(--transition);">
-              <button class="faq-question" style="width: 100%; text-align: left; padding: 1.25rem 1.5rem; background: var(--gray-50); font-weight: 700; font-size: 1.05rem; color: var(--navy); display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <div class="faq-item">
+              <button class="faq-question" aria-expanded="false" aria-controls="faq-answer-${idx}" id="faq-question-${idx}">
                 <span>${faq.q}</span>
-                <span class="faq-icon" style="font-size: 1.2rem; transition: transform 0.3s ease; color: var(--primary);">+</span>
+                <span class="faq-icon" aria-hidden="true">+</span>
               </button>
-              <div class="faq-answer" style="display: none; padding: 1.25rem 1.5rem; background: white; color: var(--gray-700); font-size: 0.95rem; line-height: 1.6; border-top: 1px solid var(--gray-200);">
+              <div class="faq-answer" id="faq-answer-${idx}" role="region" aria-labelledby="faq-question-${idx}" hidden>
                 ${faq.a}
               </div>
             </div>
@@ -57,9 +56,9 @@ export function createFAQ() {
 
         <!-- Download Prospectus Sidebar Card -->
         <div class="faq-prospectus-card">
-          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📄</div>
-          <h3 style="font-size: 1.35rem; color: white; margin-bottom: 0.5rem;">${t('faq_guide_title')}</h3>
-          <p style="font-size: 0.88rem; color: rgba(255,255,255,0.85); margin-bottom: 1.5rem; line-height: 1.5;">
+          <div class="faq-prospectus-icon" aria-hidden="true">📄</div>
+          <h3 class="faq-prospectus-title">${t('faq_guide_title')}</h3>
+          <p class="faq-prospectus-desc">
             ${t('faq_guide_desc')}
           </p>
 
@@ -77,23 +76,23 @@ export function createFAQ() {
   const items = section.querySelectorAll('.faq-item');
   items.forEach(item => {
     const qBtn = item.querySelector('.faq-question');
-    const ans = item.querySelector('.faq-answer');
-    const icon = item.querySelector('.faq-icon');
 
     qBtn.addEventListener('click', () => {
-      const isOpen = ans.style.display === 'block';
-      
-      // Close all
+      const wasOpen = item.classList.contains('open');
+
+      // Only one answer open at a time
       items.forEach(i => {
-        i.querySelector('.faq-answer').style.display = 'none';
+        i.classList.remove('open');
+        i.querySelector('.faq-answer').hidden = true;
+        i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
         i.querySelector('.faq-icon').textContent = '+';
-        i.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
       });
 
-      if (!isOpen) {
-        ans.style.display = 'block';
-        icon.textContent = '−';
-        icon.style.transform = 'rotate(180deg)';
+      if (!wasOpen) {
+        item.classList.add('open');
+        item.querySelector('.faq-answer').hidden = false;
+        qBtn.setAttribute('aria-expanded', 'true');
+        item.querySelector('.faq-icon').textContent = '−';
       }
     });
   });
