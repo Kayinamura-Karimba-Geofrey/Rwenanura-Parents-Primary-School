@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# Commits are often pushed one file at a time; only the newest push matters.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
