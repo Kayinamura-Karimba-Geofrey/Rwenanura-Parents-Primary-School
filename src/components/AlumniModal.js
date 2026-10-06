@@ -10,6 +10,8 @@ import {
   connectAlumniStream
 } from '../data/api.js';
 
+import { schoolInfo } from '../data/schoolData.js';
+
 import { 
   getUserRole, 
   getCurrentUser, 
@@ -68,7 +70,8 @@ export function createAlumniModal() {
         </button>
       </div>
 
-      <!-- WhatsApp Quick Community Bar -->
+      <!-- WhatsApp Quick Community Bar (only when an invite link is configured) -->
+      ${schoolInfo.links.alumniWhatsApp ? `
       <div class="alumni-whatsapp-quickbar">
         <div class="whatsapp-quick-text">
           <span class="whatsapp-badge-icon">
@@ -78,10 +81,10 @@ export function createAlumniModal() {
           </span>
           <span>Prefer mobile messaging? Join the <strong>Official RPPS Alumni WhatsApp Community</strong></span>
         </div>
-        <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-pill">
+        <a href="${encodeURI(schoolInfo.links.alumniWhatsApp)}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-pill">
           Join WhatsApp Group 📲
         </a>
-      </div>
+      </div>` : ''}
 
       <!-- TAB 1: LIVE CHAT -->
       <div class="alumni-tab-content active" id="tab-chat-content">
