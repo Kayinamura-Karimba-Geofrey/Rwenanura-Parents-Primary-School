@@ -1,5 +1,6 @@
 import { heroSlides } from '../data/schoolData.js';
 import { t } from '../data/i18n.js';
+import { onCleanup } from '../utils/lifecycle.js';
 
 export function createHero(onOpenApplyModal) {
   const section = document.createElement('section');
@@ -132,6 +133,7 @@ export function createHero(onOpenApplyModal) {
   function stopAutoplay() {
     if (autoplayTimer) clearInterval(autoplayTimer);
   }
+  onCleanup(stopAutoplay);
 
   // Event bindings
   section.querySelector('.prev-slide').addEventListener('click', () => {
