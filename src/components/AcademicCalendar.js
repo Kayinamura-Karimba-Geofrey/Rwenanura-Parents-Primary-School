@@ -76,14 +76,16 @@ export function createAcademicCalendar() {
         <div class="term-overview-grid">
           ${academicTerms.map(term => {
             const isActive = term.status === 'active';
-            const statusText = isActive 
-              ? t('cal_status_active', 'Active Term') 
-              : t('cal_status_upcoming', 'Upcoming Term');
+            const status = {
+              active: { icon: '🟢', cls: 'term-status-active', text: t('cal_status_active', 'Active Term') },
+              completed: { icon: '✔️', cls: 'term-status-completed', text: t('cal_status_completed', 'Completed Term') },
+              upcoming: { icon: '📅', cls: 'term-status-upcoming', text: t('cal_status_upcoming', 'Upcoming Term') },
+            }[term.status] || { icon: '📅', cls: 'term-status-upcoming', text: t('cal_status_upcoming', 'Upcoming Term') };
             return `
               <div class="term-summary-card ${isActive ? 'term-active' : ''}" data-term-id="${term.id}">
                 <div>
-                  <span class="term-status-pill ${isActive ? 'term-status-active' : 'term-status-upcoming'}">
-                    ${isActive ? '🟢' : '📅'} ${statusText}
+                  <span class="term-status-pill ${status.cls}">
+                    ${status.icon} ${status.text}
                   </span>
                   <h3 class="term-card-title">${escapeHtml(getLocalizedText(term.name))}</h3>
                   <div class="term-card-period">
@@ -283,6 +285,7 @@ export function createAcademicCalendar() {
 
   refresh();
   onAuthChange(refresh);
+  window.addEventListener('rpps-calendar-changed', refresh);
 
   return section;
 }
