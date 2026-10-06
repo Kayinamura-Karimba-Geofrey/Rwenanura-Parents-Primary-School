@@ -159,17 +159,20 @@ function initApp() {
   setupScrollReveal();
 }
 
-// Links from verification / password reset emails: /?verify=TOKEN, /?reset=TOKEN
+// Links from emails: /?verify=TOKEN, /?reset=TOKEN, /?track=TRACKING-CODE
 function handleEmailLinks() {
   const params = new URLSearchParams(window.location.search);
   const verifyToken = params.get('verify');
   const resetToken = params.get('reset');
-  if (!verifyToken && !resetToken) return;
+  const trackingCode = params.get('track');
+  if (!verifyToken && !resetToken && !trackingCode) return;
 
   // Remove the token from the address bar (and browser history) right away
   window.history.replaceState(null, '', window.location.pathname + window.location.hash);
 
-  if (resetToken) {
+  if (trackingCode) {
+    currentTrackModal.openWithCode(trackingCode);
+  } else if (resetToken) {
     currentAuthModal.openReset(resetToken);
   } else {
     verifyEmail(verifyToken).then(res => {
