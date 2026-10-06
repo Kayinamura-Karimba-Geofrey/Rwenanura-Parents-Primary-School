@@ -141,7 +141,7 @@ export function createAlumniModal() {
           </div>
 
           <!-- Real-Time Typing Indicator Bubble -->
-          <div class="chat-typing-indicator" id="chat-typing-indicator" style="display: none;">
+          <div class="chat-typing-indicator" id="chat-typing-indicator" hidden>
             <span class="typing-dots">
               <span></span><span></span><span></span>
             </span>
@@ -179,7 +179,7 @@ export function createAlumniModal() {
 
       <!-- TAB 3: ALUMNI PORTAL (ID CARD OR AUTH) -->
       <div class="alumni-tab-content" id="tab-portal-content">
-        <div id="portal-content-container" style="padding: 1rem 0; overflow-y: auto;">
+        <div id="portal-content-container" class="portal-content-container">
           <!-- Dynamically populated: ID Card for logged in, or Login/Register forms for guests -->
         </div>
       </div>
@@ -359,7 +359,7 @@ export function createAlumniModal() {
 
       return `
         <div class="chat-message-item" data-id="${msg.id}">
-          <div class="message-avatar" style="background-color: ${escapeHtml(msg.avatar_color || (isOB ? '#0d5c3a' : '#d97706'))};">
+          <div class="message-avatar ${isOB ? 'avatar-ob' : 'avatar-og'}">
             ${escapeHtml(initials)}
           </div>
           <div class="message-content-wrap">
@@ -518,21 +518,21 @@ export function createAlumniModal() {
 
     if (data.isTyping) {
       typingText.textContent = `${sanitizeText(data.authorName)} (${sanitizeText(data.authorType)}) is typing...`;
-      typingEl.style.display = 'flex';
+      typingEl.hidden = false;
 
       if (typingHideTimer) clearTimeout(typingHideTimer);
       typingHideTimer = setTimeout(() => {
-        typingEl.style.display = 'none';
+        typingEl.hidden = true;
       }, 3000);
     } else {
-      typingEl.style.display = 'none';
+      typingEl.hidden = true;
       if (typingHideTimer) clearTimeout(typingHideTimer);
     }
   }
 
   function hideTypingIndicator() {
     const typingEl = modal.querySelector('#chat-typing-indicator');
-    if (typingEl) typingEl.style.display = 'none';
+    if (typingEl) typingEl.hidden = true;
     if (typingHideTimer) clearTimeout(typingHideTimer);
   }
 
@@ -580,7 +580,7 @@ export function createAlumniModal() {
 
       headerAuthSlot.innerHTML = `
         <button id="btn-header-profile" class="alumni-persona-pill" title="View your RPPS Alumni profile">
-          <span class="persona-avatar" style="background: ${escapeHtml(user.avatarColor || (memberType === 'OB' ? '#0d5c3a' : '#d97706'))};">${escapeHtml(initials)}</span>
+          <span class="persona-avatar ${memberType === 'OG' ? 'avatar-og' : 'avatar-ob'}">${escapeHtml(initials)}</span>
           <span class="persona-info">
             <strong>${escapeHtml(user.name)}</strong>
             <small>${roleBadge} • ${escapeHtml(user.classYear || 'Verified')}</small>
@@ -767,7 +767,7 @@ export function createAlumniModal() {
 
       if (res.members.length === 0) {
         directoryGrid.innerHTML = `
-          <div class="chat-empty-state" style="grid-column: 1 / -1;">
+          <div class="chat-empty-state chat-empty-full">
             <div class="empty-icon">👥</div>
             <h4>No alumni found</h4>
             <p>Try a different keyword or register a new member profile.</p>
@@ -779,7 +779,6 @@ export function createAlumniModal() {
       directoryGrid.innerHTML = res.members.map(member => {
         const isOB = member.member_type === 'OB';
         const badgeClass = isOB ? 'badge-ob' : 'badge-og';
-        const color = isOB ? 'var(--primary)' : 'var(--gold)';
         const initials = escapeHtml((member.name || 'Alumni').substring(0, 2).toUpperCase());
 
         const cleanPhone = member.phone ? member.phone.replace(/[^0-9]/g, '') : '';
@@ -788,7 +787,7 @@ export function createAlumniModal() {
         return `
           <div class="alumni-member-card">
             <div class="member-card-header">
-              <div class="member-avatar" style="background-color: ${color};">
+              <div class="member-avatar ${isOB ? 'avatar-ob' : 'avatar-og'}">
                 ${initials}
               </div>
               <div>
@@ -853,7 +852,7 @@ export function createAlumniModal() {
       });
 
     } else {
-      directoryGrid.innerHTML = `<div class="chat-empty-state" style="grid-column: 1 / -1;">Failed to load directory.</div>`;
+      directoryGrid.innerHTML = `<div class="chat-empty-state chat-empty-full">Failed to load directory.</div>`;
     }
   }
 
@@ -893,7 +892,7 @@ export function createAlumniModal() {
           <div class="alumni-id-card">
             <div class="id-card-top">
               <div class="id-card-brand">
-                <div class="logo-crest" style="width: 38px; height: 38px;">
+                <div class="logo-crest id-card-crest">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
                     <path d="M6 12v5c3 3 9 3 12 0v-5"/>
@@ -910,7 +909,7 @@ export function createAlumniModal() {
             </div>
 
             <div class="id-card-body">
-              <div class="id-avatar" style="background: ${escapeHtml(user.avatarColor || (isOB ? '#0d5c3a' : '#d97706'))};">
+              <div class="id-avatar ${isOB ? 'avatar-ob' : 'avatar-og'}">
                 ${escapeHtml(initials)}
               </div>
               <div class="id-details">
@@ -978,7 +977,7 @@ export function createAlumniModal() {
             </button>
           </div>
 
-          <div id="auth-status-alert" class="auth-status-alert" style="display: none;"></div>
+          <div id="auth-status-alert" class="auth-status-alert" role="status" hidden></div>
 
           <!-- SUBTAB A: ALUMNI SIGN IN -->
           <div class="auth-subtab-pane ${defaultSubTab === 'login' ? 'active' : ''}" id="pane-login">
@@ -1091,12 +1090,12 @@ export function createAlumniModal() {
           btn.classList.add('active');
           const target = btn.getAttribute('data-subtab');
           portalContainer.querySelector(`#pane-${target}`).classList.add('active');
-          statusAlert.style.display = 'none';
+          statusAlert.hidden = true;
         });
       });
 
       function showAlert(msg, isError = false) {
-        statusAlert.style.display = 'block';
+        statusAlert.hidden = false;
         statusAlert.className = `auth-status-alert ${isError ? 'alert-error' : 'alert-success'}`;
         statusAlert.textContent = msg;
       }
