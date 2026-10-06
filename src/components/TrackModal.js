@@ -1,4 +1,5 @@
 import { trackApplication } from '../data/api.js';
+import { escapeHtml } from '../utils/html.js';
 
 export function createTrackModal() {
   const modal = document.createElement('div');
@@ -105,14 +106,4 @@ export function createTrackModal() {
   };
 
   return modal;
-}
-
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
