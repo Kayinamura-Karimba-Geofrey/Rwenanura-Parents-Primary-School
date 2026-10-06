@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import db from '../db.js';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../mailer.js';
+import { sendVerificationEmail, sendPasswordResetEmail, sendAccountApprovedEmail } from '../mailer.js';
 
 const router = express.Router();
 
@@ -451,13 +451,16 @@ router.post('/auth/users/:id/approve', authenticateToken, requireRole('staff', '
     if (!Number.isInteger(userId)) {
       return res.status(400).json({ success: false, error: 'Invalid user id.' });
     }
-    const target = db.prepare('SELECT id, email, role, requested_role FROM users WHERE id = ?').get(userId);
+    const target = db.prepare('SELECT id, name, email, role, requested_role, email_verified FROM users WHERE id = ?').get(userId);
     if (!target || target.role !== 'pending' || !canManage(req.user, target)) {
       return res.status(404).json({ success: false, error: 'Pending account not found.' });
     }
     const newRole = REGISTERABLE_ROLES.includes(target.requested_role) ? target.requested_role : 'staff';
     db.prepare('UPDATE users SET role = ? WHERE id = ?').run(newRole, userId);
     console.log(`✅ User #${target.id} approved as ${newRole} (by user #${req.user.id})`);
+    if (target.email && target.email_verified) {
+      sendAccountApprovedEmail(target.email, target.name, newRole);
+    }
     res.json({ success: true, role: newRole, message: `${target.email} approved as ${newRole}.` });
   } catch (err) {
     console.error('Approve error:', err);
