@@ -63,6 +63,11 @@
   color: var(--gold-dark);
 }
 
+.term-status-completed {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
 .term-card-title {
   color: var(--navy);
   font-size: 1.25rem;
