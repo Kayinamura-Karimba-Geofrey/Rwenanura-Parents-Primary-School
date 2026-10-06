@@ -37,7 +37,7 @@ export function createFacilities() {
           <img src="${fac.image}" alt="${fac.title}" loading="lazy" />
         </div>
         <div class="facility-content">
-          <div class="badge badge-gold" style="font-size: 0.7rem; padding: 0.2rem 0.6rem; margin-bottom: 0.5rem;">${fac.category}</div>
+          <div class="badge badge-gold badge-sm">${fac.category}</div>
           <h4>${fac.title}</h4>
           <p>${fac.description}</p>
         </div>
