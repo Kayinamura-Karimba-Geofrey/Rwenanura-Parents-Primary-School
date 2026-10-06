@@ -5,9 +5,8 @@ import { escapeHtml } from '../utils/html.js';
 
 export function createNewsEvents() {
   const section = document.createElement('section');
-  section.className = 'section';
+  section.className = 'section section-muted';
   section.id = 'news';
-  section.style.backgroundColor = 'var(--gray-100)';
 
   function renderNews(items) {
     section.innerHTML = `
@@ -24,20 +23,20 @@ export function createNewsEvents() {
               <div class="news-date-badge">
                 <span class="day">${escapeHtml(item.date.day)}</span>
                 <span class="month">${escapeHtml(item.date.month)}</span>
-                <span style="font-size: 0.75rem; opacity: 0.8;">${escapeHtml(item.date.year)}</span>
+                <span class="year">${escapeHtml(item.date.year)}</span>
               </div>
 
               <div class="news-content">
                 <div class="news-meta">
-                  <span class="badge" style="font-size: 0.7rem; padding: 0.15rem 0.5rem; margin-bottom: 0;">${escapeHtml(item.category)}</span>
+                  <span class="badge badge-sm">${escapeHtml(item.category)}</span>
                   <span>• ${escapeHtml(item.time)}</span>
                 </div>
-                <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--navy);">${escapeHtml(item.title)}</h3>
-                <p style="font-size: 0.88rem; color: var(--gray-600); margin-bottom: 1rem;">${escapeHtml(item.summary)}</p>
+                <h3 class="news-title">${escapeHtml(item.title)}</h3>
+                <p class="news-summary">${escapeHtml(item.summary)}</p>
                 
-                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: var(--gray-500); font-weight: 500;">
+                <div class="news-footer">
                   <span>📍 ${escapeHtml(item.location)}</span>
-                  <button class="read-news-btn" data-index="${items.indexOf(item)}" style="color: var(--primary); font-weight: 700;">${t('news_read_more')}</button>
+                  <button class="read-news-btn" data-index="${items.indexOf(item)}">${t('news_read_more')}</button>
                 </div>
               </div>
             </div>
