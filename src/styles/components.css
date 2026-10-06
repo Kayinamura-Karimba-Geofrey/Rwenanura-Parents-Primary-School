@@ -93,12 +93,13 @@
 }
 
 .lang-btn.active, .lang-btn:hover {
-  background-color: rgba(255, 255, 255, 0.14);
+  background-color: var(--primary);
   color: var(--white);
 }
 
 /* Main Navigation Bar */
 .main-nav {
+  position: relative;
   padding: 0.75rem 0;
   background-color: var(--white);
 }
@@ -157,22 +158,21 @@
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 1.6rem;
+  gap: 1.25rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-@media (max-width: 1200px) {
-  .nav-menu {
-    gap: 1.15rem;
-  }
+/* Mobile-only utilities inside the menu; hidden on the desktop bar */
+.mobile-drawer-util {
+  display: none;
 }
 
 .nav-link {
   font-weight: 500;
   color: var(--gray-700);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   padding: 0.35rem 0;
   position: relative;
   transition: var(--transition);
@@ -225,19 +225,66 @@
   padding: 0.25rem;
 }
 
-/* Mobile & Tablet Navigation Drawer */
-@media (max-width: 1040px) {
+.mobile-toggle .icon-close,
+.site-header.menu-open .mobile-toggle .icon-open {
+  display: none;
+}
+
+.site-header.menu-open .mobile-toggle .icon-close {
+  display: block;
+}
+
+/* Apply Now targets prospective parents; signed-in users get the room
+   for their account controls instead. */
+.site-header.is-signed-in .apply-now-btn {
+  display: none;
+}
+
+/* Log In / Register (visitors) or user chip + Log Out (signed in) */
+.nav-auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.nav-user-role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+
+/* Mobile & Tablet Navigation Drawer
+ * The full desktop bar (logo, 8-9 links, auth buttons, Apply) needs ~1360px,
+ * so narrower screens use the drawer instead of overflowing. */
+@media (max-width: 1360px) {
   .top-bar-info .top-bar-location,
   .top-bar-info a[href^="mailto:"] {
     display: none;
   }
   
+  /* Anchored to the bottom of the nav bar so it never overlaps the header,
+     whatever the top-bar height or scroll position. */
   .nav-menu {
-    position: fixed;
-    top: 66px;
+    position: absolute;
+    top: 100%;
     left: 0;
     width: 100%;
-    max-height: calc(100vh - 66px);
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
     overscroll-behavior: contain;
     background-color: var(--white);
@@ -275,6 +322,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Auth buttons move into the drawer */
+  .nav-auth-actions {
+    display: none;
+  }
+
+  .mobile-auth-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .mobile-auth-row .btn {
+    flex: 1;
   }
 
   .mobile-drawer-util {
@@ -372,6 +435,159 @@
   .apply-now-btn {
     display: none;
   }
+}
+
+/* Unified Log In / Register modal */
+.auth-dialog {
+  max-width: 460px;
+  width: 92%;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.auth-header h3 {
+  font-size: 1.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.auth-header p {
+  color: var(--gray-600);
+  font-size: 0.88rem;
+}
+
+.auth-crest {
+  width: 45px;
+  height: 45px;
+  margin: 0 auto 0.75rem auto;
+}
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--gray-200);
+  margin-bottom: 1.25rem;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--gray-500);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: var(--transition);
+}
+
+.auth-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
+.auth-feedback {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+}
+
+.auth-feedback.is-error {
+  background: var(--danger-subtle);
+  color: var(--danger);
+  border-color: var(--danger-border);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.35rem;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: var(--white);
+  margin-bottom: 1rem;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 92, 58, 0.12);
+}
+
+.auth-type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.auth-type-option span {
+  display: block;
+  text-align: center;
+  padding: 0.6rem;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.auth-type-option input:checked + span {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
+}
+
+.auth-type-option input:focus-visible + span {
+  box-shadow: 0 0 0 3px rgba(13, 92, 58, 0.25);
+}
+
+.auth-note {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  margin-top: 0.6rem;
+  text-align: center;
+}
+
+.auth-alumni-link {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+}
+
+.auth-alumni-link .btn-link-action {
+  font-weight: 700;
+  color: var(--primary);
 }
 
 @media (max-width: 400px) {
