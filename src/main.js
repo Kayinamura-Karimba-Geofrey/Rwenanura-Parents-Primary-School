@@ -25,7 +25,7 @@ import { createAlumniModal } from './components/AlumniModal.js';
 import { createAlumniSection } from './components/AlumniSection.js';
 import { createFooter } from './components/Footer.js';
 
-import { getStoredToken, getStoredUser, checkAuthMe, clearAuthSession } from './data/api.js';
+import { getStoredToken, getStoredUser, checkAuthMe, clearAuthSession, verifyEmail } from './data/api.js';
 import { initUserRole } from './data/userRole.js';
 import { onLanguageChange } from './data/i18n.js';
 
@@ -56,6 +56,9 @@ function setupScrollReveal() {
     observer.observe(el);
   });
 }
+
+// The app is rebuilt on language change; keep a handle on the live auth modal.
+let currentAuthModal = null;
 
 function initApp() {
   initUserRole();
@@ -149,12 +152,38 @@ function initApp() {
   app.appendChild(adminDashboard);
   app.appendChild(alumniModal);
 
+  currentAuthModal = authModal;
+
   // Initialize Scroll Reveal Animations
   setupScrollReveal();
 }
 
+// Links from verification / password reset emails: /?verify=TOKEN, /?reset=TOKEN
+function handleEmailLinks() {
+  const params = new URLSearchParams(window.location.search);
+  const verifyToken = params.get('verify');
+  const resetToken = params.get('reset');
+  if (!verifyToken && !resetToken) return;
+
+  // Remove the token from the address bar (and browser history) right away
+  window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+
+  if (resetToken) {
+    currentAuthModal.openReset(resetToken);
+  } else {
+    verifyEmail(verifyToken).then(res => {
+      currentAuthModal.showMessage(res.success ? res.message : (res.error || 'Failed to confirm email.'), !res.success);
+    });
+  }
+}
+
+// Other components (e.g. the alumni sign-in) can open the shared auth modal,
+// such as its "Forgot password" view: dispatch 'rpps-open-auth' with a tab.
+window.addEventListener('rpps-open-auth', (e) => currentAuthModal?.open(e.detail || 'login'));
+
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
+  handleEmailLinks();
   onLanguageChange(() => {
     const currentScrollY = window.scrollY;
     initApp();
