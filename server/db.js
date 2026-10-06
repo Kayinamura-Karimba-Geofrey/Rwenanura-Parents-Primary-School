@@ -129,13 +129,14 @@ export function initDatabase() {
     `);
     insertAdmin.run('Super Admin', adminEmail, hash, 'admin');
 
-    console.log('👤 Default Admin Account Created:');
-    console.log(`   Email: ${adminEmail}`);
-    if (process.env.SEED_ADMIN_PASSWORD) {
-      console.log('   Password: (loaded from SEED_ADMIN_PASSWORD env var)');
-    } else {
-      console.log(`   Password: ${adminPassword}`);
-      console.log('   ⚠️  Copy this password now — it will not be shown again.');
+    console.log(`👤 Default admin account created: ${adminEmail}`);
+    if (!process.env.SEED_ADMIN_PASSWORD) {
+      // Never print the generated password: logs are often stored or shipped
+      // elsewhere. Write it to a file only the server user can read instead.
+      const passwordFile = path.join(dataDir, 'initial-admin-password.txt');
+      fs.writeFileSync(passwordFile, `${adminPassword}\n`, { mode: 0o600 });
+      console.log(`   Generated password saved to ${passwordFile}`);
+      console.log('   ⚠️  Sign in, change the password, then delete that file.');
     }
   }
 
