@@ -14,6 +14,7 @@ import {
   logoutUser,
   getStoredUser
 } from '../data/api.js';
+import { createCalendarManager } from './CalendarManager.js';
 
 export function createAdminDashboard(onLogout) {
   const modal = document.createElement('div');
@@ -90,6 +91,9 @@ export function createAdminDashboard(onLogout) {
         </button>
         <button class="dash-tab" data-tab="staff" id="dash-staff-tab-btn" style="padding: 0.6rem 1.25rem; font-weight: 600; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-600); cursor: pointer;">
           🛡️ Accounts
+        </button>
+        <button class="dash-tab" data-tab="calendar" style="padding: 0.6rem 1.25rem; font-weight: 600; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-600); cursor: pointer;">
+          📅 Calendar
         </button>
       </div>
 
@@ -218,6 +222,9 @@ export function createAdminDashboard(onLogout) {
           </div>
         </div>
 
+        <!-- 5. CALENDAR TAB (staff/admin edit the academic calendar) -->
+        <div id="tab-content-calendar" style="display: none;"></div>
+
       </div>
     </div>
   `;
@@ -245,8 +252,12 @@ export function createAdminDashboard(onLogout) {
     admissions: modal.querySelector('#tab-content-admissions'),
     news: modal.querySelector('#tab-content-news'),
     newsletter: modal.querySelector('#tab-content-newsletter'),
-    staff: modal.querySelector('#tab-content-staff')
+    staff: modal.querySelector('#tab-content-staff'),
+    calendar: modal.querySelector('#tab-content-calendar')
   };
+
+  const calendarManager = createCalendarManager();
+  tabContents.calendar.appendChild(calendarManager);
 
   tabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
@@ -303,6 +314,7 @@ export function createAdminDashboard(onLogout) {
     renderNews();
     renderSubscribers();
     renderStaff();
+    calendarManager.load();
   }
 
   function updateCounters() {
