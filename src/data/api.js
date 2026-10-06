@@ -130,6 +130,34 @@ export async function registerUser({ accountType, name, email, password, classLe
   }
 }
 
+async function postJson(path, body, fallbackError) {
+  try {
+    return await apiRequest(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  } catch (err) {
+    return { success: false, error: err.message || fallbackError };
+  }
+}
+
+export function verifyEmail(token) {
+  return postJson('/api/auth/verify-email', { token }, 'Failed to confirm email.');
+}
+
+export function resendVerification(email) {
+  return postJson('/api/auth/resend-verification', { email }, 'Failed to send confirmation email.');
+}
+
+export function requestPasswordReset(email) {
+  return postJson('/api/auth/forgot-password', { email }, 'Failed to start password reset.');
+}
+
+export function resetPassword(token, password) {
+  return postJson('/api/auth/reset-password', { token, password }, 'Failed to reset password.');
+}
+
 export async function checkAuthMe() {
   try {
     const data = await apiRequest('/api/auth/me', {
