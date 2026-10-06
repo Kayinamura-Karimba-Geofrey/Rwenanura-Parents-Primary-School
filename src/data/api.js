@@ -2,12 +2,13 @@
  * API Service Client for Rwenanura Parents Primary School
  */
 
-const TOKEN_KEY = 'rpps_admin_token';
+// The session itself is an httpOnly cookie set by the server, which scripts
+// cannot read. Only the (non-secret) profile of the signed-in user is kept
+// here so the UI knows which role to render.
 const USER_KEY = 'rpps_admin_user';
 
-export function getStoredToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
+// Tokens were kept in localStorage before cookie sessions; drop any leftover.
+try { localStorage.removeItem('rpps_admin_token'); } catch { /* storage unavailable */ }
 
 export function getStoredUser() {
   try {
@@ -18,81 +19,67 @@ export function getStoredUser() {
   }
 }
 
-export function setAuthSession(token, user) {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-  if (typeof window !== 'undefined') {
-    if (document.body) {
-      document.body.setAttribute('data-user-role', user?.role || 'visitor');
-    }
-    window.dispatchEvent(new CustomEvent('rpps-auth-state-change', {
-      detail: { role: user?.role || 'visitor', user }
-    }));
-  }
+export function isSignedIn() {
+  return Boolean(getStoredUser());
 }
 
+function notifyAuthChange(user) {
+  if (typeof window === 'undefined') return;
+  if (document.body) {
+    document.body.setAttribute('data-user-role', user?.role || 'visitor');
+  }
+  window.dispatchEvent(new CustomEvent('rpps-auth-state-change', {
+    detail: { role: user?.role || 'visitor', user }
+  }));
+}
+
+export function setAuthSession(user) {
+  try { localStorage.setItem(USER_KEY, JSON.stringify(user)); } catch { /* storage unavailable */ }
+  notifyAuthChange(user);
+}
+
+// Forget the local profile (e.g. the server reported the session expired).
 export function clearAuthSession() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-  if (typeof window !== 'undefined') {
-    if (document.body) {
-      document.body.setAttribute('data-user-role', 'visitor');
-    }
-    window.dispatchEvent(new CustomEvent('rpps-auth-state-change', {
-      detail: { role: 'visitor', user: null }
-    }));
-  }
-}
-
-function getAuthHeaders() {
-  const token = getStoredToken();
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  };
+  try { localStorage.removeItem(USER_KEY); } catch { /* storage unavailable */ }
+  notifyAuthChange(null);
 }
 
 /**
- * Resilient API Request with Automatic Backend Fallback:
- * 1. Attempts relative proxied path (e.g. /api/auth/login)
- * 2. If network fails, automatically attempts direct connection to port 5000:
- *    http://${window.location.hostname}:5000${path}
+ * Fetch wrapper for the RPPS API.
+ * - Sends the session cookie (same-origin only).
+ * - Adds the X-Requested-With header the server requires on writes (CSRF guard).
+ * - Always resolves to a JSON object with a `success` flag.
  */
 async function apiRequest(path, options = {}) {
   let res;
-
   try {
-    res = await fetch(path, options);
-  } catch (primaryErr) {
-    // If Vite proxy dropped or failed, try direct connection to backend
-    try {
-      const host = typeof window !== 'undefined' && window.location ? window.location.hostname : 'localhost';
-      const fallbackUrl = `http://${host}:5000${path}`;
-      res = await fetch(fallbackUrl, options);
-    } catch (fallbackErr) {
-      throw new Error('Backend server is offline or unreachable. Please verify the server is running on port 5000.');
-    }
+    res = await fetch(path, {
+      ...options,
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'rpps',
+        ...(options.headers || {})
+      }
+    });
+  } catch {
+    throw new Error('Cannot reach the school server. Please check your connection and try again.');
   }
 
-  // Handle non-JSON responses (e.g. proxy HTML 502/504 errors)
+  // A 401 means the cookie session is gone; keep the UI in sync.
+  if (res.status === 401 && getStoredUser()) {
+    clearAuthSession();
+  }
+
   const contentType = res.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
     return await res.json();
   }
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    return {
-      success: false,
-      error: `Server response ${res.status}: ${res.statusText || errorText || 'Request failed'}`
-    };
-  }
-
-  try {
-    return await res.json();
-  } catch {
-    return { success: res.ok };
-  }
+  return {
+    success: false,
+    error: `Server response ${res.status}: ${res.statusText || 'Request failed'}`
+  };
 }
 
 // ----------------- AUTH APIS -----------------
@@ -101,12 +88,11 @@ export async function loginUser(email, password) {
   try {
     const data = await apiRequest('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
 
-    if (data.success && data.token) {
-      setAuthSession(data.token, data.user);
+    if (data.success && data.user) {
+      setAuthSession(data.user);
     }
     return data;
   } catch (err) {
@@ -121,7 +107,6 @@ export async function registerUser({ accountType, name, email, password, classLe
   try {
     return await apiRequest('/api/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accountType, name, email, password, classLevel })
     });
   } catch (err) {
@@ -134,7 +119,6 @@ async function postJson(path, body, fallbackError) {
   try {
     return await apiRequest(path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
   } catch (err) {
@@ -158,13 +142,16 @@ export function resetPassword(token, password) {
   return postJson('/api/auth/reset-password', { token, password }, 'Failed to reset password.');
 }
 
+// Validate the cookie session and refresh the cached profile (role changes
+// such as approval or demotion show up without logging in again).
 export async function checkAuthMe() {
   try {
-    const data = await apiRequest('/api/auth/me', {
-      headers: getAuthHeaders()
-    });
-
-    if (!data.success) {
+    const data = await apiRequest('/api/auth/me');
+    if (data.success && data.user) {
+      if (JSON.stringify(data.user) !== JSON.stringify(getStoredUser())) {
+        setAuthSession(data.user);
+      }
+    } else if (getStoredUser()) {
       clearAuthSession();
     }
     return data;
@@ -173,9 +160,18 @@ export async function checkAuthMe() {
   }
 }
 
+export async function logoutUser() {
+  try {
+    await apiRequest('/api/auth/logout', { method: 'POST' });
+  } catch {
+    // Offline: still forget the local profile; the cookie expires on its own.
+  }
+  clearAuthSession();
+}
+
 export async function fetchStaffUsers() {
   try {
-    return await apiRequest('/api/auth/users', { headers: getAuthHeaders() });
+    return await apiRequest('/api/auth/users');
   } catch (err) {
     return { success: false, users: [] };
   }
@@ -184,9 +180,7 @@ export async function fetchStaffUsers() {
 export async function approveUser(id) {
   try {
     return await apiRequest(`/api/auth/users/${id}/approve`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
+      method: 'POST'});
   } catch (err) {
     return { success: false, error: err.message || 'Failed to approve account' };
   }
@@ -196,7 +190,6 @@ export async function updateStaffRole(id, role) {
   try {
     return await apiRequest(`/api/auth/users/${id}/role`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
       body: JSON.stringify({ role })
     });
   } catch (err) {
@@ -207,9 +200,7 @@ export async function updateStaffRole(id, role) {
 export async function deleteStaffUser(id) {
   try {
     return await apiRequest(`/api/auth/users/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    });
+      method: 'DELETE'});
   } catch (err) {
     return { success: false, error: err.message || 'Failed to remove account' };
   }
@@ -221,7 +212,6 @@ export async function submitApplication(data) {
   try {
     return await apiRequest('/api/applications', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
   } catch (err) {
@@ -239,7 +229,7 @@ export async function trackApplication(code) {
 
 export async function fetchApplications() {
   try {
-    const res = await apiRequest('/api/applications', { headers: getAuthHeaders() });
+    const res = await apiRequest('/api/applications');
     return res;
   } catch (err) {
     return { success: false, applications: [] };
@@ -250,7 +240,6 @@ export async function updateApplicationStatus(id, status) {
   try {
     return await apiRequest(`/api/applications/${id}`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
       body: JSON.stringify({ status })
     });
   } catch (err) {
@@ -261,9 +250,7 @@ export async function updateApplicationStatus(id, status) {
 export async function deleteApplication(id) {
   try {
     return await apiRequest(`/api/applications/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    });
+      method: 'DELETE'});
   } catch (err) {
     return { success: false, error: err.message || 'Failed to delete application' };
   }
@@ -273,7 +260,7 @@ export async function deleteApplication(id) {
 
 export async function fetchCalendar() {
   try {
-    return await apiRequest('/api/calendar', { headers: getAuthHeaders() });
+    return await apiRequest('/api/calendar');
   } catch (err) {
     return { success: false, terms: [], events: [] };
   }
@@ -285,7 +272,6 @@ export async function subscribeNewsletter(email) {
   try {
     return await apiRequest('/api/newsletter', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
   } catch (err) {
@@ -295,7 +281,7 @@ export async function subscribeNewsletter(email) {
 
 export async function fetchSubscribers() {
   try {
-    return await apiRequest('/api/newsletter', { headers: getAuthHeaders() });
+    return await apiRequest('/api/newsletter');
   } catch (err) {
     return { success: false, subscribers: [] };
   }
@@ -315,7 +301,6 @@ export async function createNewsItem(itemData) {
   try {
     return await apiRequest('/api/news', {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(itemData)
     });
   } catch (err) {
@@ -326,9 +311,7 @@ export async function createNewsItem(itemData) {
 export async function deleteNewsItem(id) {
   try {
     return await apiRequest(`/api/news/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    });
+      method: 'DELETE'});
   } catch (err) {
     return { success: false, error: err.message || 'Failed to delete news item.' };
   }
@@ -372,7 +355,6 @@ export async function sendAlumniMessage(messageData) {
   try {
     return await apiRequest('/api/alumni/messages', {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(messageData)
     });
   } catch (err) {
@@ -384,9 +366,7 @@ export async function sendAlumniMessage(messageData) {
 export async function reactToAlumniMessage(messageId) {
   try {
     return await apiRequest(`/api/alumni/messages/${messageId}/react`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
+      method: 'POST'});
   } catch (err) {
     console.error('reactToAlumniMessage error:', err);
     return { success: false, error: err.message || 'Failed to react' };
@@ -406,7 +386,6 @@ export async function sendAlumniTypingStatus(channel = 'general', isTyping = tru
   try {
     return await apiRequest('/api/alumni/typing', {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify({ channel, isTyping })
     });
   } catch (err) {
@@ -465,9 +444,7 @@ export async function fetchAlumniMembers(type = '', search = '') {
     if (search && search.trim()) params.append('search', search.trim());
 
     const query = params.toString() ? `?${params.toString()}` : '';
-    return await apiRequest(`/api/alumni/members${query}`, {
-      headers: getAuthHeaders()
-    });
+    return await apiRequest(`/api/alumni/members${query}`);
   } catch (err) {
     console.error('fetchAlumniMembers error:', err);
     return { success: false, members: [], stats: {} };
@@ -478,12 +455,11 @@ export async function registerAlumniMember(memberData) {
   try {
     const data = await apiRequest('/api/alumni/members', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(memberData)
     });
 
-    if (data.success && data.token && data.user) {
-      setAuthSession(data.token, data.user);
+    if (data.success && data.user) {
+      setAuthSession(data.user);
     }
     return data;
   } catch (err) {
@@ -496,12 +472,11 @@ export async function registerAlumniAccount(accountData) {
   try {
     const data = await apiRequest('/api/auth/alumni-register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(accountData)
     });
 
-    if (data.success && data.token && data.user) {
-      setAuthSession(data.token, data.user);
+    if (data.success && data.user) {
+      setAuthSession(data.user);
     }
     return data;
   } catch (err) {
