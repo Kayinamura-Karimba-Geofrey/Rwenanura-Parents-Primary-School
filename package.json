@@ -21,7 +21,8 @@
     "express": "^4.21.2",
     "express-rate-limit": "^8.7.0",
     "jsonwebtoken": "^9.0.3",
-    "lucide": "^0.344.0"
+    "lucide": "^0.344.0",
+    "nodemailer": "^10.0.15"
   },
   "overrides": {
     "shell-quote": "^1.12.0"
