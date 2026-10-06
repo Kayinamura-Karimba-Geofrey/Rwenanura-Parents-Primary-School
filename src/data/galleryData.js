@@ -17,7 +17,7 @@ export const galleryItems = [
       rw: "Abanyeshuri biga ubumenyi bwa mudasobwa no gutegura porogaramu (Scratch coding) muri laboratwari igezweho ya RPPS.",
       fr: "Les élèves découvrent la logique informatique, la programmation par blocs Scratch et l'électronique dans notre laboratoire TIC moderne."
     },
-    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-robotics-lab.jpg",
     date: "Term 1, 2026"
   },
   {
@@ -34,7 +34,7 @@ export const galleryItems = [
       rw: "Abanyeshuri bakoresha mikoroscope mu kwiga ibigize ibimera n'uturemangingo mu isomo rya siyansi.",
       fr: "Les élèves du primaire observent des échantillons végétaux au microscope optique en cours de sciences expérimentales."
     },
-    image: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-science-microscopy.jpg",
     date: "Term 1, 2026"
   },
   {
@@ -51,7 +51,7 @@ export const galleryItems = [
       rw: "Abakandida b'umwaka wa gatandatu bishimira kwigira hamwe imibare na siyansi mu gutegura ikizamini cya Leta.",
       fr: "Les candidats de 6ème année participent à des séances collaboratives de mathématiques et de sciences en vue des examens nationaux."
     },
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-ple-study-group.jpg",
     date: "Term 2, 2026"
   },
   {
@@ -68,7 +68,7 @@ export const galleryItems = [
       rw: "Itorero ry'abanyeshuri ba RPPS berekana imbyino z'umuco nyarwanda n'intore mu birori ngarukamwaka by'umuco.",
       fr: "La troupe culturelle de l'école interprète les danses traditionnelles Amaraba et Intore lors du gala culturel annuel."
     },
-    image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-cultural-troupe.jpg",
     date: "Annual Gala 2026"
   },
   {
@@ -85,7 +85,7 @@ export const galleryItems = [
       rw: "Abana bo muri korali y'ishuri bitoza indirimbo n'umuziki bitegura amateraniro n'ibirori by'ikigo.",
       fr: "Les élèves de la chorale répètent des hymnes harmonieux et des percussions pour les cérémonies de l'école."
     },
-    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-choir-harmony.jpg",
     date: "Term 1, 2026"
   },
   {
@@ -102,7 +102,7 @@ export const galleryItems = [
       rw: "Umukino w'ishiraniro w'umupira w'amaguru hagati y'amatsinda y'ikigo ku kibuga giteye imbere i Nyagatare.",
       fr: "Match passionnant de football entre les maisons Inyange et Intore sur notre terrain gazonné à Nyagatare."
     },
-    image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-football-derby.jpg",
     date: "Term 3, 2026"
   },
   {
@@ -119,7 +119,7 @@ export const galleryItems = [
       rw: "Abanyeshuri basiganwa ku maguru mu mukino wa 4x100m bashyigikiwe n'abarimu ndetse n'ababyeyi babo.",
       fr: "Les élèves se dépassent lors des courses de relais 4x100m sous les encouragements vifs des parents et enseignants."
     },
-    image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-track-field.jpg",
     date: "Sports Day 2026"
   },
   {
@@ -136,7 +136,7 @@ export const galleryItems = [
       rw: "Abanyeshuri bateraniye mu kibuga cya parade bambaye imyenda y'ishuri yuje isuku, baririmba indirimbo y'igihugu.",
       fr: "Les élèves impeccablement vêtus de leur uniforme assistent au rassemblement matinal pour l'hymne national et les annonces civiques."
     },
-    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-campus-assembly.jpg",
     date: "Weekly Tradition"
   },
   {
@@ -153,7 +153,7 @@ export const galleryItems = [
       rw: "Abanyeshuri bishimira amafunguro meza afite intungamubiri ategurwa n'ikigo buri munsi mu cyumba cy'isuku cyo kuriramo.",
       fr: "Les élèves partagent des repas équilibrés, cuisinés sur place avec des produits frais locaux dans notre réfectoire hygiénique."
     },
-    image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-dining-nutrition.jpg",
     date: "Daily Meal Service"
   },
   {
@@ -170,7 +170,7 @@ export const galleryItems = [
       rw: "Abana bo mu cyiciro cy'inshuke bishimira imikino itezimbere umubiri n'imibanire myiza mu kibuga giteye umutekano.",
       fr: "Les jeunes enfants de la maternelle développent leur motricité, agilité et sens du partage dans un espace de jeux sécurisé."
     },
-    image: "https://images.unsplash.com/photo-1522661067900-ab829854a57f?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-nursery-play.jpg",
     date: "Everyday Fun"
   },
   {
@@ -187,7 +187,7 @@ export const galleryItems = [
       rw: "Abanyeshuri bato bishimira gusoma ibitabo by'ibishushanyo mu Kinyarwanda, Icyongereza, n'Igifaransa mu mutuzo w'isomero.",
       fr: "Les jeunes lecteurs découvrent des contes illustrés en anglais, kinyarwanda et français durant l'heure calme de lecture."
     },
-    image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-library-reading.jpg",
     date: "Term 1, 2026"
   },
   {
@@ -204,7 +204,7 @@ export const galleryItems = [
       rw: "Abana berekana imishinga bakoze y'ingufu zikomoka ku muyaga n'izuba imbere y'ababyeyi n'abashyitsi b'ikigo.",
       fr: "Les élèves présentent des maquettes d'éoliennes et de fours solaires aux parents et aux invités lors du salon scientifique."
     },
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/gallery-science-fair-inventions.jpg",
     date: "STEM Fair 2026"
   }
 ];
