@@ -2,9 +2,8 @@ import { t } from '../data/i18n.js';
 
 export function createTuitionEstimator(onOpenApplyModal) {
   const section = document.createElement('section');
-  section.className = 'section';
+  section.className = 'section section-tinted';
   section.id = 'tuition-calculator';
-  section.style.backgroundColor = 'var(--primary-subtle)';
 
   section.innerHTML = `
     <div class="container">
@@ -18,39 +17,36 @@ export function createTuitionEstimator(onOpenApplyModal) {
         
         <!-- Left Selection Controls -->
         <div class="tuition-calc-left">
-          <h3 style="font-size: 1.25rem; color: var(--navy); margin-bottom: 1.25rem;">${t('calc_select_options')}</h3>
+          <h3 class="calc-heading">${t('calc_select_options')}</h3>
 
-          <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; font-size: 0.9rem;">${t('calc_label_grade')}</label>
-            <select id="fee-grade-select" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-size: 0.95rem; background: white; font-weight: 600; color: var(--navy);">
+          <div class="calc-group">
+            <label class="form-label" for="fee-grade-select">${t('calc_label_grade')}</label>
+            <select class="form-input calc-select" id="fee-grade-select">
               <option value="nursery" data-tuition="75000">${t('calc_opt_nursery')}</option>
               <option value="lower_primary" data-tuition="95000" selected>${t('calc_opt_lower')}</option>
               <option value="upper_primary" data-tuition="110000">${t('calc_opt_upper')}</option>
             </select>
           </div>
 
-          <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; font-size: 0.9rem;">${t('calc_label_services')}</label>
-            
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-              <label style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; cursor: pointer;">
-                <input type="checkbox" id="fee-opt-lunch" value="18000" checked style="width: 18px; height: 18px; accent-color: var(--primary);" />
+          <fieldset class="calc-group">
+            <legend class="form-label">${t('calc_label_services')}</legend>
+            <div class="calc-options">
+              <label class="calc-option">
+                <input type="checkbox" id="fee-opt-lunch" value="18000" checked />
                 <span>${t('calc_lunch_label')}</span>
               </label>
-
-              <label style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; cursor: pointer;">
-                <input type="checkbox" id="fee-opt-transport" value="25000" style="width: 18px; height: 18px; accent-color: var(--primary);" />
+              <label class="calc-option">
+                <input type="checkbox" id="fee-opt-transport" value="25000" />
                 <span>${t('calc_transport_label')}</span>
               </label>
-
-              <label style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; cursor: pointer;">
-                <input type="checkbox" id="fee-opt-uniform" value="20000" checked style="width: 18px; height: 18px; accent-color: var(--primary);" />
+              <label class="calc-option">
+                <input type="checkbox" id="fee-opt-uniform" value="20000" checked />
                 <span>${t('calc_uniform_label')}</span>
               </label>
             </div>
-          </div>
+          </fieldset>
 
-          <div style="font-size: 0.82rem; color: var(--gray-600); background: var(--gray-100); padding: 0.75rem; border-radius: var(--radius-sm);">
+          <div class="calc-note">
             ${t('calc_note')}
           </div>
         </div>
@@ -58,34 +54,34 @@ export function createTuitionEstimator(onOpenApplyModal) {
         <!-- Right Summary Card -->
         <div class="tuition-calc-right">
           <div>
-            <h3 style="font-size: 1.25rem; color: var(--gold-light); margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 0.75rem;">${t('calc_summary_title')}</h3>
+            <h3 class="calc-summary-title">${t('calc_summary_title')}</h3>
 
-            <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--gray-300);">${t('calc_tuition_row')}</span>
+            <div class="calc-rows">
+              <div class="calc-row">
+                <span>${t('calc_tuition_row')}</span>
                 <strong id="summary-tuition">95,000 RWF</strong>
               </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--gray-300);">${t('calc_meal_row')}</span>
+              <div class="calc-row">
+                <span>${t('calc_meal_row')}</span>
                 <strong id="summary-lunch">18,000 RWF</strong>
               </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--gray-300);">${t('calc_transport_row')}</span>
+              <div class="calc-row">
+                <span>${t('calc_transport_row')}</span>
                 <strong id="summary-transport">0 RWF</strong>
               </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--gray-300);">${t('calc_uniform_row')}</span>
+              <div class="calc-row">
+                <span>${t('calc_uniform_row')}</span>
                 <strong id="summary-uniform">20,000 RWF</strong>
               </div>
             </div>
 
-            <div style="border-top: 2px dashed rgba(255,255,255,0.2); padding-top: 1.25rem; margin-top: 1rem;">
-              <div style="font-size: 0.85rem; color: var(--gray-300); text-transform: uppercase;">${t('calc_total_investment')}</div>
-              <div id="summary-total" style="font-size: 2.2rem; font-weight: 800; color: var(--gold-light);">133,000 RWF</div>
+            <div class="calc-total">
+              <div class="calc-total-label">${t('calc_total_investment')}</div>
+              <div id="summary-total" class="calc-total-value" aria-live="polite">133,000 RWF</div>
             </div>
           </div>
 
-          <button id="estimator-apply-btn" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
+          <button id="estimator-apply-btn" class="btn btn-primary btn-block calc-apply">
             ${t('calc_btn_apply')}
           </button>
         </div>
