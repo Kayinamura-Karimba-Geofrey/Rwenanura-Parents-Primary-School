@@ -1,8 +1,8 @@
 import { schoolInfo } from '../data/schoolData.js';
-import { getUserRole, getCurrentUser, onAuthChange, logoutUser } from '../data/userRole.js';
+import { getUserRole, getCurrentUser, onAuthChange, logoutUser, canViewCalendar } from '../data/userRole.js';
 import { t, getLanguage, setLanguage } from '../data/i18n.js';
 
-export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal, onOpenAlumniModal) {
+export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal, onOpenAlumniModal, onOpenAuthModal) {
   const header = document.createElement('header');
   header.className = 'site-header';
   
@@ -55,7 +55,7 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <li><a href="#academics" class="nav-link">${t('nav_academics')}</a></li>
           <li><a href="#facilities" class="nav-link">${t('nav_campus')}</a></li>
           <li><a href="#gallery" class="nav-link">${t('nav_gallery')}</a></li>
-          <li><a href="#calendar" class="nav-link">${t('nav_calendar')}</a></li>
+          <li class="nav-calendar-item" hidden><a href="#calendar" class="nav-link">${t('nav_calendar')}</a></li>
           <li><a href="#news" class="nav-link">${t('nav_news')}</a></li>
           <li><a href="#admissions" class="nav-link">${t('nav_admissions')}</a></li>
           <li><a href="#alumni" class="nav-link alumni-nav-link">${t('nav_alumni')}</a></li>
@@ -65,15 +65,20 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           </li>
         </ul>
 
-        <!-- Right Action Button & Mobile Toggle -->
+        <!-- Right Actions: Auth buttons, Apply & Mobile Toggle -->
         <div class="nav-actions">
+          <div class="nav-auth-actions" id="nav-auth-actions">
+            <!-- Log In / Register or user chip + Log Out, populated by role -->
+          </div>
+
           <button class="btn btn-primary btn-sm apply-now-btn">
             <span>${t('btn_apply_now')}</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
-          
-          <button class="mobile-toggle" id="mobile-menu-btn" aria-label="Toggle navigation menu">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+
+          <button class="mobile-toggle" id="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+            <svg class="icon-open" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       </div>
@@ -82,6 +87,36 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
 
   const topActionsContainer = header.querySelector('#top-bar-actions-container');
   const mobileDrawerUtil = header.querySelector('#mobile-drawer-util');
+  const navAuthActions = header.querySelector('#nav-auth-actions');
+  const calendarNavItem = header.querySelector('.nav-calendar-item');
+  const navMenu = header.querySelector('#nav-menu');
+  const mobileBtn = header.querySelector('#mobile-menu-btn');
+
+  function setMenuOpen(open) {
+    navMenu.classList.toggle('open', open);
+    header.classList.toggle('menu-open', open);
+    mobileBtn.setAttribute('aria-expanded', String(open));
+  }
+
+  // Log In / Register for visitors; user chip + Log Out once signed in.
+  // Shared by the desktop nav bar and the mobile drawer.
+  function authButtonsHtml(role, user) {
+    if (role === 'visitor' || !user) {
+      return `
+        <button class="btn btn-outline btn-sm auth-login-trigger">${t('nav_login', 'Log In')}</button>
+        <button class="btn btn-primary btn-sm auth-register-trigger">${t('nav_register', 'Register')}</button>
+      `;
+    }
+    const shortName = escapeHtml((user.name || 'User').split(' ')[0]);
+    const roleLabel = { student: 'Student', staff: 'Staff', admin: 'Admin', alumni: user.memberType === 'OG' ? 'OG' : 'OB' }[role] || role;
+    return `
+      <span class="nav-user-chip" title="${escapeHtml(user.name || '')}">
+        <span class="nav-user-role">${escapeHtml(roleLabel)}</span>
+        <span>${shortName}</span>
+      </span>
+      <button class="btn btn-outline btn-sm logout-trigger">${t('nav_logout', 'Log Out')}</button>
+    `;
+  }
 
   function renderTopBarActions() {
     const role = getUserRole();
@@ -96,7 +131,35 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
       </div>
     `;
 
-    if (role === 'alumni' && user) {
+    calendarNavItem.hidden = !canViewCalendar();
+    header.classList.toggle('is-signed-in', role !== 'visitor' && Boolean(user));
+    navAuthActions.innerHTML = authButtonsHtml(role, user);
+    const drawerAuthHtml = `<div class="mobile-auth-row">${authButtonsHtml(role, user)}</div>`;
+
+    if (role === 'student' && user) {
+      topActionsContainer.innerHTML = `
+        <button class="top-util-link parent-track-trigger" title="${t('top_track')}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>${t('top_track')}</span>
+        </button>
+        <span class="util-divider">|</span>
+        ${langSelectorHtml}
+      `;
+
+      mobileDrawerUtil.innerHTML = `
+        ${drawerAuthHtml}
+        <div class="mobile-util-lang-row">
+          <span class="mobile-util-label">🌐 Language:</span>
+          ${langSelectorHtml}
+        </div>
+        <div class="mobile-util-links">
+          <button class="mobile-util-btn parent-track-trigger">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>${t('top_track')}</span>
+          </button>
+        </div>
+      `;
+    } else if (role === 'alumni' && user) {
       const shortName = (user.name || 'Alumnus').split(' ')[0];
       const memberType = user.memberType === 'OG' ? 'OG' : 'OB';
       topActionsContainer.innerHTML = `
@@ -114,14 +177,11 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <span>ChatUp 💬</span>
         </button>
         <span class="util-divider">|</span>
-        <button class="top-util-link logout-trigger" title="Sign out of Alumni Network">
-          <span>Sign Out ⎋</span>
-        </button>
-        <span class="util-divider">|</span>
         ${langSelectorHtml}
       `;
 
       mobileDrawerUtil.innerHTML = `
+        ${drawerAuthHtml}
         <div class="mobile-util-lang-row">
           <span class="mobile-util-label">🌐 Language:</span>
           ${langSelectorHtml}
@@ -133,9 +193,6 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           </button>
           <button class="mobile-util-btn alumni-chat-quick">
             <span>💬 Live Alumni ChatUp</span>
-          </button>
-          <button class="mobile-util-btn logout-trigger">
-            <span>Sign Out (${escapeHtml(shortName)}) ⎋</span>
           </button>
         </div>
       `;
@@ -156,14 +213,11 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <span>${t('top_alumni')} 🎓</span>
         </button>
         <span class="util-divider">|</span>
-        <button class="top-util-link logout-trigger" title="Sign out of Staff Portal">
-          <span>Sign Out ⎋</span>
-        </button>
-        <span class="util-divider">|</span>
         ${langSelectorHtml}
       `;
 
       mobileDrawerUtil.innerHTML = `
+        ${drawerAuthHtml}
         <div class="mobile-util-lang-row">
           <span class="mobile-util-label">🌐 Language:</span>
           ${langSelectorHtml}
@@ -180,9 +234,6 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <button class="mobile-util-btn alumni-top-trigger">
             <span>🎓 ${t('top_alumni')}</span>
           </button>
-          <button class="mobile-util-btn logout-trigger">
-            <span>Sign Out ⎋</span>
-          </button>
         </div>
       `;
     } else {
@@ -198,15 +249,11 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
           <span>${t('top_alumni')}</span>
         </button>
         <span class="util-divider">|</span>
-        <button class="top-util-link admin-modal-trigger" title="${t('top_staff')}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span>${t('top_staff')}</span>
-        </button>
-        <span class="util-divider">|</span>
         ${langSelectorHtml}
       `;
 
       mobileDrawerUtil.innerHTML = `
+        ${drawerAuthHtml}
         <div class="mobile-util-lang-row">
           <span class="mobile-util-label">🌐 Language:</span>
           ${langSelectorHtml}
@@ -220,10 +267,6 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <span>${t('top_alumni')}</span>
           </button>
-          <button class="mobile-util-btn admin-modal-trigger">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>${t('top_staff')}</span>
-          </button>
         </div>
       `;
     }
@@ -231,35 +274,49 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
     // Bind event listeners on both top bar and mobile drawer buttons
     header.querySelectorAll('.parent-track-trigger').forEach(btn => {
       btn.addEventListener('click', () => {
-        header.querySelector('#nav-menu')?.classList.remove('open');
+        setMenuOpen(false);
         if (onOpenTrackModal) onOpenTrackModal();
       });
     });
 
     header.querySelectorAll('.alumni-top-trigger').forEach(btn => {
       btn.addEventListener('click', () => {
-        header.querySelector('#nav-menu')?.classList.remove('open');
+        setMenuOpen(false);
         if (onOpenAlumniModal) onOpenAlumniModal('chat', 'general');
       });
     });
 
     header.querySelectorAll('.alumni-chat-quick').forEach(btn => {
       btn.addEventListener('click', () => {
-        header.querySelector('#nav-menu')?.classList.remove('open');
+        setMenuOpen(false);
         if (onOpenAlumniModal) onOpenAlumniModal('chat', 'general');
       });
     });
 
     header.querySelectorAll('.admin-modal-trigger').forEach(btn => {
       btn.addEventListener('click', () => {
-        header.querySelector('#nav-menu')?.classList.remove('open');
+        setMenuOpen(false);
         if (onOpenAdminModal) onOpenAdminModal();
+      });
+    });
+
+    header.querySelectorAll('.auth-login-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setMenuOpen(false);
+        if (onOpenAuthModal) onOpenAuthModal('login');
+      });
+    });
+
+    header.querySelectorAll('.auth-register-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setMenuOpen(false);
+        if (onOpenAuthModal) onOpenAuthModal('register');
       });
     });
 
     header.querySelectorAll('.logout-trigger').forEach(btn => {
       btn.addEventListener('click', () => {
-        header.querySelector('#nav-menu')?.classList.remove('open');
+        setMenuOpen(false);
         logoutUser();
       });
     });
@@ -300,28 +357,50 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
     });
   }
 
-  const mobileBtn = header.querySelector('#mobile-menu-btn');
-  const navMenu = header.querySelector('#nav-menu');
-  
   mobileBtn.addEventListener('click', () => {
-    navMenu.classList.toggle('open');
+    setMenuOpen(!navMenu.classList.contains('open'));
   });
 
-  // Smooth scroll active state
   const navLinks = header.querySelectorAll('.nav-link');
+  function setActiveLink(hash) {
+    navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === hash));
+  }
+
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
-      navLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-      navMenu.classList.remove('open');
+      setActiveLink(link.getAttribute('href'));
+      setMenuOpen(false);
     });
   });
 
-  // Close mobile drawer when clicking outside
+  // Highlight the nav link of the section currently in view. Sections are
+  // mounted after the header, so start observing on the next frame.
+  requestAnimationFrame(() => {
+    const sections = [...navLinks]
+      .map(l => document.querySelector(l.getAttribute('href')))
+      .filter(Boolean);
+    const inView = new Set();
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) inView.add(entry.target);
+        else inView.delete(entry.target);
+      });
+      // First section (in page order) crossing the middle of the viewport;
+      // none (e.g. the hero) clears the highlight.
+      const current = sections.find(sec => inView.has(sec));
+      setActiveLink(current ? `#${current.id}` : null);
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    sections.forEach(sec => spy.observe(sec));
+  });
+
+  // Close mobile drawer when clicking outside or pressing Escape
   document.addEventListener('click', (e) => {
     if (!header.contains(e.target) && navMenu.classList.contains('open')) {
-      navMenu.classList.remove('open');
+      setMenuOpen(false);
     }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navMenu.classList.contains('open')) setMenuOpen(false);
   });
 
   return header;
