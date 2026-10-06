@@ -279,6 +279,8 @@ export function createAlumniModal() {
   // Close the live stream / polling when the app is rebuilt
   onCleanup(() => chat.stop());
 
+  modal.close = closeModal;
+
   modal.open = (targetTab = 'chat', targetChannel = null) => {
     modal.classList.add('active');
     goToTab(tabContents[targetTab] ? targetTab : 'chat');
