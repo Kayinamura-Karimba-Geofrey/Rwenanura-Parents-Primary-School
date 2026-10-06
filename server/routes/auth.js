@@ -125,10 +125,49 @@ const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Middleware to optionally verify JWT token without rejecting guests
+// ---------------------------------------------------------------------------
+// Session cookie
+// The JWT lives in an httpOnly cookie so page scripts (and therefore any
+// injected script) can never read it. SameSite=Strict keeps other sites from
+// sending it; index.js additionally requires a custom header on writes.
+// ---------------------------------------------------------------------------
+export const SESSION_COOKIE = 'rpps_session';
+const SESSION_TTL_SECONDS = 14 * 24 * 60 * 60;
+
+function readCookie(req, name) {
+  const header = req.headers.cookie;
+  if (!header) return null;
+  for (const part of header.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq !== -1 && part.slice(0, eq).trim() === name) {
+      return decodeURIComponent(part.slice(eq + 1).trim());
+    }
+  }
+  return null;
+}
+
+function cookieAttributes(maxAgeSeconds) {
+  return [
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Strict',
+    `Max-Age=${maxAgeSeconds}`,
+    ...(process.env.NODE_ENV === 'production' ? ['Secure'] : []),
+  ].join('; ');
+}
+
+function startSession(res, userObj) {
+  const token = jwt.sign(userObj, JWT_SECRET, { expiresIn: SESSION_TTL_SECONDS });
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${token}; ${cookieAttributes(SESSION_TTL_SECONDS)}`);
+}
+
+function endSession(res) {
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; ${cookieAttributes(0)}`);
+}
+
+// Middleware to optionally verify the session without rejecting guests
 export function optionalAuthenticate(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = readCookie(req, SESSION_COOKIE);
 
   if (!token) {
     req.user = null;
@@ -142,18 +181,18 @@ export function optionalAuthenticate(req, res, next) {
   });
 }
 
-// Middleware to strictly verify JWT token
+// Middleware to strictly verify the session
 export function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = readCookie(req, SESSION_COOKIE);
 
   if (!token) {
-    return res.status(401).json({ success: false, error: 'Access token required. Please log in.' });
+    return res.status(401).json({ success: false, error: 'Please log in to continue.' });
   }
 
   jwt.verify(token, JWT_SECRET, JWT_VERIFY_OPTIONS, (err, decoded) => {
     if (err || !attachLiveUser(req, decoded)) {
-      return res.status(401).json({ success: false, error: 'Invalid or expired session token.' });
+      endSession(res);
+      return res.status(401).json({ success: false, error: 'Your session has expired. Please log in again.' });
     }
     next();
   });
@@ -620,14 +659,13 @@ router.post('/auth/login', loginLimiter, (req, res) => {
       ...extraData
     };
 
-    const token = jwt.sign(userObj, JWT_SECRET, { expiresIn: '14d' });
+    startSession(res, userObj);
 
     console.log(`🔐 User Logged In: ${user.name} (${user.email}) [${user.role}]`);
 
     res.json({
       success: true,
       message: 'Login successful!',
-      token,
       user: userObj
     });
 
@@ -635,6 +673,12 @@ router.post('/auth/login', loginLimiter, (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ success: false, error: 'Server authentication error.' });
   }
+});
+
+// POST /api/auth/logout - End the session (clears the httpOnly cookie)
+router.post('/auth/logout', (req, res) => {
+  endSession(res);
+  res.json({ success: true });
 });
 
 // GET /api/auth/me - Fetch current authenticated user
