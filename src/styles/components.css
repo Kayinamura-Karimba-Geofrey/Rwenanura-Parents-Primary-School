@@ -1561,6 +1561,13 @@
   text-decoration: underline;
 }
 
+.info-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .info-updated {
   font-size: 0.8rem;
   color: var(--gray-500);
