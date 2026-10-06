@@ -187,6 +187,11 @@ export function createAdminDashboard(onLogout) {
               <textarea id="news-input-summary" required rows="2" placeholder="Brief summary of the announcement..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.88rem; font-family: inherit;"></textarea>
             </div>
 
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--navy);">Full Article (optional, shown by "Read more")</label>
+              <textarea id="news-input-body" rows="5" maxlength="5000" placeholder="The complete story. Leave a blank line between paragraphs." style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.88rem; font-family: inherit;"></textarea>
+            </div>
+
             <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
               <button type="button" id="cancel-add-news-btn" class="btn btn-outline" style="padding: 0.4rem 0.85rem;">Cancel</button>
               <button type="submit" class="btn btn-primary" style="padding: 0.4rem 1rem;">Publish to Live Site</button>
@@ -512,8 +517,9 @@ export function createAdminDashboard(onLogout) {
     const time = modal.querySelector('#news-input-time').value;
     const location = modal.querySelector('#news-input-location').value;
     const summary = modal.querySelector('#news-input-summary').value;
+    const body = modal.querySelector('#news-input-body').value;
 
-    const res = await createNewsItem({ title, type, category, day, month, year, time, location, summary });
+    const res = await createNewsItem({ title, type, category, day, month, year, time, location, summary, body });
 
     if (res.success) {
       alert('Article published successfully!');
