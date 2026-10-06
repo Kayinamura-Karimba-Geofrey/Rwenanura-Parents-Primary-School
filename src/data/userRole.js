@@ -3,7 +3,7 @@
  * Manages visitor, alumni, student and staff roles with reactive state updates.
  */
 
-import { getStoredUser, setAuthSession, clearAuthSession } from './api.js';
+import { getStoredUser, setAuthSession, logoutUser as endServerSession } from './api.js';
 
 export const USER_ROLES = {
   VISITOR: 'visitor',
@@ -61,15 +61,15 @@ export function isStaffOrAdmin() {
 /**
  * Set authenticated session and notify all subscribers
  */
-export function setUserSession(token, user) {
-  setAuthSession(token, user);
+export function setUserSession(user) {
+  setAuthSession(user);
 }
 
 /**
  * Log out and notify all subscribers
  */
 export function logoutUser() {
-  clearAuthSession();
+  return endServerSession();
 }
 
 /**
