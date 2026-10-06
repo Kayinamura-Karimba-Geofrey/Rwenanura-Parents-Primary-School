@@ -16,6 +16,7 @@ import {
 } from '../data/api.js';
 import { createCalendarManager } from './CalendarManager.js';
 import { escapeHtml } from '../utils/html.js';
+import { onCleanup } from '../utils/lifecycle.js';
 
 export function createAdminDashboard(onLogout) {
   const modal = document.createElement('div');
@@ -654,6 +655,7 @@ export function createAdminDashboard(onLogout) {
     }
   });
   observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+  onCleanup(() => observer.disconnect());
 
   return modal;
 }
