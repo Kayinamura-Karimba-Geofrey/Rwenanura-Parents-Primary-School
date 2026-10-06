@@ -2,6 +2,7 @@ import { schoolInfo } from '../data/schoolData.js';
 import { subscribeNewsletter } from '../data/api.js';
 import { t } from '../data/i18n.js';
 import { canViewCalendar, onAuthChange } from '../data/userRole.js';
+import { privacyPolicy, termsOfUse } from '../data/policies.js';
 
 export function createFooter() {
   const footer = document.createElement('footer');
@@ -78,9 +79,9 @@ export function createFooter() {
       <div class="footer-bottom">
         <p>© ${new Date().getFullYear()} ${schoolInfo.name}. ${t('footer_copyright')}</p>
         <div style="display: flex; gap: 1.5rem;">
-          <a href="#" style="color: var(--gray-400);">${t('footer_privacy')}</a>
-          <a href="#" style="color: var(--gray-400);">${t('footer_terms')}</a>
-          <a href="#" style="color: var(--gray-400);">${t('footer_portal')}</a>
+          <button type="button" class="footer-legal-link" data-policy="privacy">${t('footer_privacy')}</button>
+          <button type="button" class="footer-legal-link" data-policy="terms">${t('footer_terms')}</button>
+          <button type="button" class="footer-legal-link" id="footer-track-link">${t('footer_portal')}</button>
         </div>
       </div>
     </div>
@@ -91,6 +92,17 @@ export function createFooter() {
   const syncCalendarLink = () => { calendarItem.hidden = !canViewCalendar(); };
   syncCalendarLink();
   onAuthChange(syncCalendarLink);
+
+  footer.querySelectorAll('[data-policy]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const policy = btn.dataset.policy === 'privacy' ? privacyPolicy : termsOfUse;
+      window.dispatchEvent(new CustomEvent('rpps-show-info', { detail: policy }));
+    });
+  });
+  // Parents' portal = tracking an admission application
+  footer.querySelector('#footer-track-link').addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('rpps-open-track'));
+  });
 
   const form = footer.querySelector('#newsletter-form');
   const msgEl = footer.querySelector('#newsletter-msg');
