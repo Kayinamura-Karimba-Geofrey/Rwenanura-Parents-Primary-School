@@ -1,6 +1,6 @@
 /**
  * RPPS Role-Based Access Control (RBAC) Client Manager
- * Manages visitor, alumni, and staff roles with reactive state updates.
+ * Manages visitor, alumni, student and staff roles with reactive state updates.
  */
 
 import { getStoredUser, setAuthSession, clearAuthSession } from './api.js';
@@ -8,6 +8,7 @@ import { getStoredUser, setAuthSession, clearAuthSession } from './api.js';
 export const USER_ROLES = {
   VISITOR: 'visitor',
   ALUMNI: 'alumni',
+  STUDENT: 'student',
   STAFF: 'staff',
   ADMIN: 'admin'
 };
@@ -22,7 +23,7 @@ export function getCurrentUser() {
 }
 
 /**
- * Get the active role: 'visitor', 'alumni', 'staff', or 'admin'
+ * Get the active role: 'visitor', 'alumni', 'student', 'staff', or 'admin'
  */
 export function getUserRole() {
   const user = getCurrentUser();
@@ -39,6 +40,17 @@ export function isVisitor() {
 
 export function isAlumni() {
   return getUserRole() === USER_ROLES.ALUMNI;
+}
+
+export function isStudent() {
+  return getUserRole() === USER_ROLES.STUDENT;
+}
+
+// The school calendar is restricted to signed-in students, staff and admins
+// (the API enforces the same rule on GET /api/calendar).
+export function canViewCalendar() {
+  const role = getUserRole();
+  return role === USER_ROLES.STUDENT || role === USER_ROLES.STAFF || role === USER_ROLES.ADMIN;
 }
 
 export function isStaffOrAdmin() {
