@@ -7,6 +7,7 @@ import {
   createNewsItem,
   deleteNewsItem,
   fetchStaffUsers,
+  approveUser,
   updateStaffRole,
   deleteStaffUser,
   clearAuthSession,
@@ -38,7 +39,7 @@ export function createAdminDashboard(onLogout) {
 
         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
           <button id="dash-refresh-btn" class="btn btn-outline" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">🔄 Sync Data</button>
-          <button id="dash-logout-btn" class="btn btn-gold" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">Logout 🚪</button>
+          <button id="dash-logout-btn" class="btn btn-primary btn-xs">Logout 🚪</button>
           <button class="modal-close" style="position: static; font-size: 1.5rem;" aria-label="Close modal">&times;</button>
         </div>
       </div>
@@ -86,8 +87,8 @@ export function createAdminDashboard(onLogout) {
         <button class="dash-tab" data-tab="newsletter" style="padding: 0.6rem 1.25rem; font-weight: 600; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-600); cursor: pointer;">
           📧 Newsletter Mailing List
         </button>
-        <button class="dash-tab" data-tab="staff" id="dash-staff-tab-btn" style="display: none; padding: 0.6rem 1.25rem; font-weight: 600; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-600); cursor: pointer;">
-          🛡️ Staff Accounts
+        <button class="dash-tab" data-tab="staff" id="dash-staff-tab-btn" style="padding: 0.6rem 1.25rem; font-weight: 600; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-600); cursor: pointer;">
+          🛡️ Accounts
         </button>
       </div>
 
@@ -107,7 +108,7 @@ export function createAdminDashboard(onLogout) {
                 <button class="filter-btn" data-filter="Approved">Approved</button>
               </div>
               
-              <button id="export-csv-btn" class="btn btn-outline" style="padding: 0.45rem 0.85rem; font-size: 0.82rem; background: var(--primary-subtle); border-color: var(--primary); color: var(--primary);">
+              <button id="export-csv-btn" class="btn btn-outline btn-xs">
                 📥 Export CSV
               </button>
             </div>
@@ -208,11 +209,9 @@ export function createAdminDashboard(onLogout) {
           </div>
         </div>
 
-        <!-- 4. STAFF ACCOUNTS TAB (admin only) -->
+        <!-- 4. ACCOUNTS TAB (staff: students; admin: everyone) -->
         <div id="tab-content-staff" style="display: none;">
-          <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem;">
-            New staff sign-ups stay <strong>pending</strong> until approved here. Staff can view and update admissions; admins can also delete records and manage accounts.
-          </p>
+          <p id="dash-accounts-help" style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem;"></p>
           <div id="dash-staff-container" style="display: flex; flex-direction: column; gap: 0.6rem;">
             <div style="text-align: center; padding: 2rem; color: var(--gray-500);">Loading accounts...</div>
           </div>
@@ -281,13 +280,15 @@ export function createAdminDashboard(onLogout) {
       modal.querySelector('#dash-user-email').textContent = user.email || '';
       modal.querySelector('#dash-user-role').textContent = (user.role || 'staff').toUpperCase();
     }
-    modal.querySelector('#dash-staff-tab-btn').style.display = isAdmin ? '' : 'none';
+    modal.querySelector('#dash-accounts-help').innerHTML = isAdmin
+      ? 'New registrations stay <strong>pending</strong> until approved here. Students can view the school calendar; staff can also manage admissions and approve students; admins manage every account.'
+      : 'New student registrations stay <strong>pending</strong> until you approve them. Approved students can sign in and view the school calendar.';
 
     const [appRes, subRes, newsRes, staffRes] = await Promise.all([
       fetchApplications(),
       fetchSubscribers(),
       fetchNewsAndEvents(),
-      isAdmin ? fetchStaffUsers() : Promise.resolve({ success: false })
+      fetchStaffUsers()
     ]);
 
     if (appRes.success) applications = appRes.applications || [];
@@ -300,7 +301,7 @@ export function createAdminDashboard(onLogout) {
     renderApplications();
     renderNews();
     renderSubscribers();
-    if (isAdmin) renderStaff();
+    renderStaff();
   }
 
   function updateCounters() {
@@ -416,7 +417,7 @@ export function createAdminDashboard(onLogout) {
               <option value="Approved" ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
             </select>
             
-            <button class="app-delete-btn" data-id="${app.id}" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.3rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.78rem; cursor: pointer;">
+            <button class="btn btn-outline btn-xs app-delete-btn" data-id="${app.id}">
               🗑️
             </button>
           </div>
@@ -530,7 +531,7 @@ export function createAdminDashboard(onLogout) {
           <p style="font-size: 0.82rem; color: var(--gray-600); margin: 0.2rem 0 0 0;">${escapeHtml(item.summary)}</p>
         </div>
 
-        <button class="delete-news-btn" data-id="${item.id}" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
+        <button class="btn btn-outline btn-xs delete-news-btn" data-id="${item.id}">
           Delete 🗑️
         </button>
       </div>
@@ -584,41 +585,55 @@ export function createAdminDashboard(onLogout) {
     `;
   }
 
-  // 4. Render Staff Accounts (admin only)
+  // 4. Render Accounts (staff see students; admins see everyone)
   const staffContainer = modal.querySelector('#dash-staff-container');
   const ROLE_BADGE = {
     pending: 'background: var(--gold-light); color: var(--gold-dark);',
+    student: 'background: var(--gray-100); color: var(--gray-700);',
     staff: 'background: var(--primary-subtle); color: var(--primary);',
     admin: 'background: var(--navy); color: var(--white);'
   };
 
   function renderStaff() {
     const me = getStoredUser();
+    const isAdmin = me && me.role === 'admin';
     if (staffUsers.length === 0) {
-      staffContainer.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No staff accounts found.</div>`;
+      staffContainer.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No accounts found.</div>`;
       return;
     }
 
     staffContainer.innerHTML = staffUsers.map(u => {
       const isSelf = me && me.id === u.id;
+      const roleLabel = u.role === 'pending' ? `pending ${u.requested_role || 'staff'}` : u.role;
       const actions = isSelf ? `<span style="font-size: 0.78rem; color: var(--gray-500);">(you)</span>` : `
-        ${u.role === 'pending' ? `<button class="btn btn-primary staff-role-btn" data-id="${u.id}" data-role="staff" style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">Approve</button>` : ''}
-        ${u.role === 'staff' ? `<button class="btn btn-outline staff-role-btn" data-id="${u.id}" data-role="admin" style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">Make Admin</button>` : ''}
-        ${u.role === 'admin' ? `<button class="btn btn-outline staff-role-btn" data-id="${u.id}" data-role="staff" style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">Make Staff</button>` : ''}
-        <button class="staff-delete-btn" data-id="${u.id}" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.78rem; cursor: pointer;">
+        ${u.role === 'pending' ? `<button class="btn btn-primary btn-xs staff-approve-btn" data-id="${u.id}">Approve</button>` : ''}
+        ${isAdmin && u.role === 'staff' ? `<button class="btn btn-outline btn-xs staff-role-btn" data-id="${u.id}" data-role="admin">Make Admin</button>` : ''}
+        ${isAdmin && u.role === 'admin' ? `<button class="btn btn-outline btn-xs staff-role-btn" data-id="${u.id}" data-role="staff">Make Staff</button>` : ''}
+        <button class="btn btn-outline btn-xs staff-delete-btn" data-id="${u.id}">
           ${u.role === 'pending' ? 'Reject' : 'Remove'}
         </button>`;
       return `
         <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
           <div>
             <strong style="color: var(--navy);">${escapeHtml(u.name)}</strong>
-            <span style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 3px; margin-left: 0.35rem; ${ROLE_BADGE[u.role] || ''}">${escapeHtml(u.role)}</span>
-            <div style="font-size: 0.8rem; color: var(--gray-600);">${escapeHtml(u.email)} • joined ${new Date(u.created_at).toLocaleDateString()}</div>
+            <span style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 3px; margin-left: 0.35rem; ${ROLE_BADGE[u.role] || ''}">${escapeHtml(roleLabel)}</span>
+            <div style="font-size: 0.8rem; color: var(--gray-600);">${escapeHtml(u.email)}${u.class_level ? ` • ${escapeHtml(u.class_level)}` : ''} • joined ${new Date(u.created_at).toLocaleDateString()}</div>
           </div>
           <div style="display: flex; gap: 0.4rem; align-items: center;">${actions}</div>
         </div>
       `;
     }).join('');
+
+    staffContainer.querySelectorAll('.staff-approve-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        const res = await approveUser(id);
+        if (!res.success) return alert(res.error || 'Failed to approve account.');
+        const item = staffUsers.find(u => u.id == id);
+        if (item) item.role = res.role;
+        renderStaff();
+      });
+    });
 
     staffContainer.querySelectorAll('.staff-role-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
