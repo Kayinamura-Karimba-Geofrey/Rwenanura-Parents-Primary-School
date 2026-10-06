@@ -2064,3 +2064,26 @@
 }
 
 
+
+/* Avatar colours: Old Boys green, Old Girls gold */
+.avatar-ob {
+  background-color: var(--primary);
+}
+
+.avatar-og {
+  background-color: var(--gold);
+}
+
+.portal-content-container {
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.chat-empty-full {
+  grid-column: 1 / -1;
+}
+
+.id-card-crest {
+  width: 38px;
+  height: 38px;
+}
