@@ -155,7 +155,7 @@ router.post('/alumni/typing', typingLimiter, authenticateToken, (req, res) => {
 });
 
 // GET /api/alumni/messages - Fetch messages for alumni chat
-router.get('/alumni/messages', (req, res) => {
+router.get('/alumni/messages', optionalAuthenticate, (req, res) => {
   try {
     const { channel, search, limit = 100 } = req.query;
     // Cap the page size; also guard against negative LIMIT values (SQLite
@@ -188,6 +188,14 @@ router.get('/alumni/messages', (req, res) => {
 
     const stmt = db.prepare(query);
     const messages = stmt.all(...params);
+
+    // Mark the messages the signed-in user has already liked
+    if (req.user) {
+      const liked = new Set(
+        db.prepare('SELECT message_id FROM alumni_message_likes WHERE user_id = ?').all(req.user.id).map(r => r.message_id)
+      );
+      messages.forEach(m => { m.liked_by_me = liked.has(m.id); });
+    }
 
     res.json({
       success: true,
@@ -265,7 +273,19 @@ router.post('/alumni/messages', messageLimiter, authenticateToken, (req, res) =>
   }
 });
 
-// POST /api/alumni/messages/:id/react - Like/Cheer a message
+// Like a message once per user; reacting again removes the like.
+const toggleLike = db.transaction((msgId, userId) => {
+  const removed = db.prepare('DELETE FROM alumni_message_likes WHERE message_id = ? AND user_id = ?').run(msgId, userId).changes > 0;
+  if (removed) {
+    db.prepare('UPDATE alumni_messages SET likes_count = MAX(likes_count - 1, 0) WHERE id = ?').run(msgId);
+  } else {
+    db.prepare('INSERT INTO alumni_message_likes (message_id, user_id) VALUES (?, ?)').run(msgId, userId);
+    db.prepare('UPDATE alumni_messages SET likes_count = likes_count + 1 WHERE id = ?').run(msgId);
+  }
+  return !removed;
+});
+
+// POST /api/alumni/messages/:id/react - Like/unlike a message (toggle)
 router.post('/alumni/messages/:id/react', reactionLimiter, authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
@@ -273,13 +293,11 @@ router.post('/alumni/messages/:id/react', reactionLimiter, authenticateToken, (r
     if (!Number.isInteger(msgId)) {
       return res.status(400).json({ success: false, error: 'Invalid message id.' });
     }
-    const stmt = db.prepare('UPDATE alumni_messages SET likes_count = likes_count + 1 WHERE id = ?');
-    const result = stmt.run(msgId);
-
-    if (result.changes === 0) {
+    if (!db.prepare('SELECT id FROM alumni_messages WHERE id = ?').get(msgId)) {
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
 
+    const liked = toggleLike(msgId, req.user.id);
     const updated = db.prepare('SELECT id, likes_count FROM alumni_messages WHERE id = ?').get(msgId);
 
     // Broadcast reaction update in real-time to all connected alumni clients
@@ -290,6 +308,7 @@ router.post('/alumni/messages/:id/react', reactionLimiter, authenticateToken, (r
 
     res.json({
       success: true,
+      liked,
       likesCount: updated.likes_count
     });
   } catch (err) {
