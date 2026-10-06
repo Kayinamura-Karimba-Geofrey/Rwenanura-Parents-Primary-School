@@ -64,3 +64,41 @@ export function sendPasswordResetEmail(to, name, token) {
     text: `Hello ${name},\n\nWe received a request to reset your password. Choose a new password here:\n\n${appLink({ reset: token })}\n\nThis link expires in 1 hour. If you did not ask for this, you can ignore this email; your password will not change.`,
   });
 }
+
+const STATUS_MESSAGES = {
+  'Pending': 'has been received and is waiting to be reviewed',
+  'Under Review': 'is now being reviewed by our admissions team',
+  'Approved': 'has been APPROVED. Congratulations! The school will contact you about the next steps',
+};
+
+export function sendApplicationReceivedEmail(to, { parentName, childName, grade, trackingCode }) {
+  return sendMail({
+    to,
+    subject: `Application received for ${childName} - RPPS`,
+    text: `Dear ${parentName},\n\nThank you for applying to Rwenanura Parents Primary School. We have received the application for ${childName} (${grade}).\n\nYour tracking code is: ${trackingCode}\n\nUse it on our website ("Track Application") to follow the status of the application:\n${appLink({ track: trackingCode })}\n\nWe will email you when the status changes.`,
+  });
+}
+
+export function sendApplicationStatusEmail(to, { parentName, childName, status, trackingCode }) {
+  return sendMail({
+    to,
+    subject: `Application update for ${childName}: ${status} - RPPS`,
+    text: `Dear ${parentName},\n\nThe application for ${childName} ${STATUS_MESSAGES[status] || `is now: ${status}`}.\n\nTracking code: ${trackingCode}\n${appLink({ track: trackingCode })}\n\nIf you have questions, reply to this email or call the school office.`,
+  });
+}
+
+export function sendNewApplicationAlert({ childName, grade, trackingCode }) {
+  return sendMail({
+    to: process.env.ADMISSIONS_NOTIFY_EMAIL,
+    subject: `New admission application: ${childName} (${grade})`,
+    text: `A new application was submitted on the website.\n\nPupil: ${childName}\nClass: ${grade}\nTracking code: ${trackingCode}\n\nReview it in the School Management Console: ${APP_URL}`,
+  });
+}
+
+export function sendAccountApprovedEmail(to, name, role) {
+  return sendMail({
+    to,
+    subject: 'Your RPPS account is active',
+    text: `Hello ${name},\n\nYour ${role} account at Rwenanura Parents Primary School has been approved. You can now sign in:\n\n${APP_URL}\n`,
+  });
+}
