@@ -37,8 +37,8 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
 
       <!-- LOGIN FORM -->
       <form id="auth-login-form" class="auth-form">
-        <label class="auth-label" for="login-email">Email</label>
-        <input class="auth-input" type="email" id="login-email" required autocomplete="username" placeholder="you@example.com" />
+        <label class="auth-label" for="login-email">Email or Username</label>
+        <input class="auth-input" type="text" id="login-email" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="you@example.com or username" />
 
         <label class="auth-label" for="login-password">Password</label>
         <input class="auth-input" type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
@@ -88,8 +88,13 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
         <label class="auth-label" for="register-name">Full Name</label>
         <input class="auth-input" type="text" id="register-name" required maxlength="120" autocomplete="name" placeholder="e.g. Aline Uwase" />
 
-        <label class="auth-label" for="register-email">Email</label>
-        <input class="auth-input" type="email" id="register-email" required maxlength="200" autocomplete="email" placeholder="you@example.com" />
+        <div id="register-username-field">
+          <label class="auth-label" for="register-username">Username</label>
+          <input class="auth-input" type="text" id="register-username" minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,29}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. aline.uwase" />
+        </div>
+
+        <label class="auth-label" for="register-email" id="register-email-label">Email <span class="auth-optional">(optional - a parent's email is fine)</span></label>
+        <input class="auth-input" type="email" id="register-email" maxlength="200" autocomplete="email" placeholder="you@example.com" />
 
         <div id="register-class-field">
           <label class="auth-label" for="register-class">Class</label>
@@ -102,7 +107,7 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
         <input class="auth-input" type="password" id="register-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
 
         <button type="submit" id="register-submit-btn" class="btn btn-primary btn-block">Create Account</button>
-        <p class="auth-note" id="register-note">Confirm your email, then a staff member approves student accounts.</p>
+        <p class="auth-note" id="register-note">A staff member approves student accounts before first sign-in.</p>
       </form>
 
       <p class="auth-alumni-link">
@@ -121,6 +126,20 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
   let resetToken = null;
   const feedback = modal.querySelector('#auth-feedback');
   const classField = modal.querySelector('#register-class-field');
+  const usernameField = modal.querySelector('#register-username-field');
+  const usernameInput = modal.querySelector('#register-username');
+  const emailInput = modal.querySelector('#register-email');
+  const emailOptional = modal.querySelector('#register-email-label .auth-optional');
+
+  // Pupils: username required, email optional. Staff: email required.
+  function applyAccountType(isStudent) {
+    classField.hidden = !isStudent;
+    usernameField.hidden = !isStudent;
+    usernameInput.required = isStudent;
+    emailInput.required = !isStudent;
+    emailOptional.hidden = !isStudent;
+  }
+  applyAccountType(true);
   const registerNote = modal.querySelector('#register-note');
 
   function close() {
@@ -175,9 +194,9 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
   registerForm.querySelectorAll('input[name="account-type"]').forEach(radio => {
     radio.addEventListener('change', () => {
       const isStudent = radio.value === 'student' && radio.checked;
-      classField.hidden = !isStudent;
+      applyAccountType(isStudent);
       registerNote.textContent = isStudent
-        ? 'Confirm your email, then a staff member approves student accounts.'
+        ? 'A staff member approves student accounts before first sign-in.'
         : 'Confirm your email, then an administrator approves staff accounts.';
     });
   });
@@ -258,7 +277,8 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
     const res = await registerUser({
       accountType,
       name: modal.querySelector('#register-name').value,
-      email: modal.querySelector('#register-email').value,
+      email: emailInput.value,
+      username: accountType === 'student' ? usernameInput.value : undefined,
       password: modal.querySelector('#register-password').value,
       classLevel: accountType === 'student' ? modal.querySelector('#register-class').value : undefined
     });
@@ -268,7 +288,7 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
 
     if (res.success) {
       registerForm.reset();
-      classField.hidden = false;
+      applyAccountType(true);
       switchTab('login');
       showFeedback(res.message || 'Registration received. You can log in once your account is approved.');
     } else {
