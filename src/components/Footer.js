@@ -1,6 +1,7 @@
 import { schoolInfo } from '../data/schoolData.js';
 import { subscribeNewsletter } from '../data/api.js';
 import { t } from '../data/i18n.js';
+import { canViewCalendar, onAuthChange } from '../data/userRole.js';
 
 export function createFooter() {
   const footer = document.createElement('footer');
@@ -50,7 +51,7 @@ export function createFooter() {
           <h4>${t('footer_info_title')}</h4>
           <ul class="footer-links">
             <li><a href="#news">${t('nav_news')}</a></li>
-            <li><a href="#calendar">${t('nav_calendar')}</a></li>
+            <li class="footer-calendar-item" hidden><a href="#calendar">${t('nav_calendar')}</a></li>
             <li><a href="#testimonials">${t('test_badge')}</a></li>
             <li><a href="#tuition-calculator">${t('calc_badge')}</a></li>
             <li><a href="#about">${t('headteacher_title')}</a></li>
@@ -67,7 +68,7 @@ export function createFooter() {
           <h5 style="color: var(--white); font-size: 0.95rem; margin-bottom: 0.5rem;">${t('footer_newsletter_title')}</h5>
           <form id="newsletter-form" style="display: flex; gap: 0.5rem;">
             <input type="email" id="newsletter-email" required placeholder="${t('footer_newsletter_placeholder')}" style="padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--gray-700); background: var(--navy-light); color: var(--white); font-size: 0.82rem; width: 100%;" />
-            <button type="submit" id="newsletter-btn" class="btn btn-gold" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;">${t('footer_newsletter_btn')}</button>
+            <button type="submit" id="newsletter-btn" class="btn btn-primary" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;">${t('footer_newsletter_btn')}</button>
           </form>
           <div id="newsletter-msg" style="font-size: 0.8rem; margin-top: 0.5rem; display: none;"></div>
         </div>
@@ -84,6 +85,12 @@ export function createFooter() {
       </div>
     </div>
   `;
+
+  // Calendar link only for roles that can see the calendar section
+  const calendarItem = footer.querySelector('.footer-calendar-item');
+  const syncCalendarLink = () => { calendarItem.hidden = !canViewCalendar(); };
+  syncCalendarLink();
+  onAuthChange(syncCalendarLink);
 
   const form = footer.querySelector('#newsletter-form');
   const msgEl = footer.querySelector('#newsletter-msg');
