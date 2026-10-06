@@ -119,7 +119,7 @@ export function createGallery() {
       return `
         <div class="gallery-card" data-index="${index}">
           <div class="gallery-card-img-wrapper">
-            <img src="${item.image}" alt="${escapeHtml(itemTitle)}" class="gallery-card-img" loading="lazy" />
+            <img src="${item.image}" alt="${escapeHtml(itemTitle)}" class="gallery-card-img" loading="lazy" decoding="async" />
           </div>
           <span class="gallery-card-tag">${escapeHtml(item.tag)}</span>
           <span class="gallery-card-date">${escapeHtml(item.date)}</span>
@@ -194,7 +194,7 @@ export function createGallery() {
     // Render Thumbnails
     lightboxThumbStrip.innerHTML = filteredItems.map((item, idx) => `
       <div class="lightbox-thumb ${idx === activeLightboxIndex ? 'active' : ''}" data-thumb-idx="${idx}">
-        <img src="${item.image}" alt="" />
+        <img src="${item.image}" alt="" loading="lazy" decoding="async" />
       </div>
     `).join('');
 
