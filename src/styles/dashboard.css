@@ -1,5 +1,420 @@
 /* School Management Console (staff/admin dashboard) */
 
+.dash-dialog {
+  max-width: 980px;
+  width: 94%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Only the tab content scrolls; everything above it keeps its height */
+.dash-dialog > :not(.dash-content) {
+  flex-shrink: 0;
+}
+
+/* Header */
+.admin-dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-form-grid-3 {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.admin-form-grid-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.5fr;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .admin-form-grid-3, .admin-form-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-dash-header {
+  border-bottom: 2px solid var(--gray-200);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dash-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dash-crest {
+  width: 40px;
+  height: 40px;
+}
+
+.dash-title {
+  font-size: 1.3rem;
+  color: var(--navy);
+  margin-bottom: 0.15rem;
+}
+
+.dash-user-line {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+}
+
+.dash-role-badge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  margin: 0 0 0 0.35rem;
+}
+
+.dash-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dash-close {
+  position: static;
+  font-size: 1.5rem;
+}
+
+/* Stat tiles */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.dash-stat {
+  background: var(--gray-100);
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--primary);
+}
+
+.dash-stat-gold,
+.dash-stat-gold-border {
+  border-left-color: var(--gold);
+}
+
+.dash-stat-green {
+  border-left-color: var(--primary-light);
+}
+
+.dash-stat-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.dash-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.dash-stat-gold .dash-stat-value {
+  color: var(--gold);
+}
+
+.dash-stat-green .dash-stat-value {
+  color: var(--primary);
+}
+
+/* Grade analytics */
+.dash-panel {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.dash-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.dash-panel-header strong {
+  font-size: 0.88rem;
+  color: var(--navy);
+}
+
+.dash-grade-bars {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.dash-grade {
+  flex: 1;
+  min-width: 110px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.dash-grade-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.dash-grade-bar {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border: none;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--gray-200);
+  appearance: none;
+}
+
+.dash-grade-bar::-webkit-progress-bar {
+  background: var(--gray-200);
+}
+
+.dash-grade-bar::-webkit-progress-value {
+  background: var(--primary);
+}
+
+.dash-grade-bar::-moz-progress-bar {
+  background: var(--primary);
+}
+
+/* Tabs */
+.dash-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--gray-300);
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.dash-tab {
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.dash-tab:hover {
+  color: var(--primary);
+}
+
+.dash-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
+.dash-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+/* Shared bits */
+.dash-toolbar-top {
+  margin-top: 0;
+}
+
+.dash-search {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-family: inherit;
+}
+
+.dash-filters {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.dash-callout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  background: var(--gray-100);
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+}
+
+.dash-callout strong {
+  color: var(--navy);
+}
+
+.dash-callout p {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+}
+
+.dash-muted {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+}
+
+.dash-count {
+  color: var(--primary);
+}
+
+.dash-help {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+}
+
+/* Application cards */
+.dash-item.dash-item-stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.dash-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dash-code {
+  background: var(--navy);
+  color: var(--gold);
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+}
+
+.dash-app-name {
+  margin-left: 0.5rem;
+}
+
+.dash-select {
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-300);
+  font-size: 0.8rem;
+  background: var(--white);
+  font-family: inherit;
+}
+
+.dash-app-details {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.4rem;
+  background: var(--gray-100);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+}
+
+.dash-note {
+  font-size: 0.8rem;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+/* Subscribers table */
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.dash-table th {
+  background: var(--navy);
+  color: var(--white);
+  text-align: left;
+  padding: 0.6rem 0.85rem;
+}
+
+.dash-table th:first-child {
+  border-top-left-radius: 4px;
+}
+
+.dash-table th:last-child {
+  border-top-right-radius: 4px;
+}
+
+.dash-table td {
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.dash-table-strong {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+/* Account role badges */
+.dash-role {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 3px;
+  margin-left: 0.35rem;
+}
+
+.dash-role-pending {
+  background: var(--gold-light);
+  color: var(--gold-dark);
+}
+
+.dash-role-student {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.dash-role-staff {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+
+.dash-role-admin {
+  background: var(--navy);
+  color: var(--white);
+}
+
+/* Lists, items and forms */
+
 .dash-section-title {
   font-size: 1rem;
   color: var(--navy);
