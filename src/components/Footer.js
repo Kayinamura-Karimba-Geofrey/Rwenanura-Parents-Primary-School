@@ -14,23 +14,23 @@ export function createFooter() {
       <div class="footer-grid">
         <!-- School Identity Col -->
         <div>
-          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
-            <div class="logo-crest" style="width: 40px; height: 40px;">
+          <div class="footer-brand">
+            <div class="logo-crest footer-crest">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             </div>
             <div>
-              <h3 style="color: var(--white); font-size: 1.1rem; line-height: 1.2;">RPPS</h3>
-              <p style="color: var(--gold); font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">${t('school_name')}</p>
+              <h3 class="footer-brand-title">RPPS</h3>
+              <p class="footer-brand-sub">${t('school_name')}</p>
             </div>
           </div>
 
-          <p style="font-size: 0.88rem; color: var(--gray-400); margin-bottom: 1.25rem; line-height: 1.6;">
+          <p class="footer-desc">
             ${t('footer_desc')}
           </p>
 
-          <div style="font-size: 0.85rem; color: var(--gray-300);">
-            <p style="margin-bottom: 0.4rem;"><strong>${t('top_location')}:</strong> ${schoolInfo.location}</p>
-            <p style="margin-bottom: 0.4rem;"><strong>Phone:</strong> ${schoolInfo.phone} / ${schoolInfo.altPhone}</p>
+          <div class="footer-contact">
+            <p><strong>${t('top_location')}:</strong> ${schoolInfo.location}</p>
+            <p><strong>Phone:</strong> ${schoolInfo.phone} / ${schoolInfo.altPhone}</p>
             <p><strong>Email:</strong> ${schoolInfo.email}</p>
           </div>
         </div>
@@ -63,22 +63,22 @@ export function createFooter() {
         <!-- Working Hours & Newsletter -->
         <div class="footer-col">
           <h4>${t('footer_office_hours')}</h4>
-          <p style="font-size: 0.88rem; color: var(--gray-300); margin-bottom: 0.5rem;">${schoolInfo.workingHours}</p>
-          <p style="font-size: 0.8rem; color: var(--gray-400); margin-bottom: 1.25rem;">${t('footer_closed_weekend')}</p>
+          <p class="footer-hours">${schoolInfo.workingHours}</p>
+          <p class="footer-closed">${t('footer_closed_weekend')}</p>
 
-          <h5 style="color: var(--white); font-size: 0.95rem; margin-bottom: 0.5rem;">${t('footer_newsletter_title')}</h5>
-          <form id="newsletter-form" style="display: flex; gap: 0.5rem;">
-            <input type="email" id="newsletter-email" required placeholder="${t('footer_newsletter_placeholder')}" style="padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--gray-700); background: var(--navy-light); color: var(--white); font-size: 0.82rem; width: 100%;" />
-            <button type="submit" id="newsletter-btn" class="btn btn-primary" style="padding: 0.5rem 0.85rem; font-size: 0.82rem;">${t('footer_newsletter_btn')}</button>
+          <h5 class="footer-newsletter-title">${t('footer_newsletter_title')}</h5>
+          <form id="newsletter-form" class="footer-newsletter-form">
+            <input type="email" id="newsletter-email" class="footer-newsletter-input" required maxlength="200" aria-label="${t('footer_newsletter_placeholder')}" placeholder="${t('footer_newsletter_placeholder')}" />
+            <button type="submit" id="newsletter-btn" class="btn btn-primary btn-xs">${t('footer_newsletter_btn')}</button>
           </form>
-          <div id="newsletter-msg" style="font-size: 0.8rem; margin-top: 0.5rem; display: none;"></div>
+          <div id="newsletter-msg" class="footer-newsletter-msg" role="status" hidden></div>
         </div>
       </div>
 
       <!-- Bottom Bar -->
       <div class="footer-bottom">
         <p>© ${new Date().getFullYear()} ${schoolInfo.name}. ${t('footer_copyright')}</p>
-        <div style="display: flex; gap: 1.5rem;">
+        <div class="footer-legal">
           <button type="button" class="footer-legal-link" data-policy="privacy">${t('footer_privacy')}</button>
           <button type="button" class="footer-legal-link" data-policy="terms">${t('footer_terms')}</button>
           <button type="button" class="footer-legal-link" id="footer-track-link">${t('footer_portal')}</button>
@@ -115,13 +115,12 @@ export function createFooter() {
     btn.disabled = true;
     const res = await subscribeNewsletter(email);
 
-    msgEl.style.display = 'block';
+    msgEl.hidden = false;
+    msgEl.classList.toggle('is-error', !res.success);
     if (res.success) {
-      msgEl.style.color = 'var(--primary-border)';
       msgEl.textContent = res.message;
       form.reset();
     } else {
-      msgEl.style.color = 'var(--danger-border)';
       msgEl.textContent = res.error || 'Failed to subscribe.';
     }
 
