@@ -1538,3 +1538,77 @@
     right: 0.75rem;
   }
 }
+
+/* Reading modal (news articles, privacy notice, terms) */
+.info-dialog {
+  max-width: 720px;
+  width: 94%;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.info-title {
+  font-size: 1.45rem;
+  color: var(--navy);
+  margin: 0 2rem 0.35rem 0;
+}
+
+.info-meta {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-bottom: 1.25rem;
+}
+
+.info-body {
+  color: var(--gray-700);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.info-body p,
+.info-body ul {
+  margin-bottom: 1rem;
+}
+
+.info-body ul {
+  padding-left: 1.25rem;
+}
+
+.info-body li {
+  margin-bottom: 0.4rem;
+}
+
+.info-body h4 {
+  font-size: 1.05rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.info-body a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.info-updated {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+}
+
+/* Footer legal links are buttons styled as links */
+.footer-legal-link {
+  color: var(--gray-400);
+  font-size: inherit;
+  padding: 0;
+  transition: var(--transition);
+}
+
+.footer-legal-link:hover {
+  color: var(--white);
+}
+
+.pillar-note {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  font-style: italic;
+  margin-top: 0.75rem;
+}
