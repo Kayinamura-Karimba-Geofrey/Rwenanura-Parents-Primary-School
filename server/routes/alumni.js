@@ -257,7 +257,7 @@ router.post('/alumni/messages', messageLimiter, authenticateToken, (req, res) =>
 
     const newMessage = db.prepare('SELECT * FROM alumni_messages WHERE id = ?').get(info.lastInsertRowid);
 
-    console.log(`💬 New Alumni Chat: [${authorType}] ${authorName} in #${cleanChannel}: "${content.substring(0, 40)}..."`);
+    console.log(`💬 New alumni message #${newMessage.id} in #${cleanChannel} (user #${req.user.id})`);
 
     // Broadcast in real-time to all connected alumni clients
     broadcastSSE('new_message', newMessage);
