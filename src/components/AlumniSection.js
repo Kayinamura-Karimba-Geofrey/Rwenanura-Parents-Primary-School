@@ -66,7 +66,7 @@ export function createAlumniSection(onOpenAlumniModal) {
             <span class="cohort-tag">Nyagatare Hub</span>
             <span class="cohort-tag">Diaspora OB/OG</span>
           </div>
-          <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-block">
+          <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-block">
             <span>${t('btn_join_whatsapp')}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
@@ -136,7 +136,7 @@ export function createAlumniSection(onOpenAlumniModal) {
           <p>${t('alumni_banner_auth_p')}</p>
         </div>
         <div class="cta-actions">
-          <button class="btn btn-gold btn-lg trigger-chat-action">
+          <button class="btn btn-primary btn-lg trigger-chat-action">
             <span>${t('alumni_btn_lounge')}</span>
           </button>
           <button class="btn btn-outline-white btn-lg trigger-directory-action">
@@ -158,7 +158,7 @@ export function createAlumniSection(onOpenAlumniModal) {
           <p>${t('alumni_banner_guest_p')}</p>
         </div>
         <div class="cta-actions">
-          <button class="btn btn-gold btn-lg trigger-register-action">
+          <button class="btn btn-primary btn-lg trigger-register-action">
             <span>${t('alumni_btn_signin')}</span>
           </button>
           <button class="btn btn-outline-white btn-lg trigger-chat-action">
