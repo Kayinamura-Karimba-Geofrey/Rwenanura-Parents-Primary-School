@@ -1,9 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import db from '../db.js';
-import { authenticateToken, optionalAuthenticate, validateAlumniProfile, JWT_SECRET } from './auth.js';
+import { authenticateToken, optionalAuthenticate, validateAlumniProfile } from './auth.js';
 
 const router = express.Router();
 
@@ -394,10 +392,11 @@ router.get('/alumni/members', optionalAuthenticate, (req, res) => {
   }
 });
 
-// POST /api/alumni/members - Register in Alumni Network (with optional password for instant account creation)
+// POST /api/alumni/members - Add a directory entry (no login account; alumni
+// accounts are created via /api/auth/alumni-register with email verification)
 router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
   try {
-    const { name, email, phone, memberType, classYear, profession, location, bio, password } = req.body || {};
+    const { name, email, phone, memberType, classYear, profession, location, bio } = req.body || {};
 
     if (!name || !memberType || !classYear) {
       return res.status(400).json({
@@ -417,11 +416,6 @@ router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
 
     const cleanType = memberType.toUpperCase() === 'OG' ? 'OG' : 'OB';
     const cleanEmail = email ? email.trim().toLowerCase() : null;
-
-    // If a password is provided, an account is created; enforce the policy.
-    if (password && (typeof password !== 'string' || password.length < 8 || password.length > 128)) {
-      return res.status(400).json({ success: false, error: 'Password must be between 8 and 128 characters long.' });
-    }
 
     const stmt = db.prepare(`
       INSERT INTO alumni_members (name, email, phone, member_type, class_year, profession, location, bio)
@@ -443,42 +437,10 @@ router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
 
     console.log(`🎓 New Alumni Member Registered: [${cleanType}] ${name} (${classYear})`);
 
-    let token = null;
-    let userObj = null;
-
-    // If password provided and email exists, also create a login user account
-    if (password && cleanEmail) {
-      const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail);
-      if (!existingUser) {
-        const salt = bcrypt.genSaltSync(10);
-        const hash = bcrypt.hashSync(password, salt);
-        const userInsert = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-        const uInfo = userInsert.run(name.trim(), cleanEmail, hash, 'alumni');
-        
-        userObj = {
-          id: uInfo.lastInsertRowid,
-          name: name.trim(),
-          email: cleanEmail,
-          role: 'alumni',
-          memberType: cleanType,
-          classYear: classYear.trim(),
-          profession: profession ? profession.trim() : '',
-          location: location ? location.trim() : '',
-          phone: phone ? phone.trim() : '',
-          bio: bio ? bio.trim() : '',
-          avatarColor: cleanType === 'OB' ? '#0d5c3a' : '#d97706'
-        };
-
-        token = jwt.sign(userObj, JWT_SECRET, { expiresIn: '14d' });
-      }
-    }
-
     res.status(201).json({
       success: true,
       message: 'Welcome to the RPPS OBs & OGs Alumni Network!',
-      member: newMember,
-      token,
-      user: userObj
+      member: newMember
     });
   } catch (err) {
     console.error('Error registering alumni:', err);
