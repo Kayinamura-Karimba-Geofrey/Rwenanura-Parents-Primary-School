@@ -1,6 +1,7 @@
 import { schoolInfo } from '../data/schoolData.js';
 import { getUserRole, getCurrentUser, onAuthChange, logoutUser, canViewCalendar } from '../data/userRole.js';
 import { t, getLanguage, setLanguage } from '../data/i18n.js';
+import { escapeHtml } from '../utils/html.js';
 
 export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal, onOpenAlumniModal, onOpenAuthModal) {
   const header = document.createElement('header');
@@ -404,14 +405,4 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
   });
 
   return header;
-}
-
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
