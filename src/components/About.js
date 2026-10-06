@@ -41,7 +41,7 @@ export function createAbout() {
         <!-- Headteacher's Welcome Card -->
         <div class="headteacher-card">
           <div class="headteacher-profile">
-            <img src="${schoolInfo.headteacher.image}" alt="${schoolInfo.headteacher.name}" class="headteacher-img" />
+            <img src="${schoolInfo.headteacher.image}" alt="${schoolInfo.headteacher.name}" class="headteacher-img" loading="lazy" decoding="async" />
             <div>
               <h3 class="headteacher-name">${t('headteacher_name', schoolInfo.headteacher.name)}</h3>
               <p class="headteacher-role">${t('headteacher_title', schoolInfo.headteacher.title)}</p>
