@@ -25,7 +25,7 @@ import { createAlumniModal } from './components/AlumniModal.js';
 import { createAlumniSection } from './components/AlumniSection.js';
 import { createFooter } from './components/Footer.js';
 
-import { getStoredToken, getStoredUser, checkAuthMe, clearAuthSession, verifyEmail } from './data/api.js';
+import { isSignedIn, getStoredUser, checkAuthMe, verifyEmail } from './data/api.js';
 import { initUserRole } from './data/userRole.js';
 import { onLanguageChange } from './data/i18n.js';
 
@@ -63,15 +63,10 @@ let currentAuthModal = null;
 function initApp() {
   initUserRole();
 
-  // SECURITY: validate the stored session against the server on load so
-  // expired tokens and revoked/downgraded roles can't keep granting access
-  // to admin UI state from localStorage.
-  if (getStoredToken()) {
-    checkAuthMe().then(res => {
-      if (!res.success) {
-        clearAuthSession();
-      }
-    });
+  // Validate the cookie session on load so expired sessions and changed roles
+  // are reflected in the UI (the server enforces them regardless).
+  if (isSignedIn()) {
+    checkAuthMe();
   }
 
   const app = document.querySelector('#app');
@@ -97,11 +92,10 @@ function initApp() {
   };
 
   const handleOpenAdminConsole = () => {
-    const token = getStoredToken();
     const user = getStoredUser();
-    if (token && user && user.role === 'alumni') {
+    if (user && user.role === 'alumni') {
       alumniModal.open('portal');
-    } else if (token && user && (user.role === 'staff' || user.role === 'admin')) {
+    } else if (user && (user.role === 'staff' || user.role === 'admin')) {
       adminDashboard.classList.add('active');
     } else {
       authModal.open('login');
