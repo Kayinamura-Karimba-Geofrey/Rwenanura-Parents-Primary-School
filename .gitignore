@@ -6,6 +6,7 @@ dist/
 .DS_Store
 .env
 server/data/*.sqlite*
+server/data/initial-admin-password.txt
 
 # Security & Hardening rules
 *.bat
