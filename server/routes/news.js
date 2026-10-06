@@ -15,6 +15,7 @@ const MAX_LEN = {
   time: 60,
   location: 120,
   summary: 1000,
+  body: 5000,
 };
 
 const VALID_TYPES = ['news', 'event'];
@@ -39,7 +40,8 @@ router.get('/news', (req, res) => {
       },
       time: item.time_str,
       location: item.location,
-      summary: item.summary
+      summary: item.summary,
+      body: item.body || ''
     }));
 
     res.json({
@@ -58,13 +60,13 @@ router.get('/news', (req, res) => {
 // alumni account publish articles on the public landing page.
 router.post('/news', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
-    const { title, type, category, day, month, year, time, location, summary } = req.body || {};
+    const { title, type, category, day, month, year, time, location, summary, body } = req.body || {};
 
     if (!title || !category || !day || !month || !summary) {
       return res.status(400).json({ success: false, error: 'Title, category, date, and summary are required.' });
     }
 
-    const fields = [title, type, category, day, month, year, time, location, summary];
+    const fields = [title, type, category, day, month, year, time, location, summary, body];
     if (fields.some(v => v != null && typeof v !== 'string' && typeof v !== 'number')) {
       return res.status(400).json({ success: false, error: 'Invalid input format.' });
     }
@@ -74,8 +76,8 @@ router.post('/news', authenticateToken, requireRole('staff', 'admin'), (req, res
     }
 
     const stmt = db.prepare(`
-      INSERT INTO news_events (title, type, category, day_str, month_str, year_str, time_str, location, summary)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO news_events (title, type, category, day_str, month_str, year_str, time_str, location, summary, body)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
@@ -87,7 +89,8 @@ router.post('/news', authenticateToken, requireRole('staff', 'admin'), (req, res
       capped((year || new Date().getFullYear()).toString(), MAX_LEN.year),
       capped(time || 'All Day', MAX_LEN.time),
       capped(location || 'School Campus', MAX_LEN.location),
-      capped(summary, MAX_LEN.summary)
+      capped(summary, MAX_LEN.summary),
+      body ? capped(body, MAX_LEN.body) : null
     );
 
     console.log(`📢 News item #${info.lastInsertRowid} published (user #${req.user.id})`);
