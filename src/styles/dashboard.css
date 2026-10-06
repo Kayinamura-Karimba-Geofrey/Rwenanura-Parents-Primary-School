@@ -1,0 +1,180 @@
+/* School Management Console (staff/admin dashboard) */
+
+.dash-section-title {
+  font-size: 1rem;
+  color: var(--navy);
+  margin: 0.5rem 0 0.75rem;
+}
+
+.dash-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1.25rem 0 0.75rem;
+}
+
+.dash-toolbar .dash-section-title {
+  margin: 0;
+}
+
+.dash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dash-item {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dash-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  flex-wrap: wrap;
+}
+
+.dash-badge {
+  font-size: 0.68rem;
+  padding: 0.1rem 0.4rem;
+  margin-bottom: 0;
+}
+
+.dash-item-title {
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+
+.dash-item-text {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  margin: 0.2rem 0 0;
+}
+
+.dash-item-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dash-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray-500);
+}
+
+/* Forms */
+.dash-form {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.dash-form-title {
+  font-size: 1.05rem;
+  color: var(--navy);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.dash-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dash-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.dash-field input,
+.dash-field select,
+.dash-field textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-family: inherit;
+  font-weight: 400;
+  background: var(--white);
+  color: var(--gray-800);
+}
+
+.dash-field input:focus,
+.dash-field select:focus,
+.dash-field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 92, 58, 0.12);
+}
+
+.dash-translations {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.82rem;
+  color: var(--gray-600);
+}
+
+.dash-translations summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.dash-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Calendar manager */
+.cm-terms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.cm-term-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cm-term-card strong {
+  color: var(--navy);
+  margin-bottom: 0.25rem;
+}
+
+.cm-term-card .btn {
+  align-self: flex-start;
+}
