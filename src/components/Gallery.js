@@ -1,5 +1,6 @@
 import { galleryItems } from '../data/galleryData.js';
 import { t, getLanguage } from '../data/i18n.js';
+import { escapeHtml } from '../utils/html.js';
 
 export function createGallery() {
   const section = document.createElement('section');
@@ -247,14 +248,4 @@ export function createGallery() {
   renderGrid();
 
   return section;
-}
-
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
