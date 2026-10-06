@@ -20,6 +20,7 @@ import {
   logoutUser, 
   onAuthChange 
 } from '../data/userRole.js';
+import { escapeHtml } from '../utils/html.js';
 
 export function createAlumniModal() {
   const modal = document.createElement('div');
@@ -1214,15 +1215,6 @@ export function createAlumniModal() {
   return modal;
 }
 
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 function sanitizeText(str) {
   return typeof str === 'string' ? str.substring(0, 120) : '';
