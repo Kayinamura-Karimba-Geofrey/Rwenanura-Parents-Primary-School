@@ -1,6 +1,9 @@
 import './style.css';
 import './styles/components.css';
-import './styles/alumni.css';
+import './styles/alumni/modal.css';
+import './styles/alumni/directory.css';
+import './styles/alumni/portal.css';
+import './styles/alumni/homepage.css';
 import './styles/gallery.css';
 import './styles/calendar.css';
 import './styles/dashboard.css';
