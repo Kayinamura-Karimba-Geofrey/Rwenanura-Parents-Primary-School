@@ -174,8 +174,8 @@
   align-items: center;
   gap: 0.5rem;
   background: var(--white);
-  color: var(--navy);
-  border: 1px solid var(--gray-300);
+  color: var(--primary);
+  border: 1px solid var(--primary);
   padding: 0.65rem 1.15rem;
   border-radius: var(--radius-md);
   font-size: 0.85rem;
@@ -185,8 +185,8 @@
 }
 
 .btn-print-timetable:hover {
-  background: var(--gray-100);
-  border-color: var(--gray-400);
+  background: var(--primary-subtle);
+  border-color: var(--primary-dark);
   transform: translateY(-2px);
 }
 
@@ -225,8 +225,8 @@
 }
 
 .category-filter-pill.active {
-  background: var(--navy);
-  border-color: var(--navy);
+  background: var(--primary);
+  border-color: var(--primary);
   color: var(--white);
 }
 
