@@ -115,22 +115,17 @@ export async function loginUser(email, password) {
   }
 }
 
-// Staff signups are created as 'pending' and return no session until an
-// administrator approves them.
-export async function signupUser(name, email, password) {
+// Public registration for students and staff. Accounts are created as
+// 'pending' and return no session until they are approved.
+export async function registerUser({ accountType, name, email, password, classLevel }) {
   try {
-    const data = await apiRequest('/api/auth/signup', {
+    return await apiRequest('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ accountType, name, email, password, classLevel })
     });
-
-    if (data.success && data.token) {
-      setAuthSession(data.token, data.user);
-    }
-    return data;
   } catch (err) {
-    console.error('Signup error:', err);
+    console.error('Register error:', err);
     return { success: false, error: err.message || 'Network error registering account.' };
   }
 }
@@ -155,6 +150,17 @@ export async function fetchStaffUsers() {
     return await apiRequest('/api/auth/users', { headers: getAuthHeaders() });
   } catch (err) {
     return { success: false, users: [] };
+  }
+}
+
+export async function approveUser(id) {
+  try {
+    return await apiRequest(`/api/auth/users/${id}/approve`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+  } catch (err) {
+    return { success: false, error: err.message || 'Failed to approve account' };
   }
 }
 
@@ -232,6 +238,16 @@ export async function deleteApplication(id) {
     });
   } catch (err) {
     return { success: false, error: err.message || 'Failed to delete application' };
+  }
+}
+
+// ----------------- CALENDAR APIS -----------------
+
+export async function fetchCalendar() {
+  try {
+    return await apiRequest('/api/calendar', { headers: getAuthHeaders() });
+  } catch (err) {
+    return { success: false, terms: [], events: [] };
   }
 }
 
