@@ -83,18 +83,6 @@ function syncRoleAttribute(role) {
 }
 
 /**
- * Dispatch reactive auth state event
- */
-function notifyAuthChange(role, user) {
-  if (typeof window !== 'undefined') {
-    const event = new CustomEvent(AUTH_EVENT_NAME, {
-      detail: { role, user }
-    });
-    window.dispatchEvent(event);
-  }
-}
-
-/**
  * Subscribe to auth / role state changes
  */
 export function onAuthChange(callback) {
