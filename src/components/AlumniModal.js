@@ -370,7 +370,7 @@ export function createAlumniModal() {
               ${escapeHtml(msg.content)}
             </div>
             <div class="message-actions-row">
-              <button class="btn-reaction-cheer" data-msg-id="${msg.id}">
+              <button class="btn-reaction-cheer${msg.liked_by_me ? ' liked' : ''}" data-msg-id="${msg.id}" aria-pressed="${msg.liked_by_me ? 'true' : 'false'}" title="${msg.liked_by_me ? 'Remove like' : 'Like'}">
                 <span class="cheer-heart">❤️</span>
                 <span class="cheer-count">${msg.likes_count || 0}</span>
               </button>
@@ -393,6 +393,9 @@ export function createAlumniModal() {
         if (res.success) {
           const countSpan = btn.querySelector('.cheer-count');
           if (countSpan) countSpan.textContent = res.likesCount;
+          btn.classList.toggle('liked', res.liked);
+          btn.setAttribute('aria-pressed', String(res.liked));
+          btn.title = res.liked ? 'Remove like' : 'Like';
         }
         setTimeout(() => btn.classList.remove('reacting'), 400);
       });
