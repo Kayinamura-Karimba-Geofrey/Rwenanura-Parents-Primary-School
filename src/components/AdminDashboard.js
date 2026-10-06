@@ -8,6 +8,7 @@ import {
   deleteNewsItem,
   fetchStaffUsers,
   approveUser,
+  issueTemporaryPassword,
   updateStaffRole,
   deleteStaffUser,
   logoutUser,
@@ -607,6 +608,7 @@ export function createAdminDashboard(onLogout) {
       const roleLabel = u.role === 'pending' ? `pending ${u.requested_role || 'staff'}` : u.role;
       const actions = isSelf ? `<span style="font-size: 0.78rem; color: var(--gray-500);">(you)</span>` : `
         ${u.role === 'pending' ? `<button class="btn btn-primary btn-xs staff-approve-btn" data-id="${u.id}">Approve</button>` : ''}
+        ${u.role === 'student' ? `<button class="btn btn-outline btn-xs staff-temp-password-btn" data-id="${u.id}">Reset Password</button>` : ''}
         ${isAdmin && u.role === 'staff' ? `<button class="btn btn-outline btn-xs staff-role-btn" data-id="${u.id}" data-role="admin">Make Admin</button>` : ''}
         ${isAdmin && u.role === 'admin' ? `<button class="btn btn-outline btn-xs staff-role-btn" data-id="${u.id}" data-role="staff">Make Staff</button>` : ''}
         <button class="btn btn-outline btn-xs staff-delete-btn" data-id="${u.id}">
@@ -617,7 +619,7 @@ export function createAdminDashboard(onLogout) {
           <div>
             <strong style="color: var(--navy);">${escapeHtml(u.name)}</strong>
             <span style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 3px; margin-left: 0.35rem; ${ROLE_BADGE[u.role] || ''}">${escapeHtml(roleLabel)}</span>
-            <div style="font-size: 0.8rem; color: var(--gray-600);">${escapeHtml(u.email)}${u.class_level ? ` • ${escapeHtml(u.class_level)}` : ''} • joined ${new Date(u.created_at).toLocaleDateString()}</div>
+            <div style="font-size: 0.8rem; color: var(--gray-600);">${escapeHtml([u.username ? `@${u.username}` : '', u.email || ''].filter(Boolean).join(' • '))}${u.class_level ? ` • ${escapeHtml(u.class_level)}` : ''} • joined ${new Date(u.created_at).toLocaleDateString()}</div>
           </div>
           <div style="display: flex; gap: 0.4rem; align-items: center;">${actions}</div>
         </div>
@@ -632,6 +634,16 @@ export function createAdminDashboard(onLogout) {
         const item = staffUsers.find(u => u.id == id);
         if (item) item.role = res.role;
         renderStaff();
+      });
+    });
+
+    staffContainer.querySelectorAll('.staff-temp-password-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        if (!confirm('Give this pupil a new temporary password? Their current password will stop working.')) return;
+        const res = await issueTemporaryPassword(id);
+        if (!res.success) return alert(res.error || 'Failed to reset password.');
+        prompt('Temporary password (give it to the pupil; they can sign in with it right away):', res.temporaryPassword);
       });
     });
 
