@@ -4,6 +4,7 @@
  */
 
 import { getStoredUser, setAuthSession, logoutUser as endServerSession } from './api.js';
+import { currentScope } from '../utils/lifecycle.js';
 
 export const USER_ROLES = {
   VISITOR: 'visitor',
@@ -101,7 +102,8 @@ export function onAuthChange(callback) {
     const handler = (e) => {
       callback(e.detail.role, e.detail.user);
     };
-    window.addEventListener(AUTH_EVENT_NAME, handler);
+    // Tied to the current app build so a rebuild (language change) drops it
+    window.addEventListener(AUTH_EVENT_NAME, handler, { signal: currentScope() });
     return () => window.removeEventListener(AUTH_EVENT_NAME, handler);
   }
   return () => {};
