@@ -91,7 +91,7 @@ export function createAdminModal() {
               <option value="Approved" ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
             </select>
             
-            <button class="delete-app-btn" data-id="${app.id}" title="Delete Application" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
+            <button class="btn btn-outline btn-xs delete-app-btn" data-id="${app.id}" title="Delete Application">
               🗑️
             </button>
           </div>
