@@ -15,6 +15,7 @@ import {
   getStoredUser
 } from '../data/api.js';
 import { createCalendarManager } from './CalendarManager.js';
+import { escapeHtml } from '../utils/html.js';
 
 export function createAdminDashboard(onLogout) {
   const modal = document.createElement('div');
@@ -703,14 +704,4 @@ export function createAdminDashboard(onLogout) {
   observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
 
   return modal;
-}
-
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
