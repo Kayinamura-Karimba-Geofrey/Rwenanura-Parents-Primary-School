@@ -576,6 +576,26 @@
   text-align: center;
 }
 
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.auth-links .btn-link-action {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.auth-help {
+  font-size: 0.88rem;
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+}
+
 .auth-alumni-link {
   text-align: center;
   font-size: 0.82rem;
