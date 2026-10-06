@@ -45,7 +45,7 @@ router.post('/newsletter', subscribeLimiter, (req, res) => {
     const stmt = db.prepare('INSERT INTO subscribers (email) VALUES (?)');
     stmt.run(cleanEmail);
 
-    console.log(`📧 New Newsletter Subscriber: ${cleanEmail}`);
+    console.log('📧 New newsletter subscriber');
 
     res.status(201).json({
       success: true,
