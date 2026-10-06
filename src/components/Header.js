@@ -2,6 +2,7 @@ import { schoolInfo } from '../data/schoolData.js';
 import { getUserRole, getCurrentUser, onAuthChange, logoutUser, canViewCalendar } from '../data/userRole.js';
 import { t, getLanguage, setLanguage } from '../data/i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { currentScope, onCleanup } from '../utils/lifecycle.js';
 
 export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModal, onOpenAlumniModal, onOpenAuthModal) {
   const header = document.createElement('header');
@@ -392,17 +393,19 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
       setActiveLink(current ? `#${current.id}` : null);
     }, { rootMargin: '-45% 0px -50% 0px' });
     sections.forEach(sec => spy.observe(sec));
+    onCleanup(() => spy.disconnect());
   });
 
   // Close mobile drawer when clicking outside or pressing Escape
+  const signal = currentScope();
   document.addEventListener('click', (e) => {
     if (!header.contains(e.target) && navMenu.classList.contains('open')) {
       setMenuOpen(false);
     }
-  });
+  }, { signal });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && navMenu.classList.contains('open')) setMenuOpen(false);
-  });
+  }, { signal });
 
   return header;
 }
