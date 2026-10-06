@@ -19,6 +19,7 @@ const db = new Database(dbPath);
 
 // Enable WAL mode for high performance
 db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
 // Initialize Database Tables
 export function initDatabase() {
@@ -44,6 +45,30 @@ export function initDatabase() {
   if (!userColumns.includes('class_level')) {
     db.exec('ALTER TABLE users ADD COLUMN class_level TEXT');
   }
+  // Accounts that existed before email verification are treated as verified
+  // so nobody is locked out; new accounts start unverified (0).
+  if (!userColumns.includes('email_verified')) {
+    db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0');
+    db.exec('UPDATE users SET email_verified = 1');
+  }
+  // Sessions issued before this time are rejected (set on password reset).
+  if (!userColumns.includes('password_changed_at')) {
+    db.exec('ALTER TABLE users ADD COLUMN password_changed_at INTEGER');
+  }
+
+  // Single-use email verification / password reset tokens. Only a SHA-256
+  // hash of each token is stored, so a database leak can't be replayed.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      purpose TEXT NOT NULL,
+      token_hash TEXT UNIQUE NOT NULL,
+      payload TEXT,
+      expires_at INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
   // 2. Applications Table
   db.exec(`
@@ -99,8 +124,8 @@ export function initDatabase() {
     const hash = bcrypt.hashSync(adminPassword, salt);
 
     const insertAdmin = db.prepare(`
-      INSERT INTO users (name, email, password_hash, role)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO users (name, email, password_hash, role, email_verified)
+      VALUES (?, ?, ?, ?, 1)
     `);
     insertAdmin.run('Super Admin', adminEmail, hash, 'admin');
 
