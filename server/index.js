@@ -13,6 +13,7 @@ import newsletterRouter from './routes/newsletter.js';
 import newsRouter from './routes/news.js';
 import authRouter from './routes/auth.js';
 import alumniRouter from './routes/alumni.js';
+import calendarRouter from './routes/calendar.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,6 +102,7 @@ app.use('/api', newsletterRouter);
 app.use('/api', newsRouter);
 app.use('/api', authRouter);
 app.use('/api', alumniRouter);
+app.use('/api', calendarRouter);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
