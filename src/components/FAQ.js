@@ -1,4 +1,5 @@
 import { t } from '../data/i18n.js';
+import { schoolInfo } from '../data/schoolData.js';
 
 export function createFAQ() {
   const section = document.createElement('section');
@@ -62,9 +63,10 @@ export function createFAQ() {
             ${t('faq_guide_desc')}
           </p>
 
-          <button id="download-prospectus-btn" class="btn btn-primary" style="width: 100%;">
-            📥 ${t('faq_guide_btn')}
-          </button>
+          <a id="download-prospectus-btn" class="btn btn-primary btn-block"
+             href="mailto:${schoolInfo.admissionsEmail}?subject=${encodeURIComponent('Prospectus request')}">
+            📧 ${t('faq_guide_request_btn', 'Request the Prospectus by Email')}
+          </a>
         </div>
 
       </div>
@@ -96,11 +98,21 @@ export function createFAQ() {
     });
   });
 
-  // Download Prospectus Button Handler
-  const downloadBtn = section.querySelector('#download-prospectus-btn');
-  downloadBtn.addEventListener('click', () => {
-    alert('📄 Initializing official RPPS 2026 Academic Prospectus PDF download...');
-  });
+  // Offer the PDF only if it has actually been published (public/prospectus.pdf);
+  // otherwise keep the "request by email" link.
+  const prospectusLink = section.querySelector('#download-prospectus-btn');
+  const pdfUrl = schoolInfo.links.prospectusPdf;
+  if (pdfUrl) {
+    fetch(pdfUrl, { method: 'HEAD' })
+      .then(res => {
+        if (res.ok && (res.headers.get('content-type') || '').includes('pdf')) {
+          prospectusLink.href = pdfUrl;
+          prospectusLink.setAttribute('download', 'RPPS-Prospectus.pdf');
+          prospectusLink.textContent = `📥 ${t('faq_guide_btn')}`;
+        }
+      })
+      .catch(() => { /* keep the email request link */ });
+  }
 
   return section;
 }
