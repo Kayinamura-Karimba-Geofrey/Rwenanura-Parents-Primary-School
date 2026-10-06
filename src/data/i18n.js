@@ -260,6 +260,8 @@ export const translations = {
     faq_guide_title: "Download Official School Guide",
     faq_guide_desc: "Get the full 2026 Rwenanura Parents Primary School prospectus including academic calendar, fee schedules, and school policies.",
     faq_guide_btn: "Download Prospectus (PDF)",
+    faq_guide_request_btn: "Request the Prospectus by Email",
+    alumni_whatsapp_soon: "Ask the school office for the WhatsApp group link.",
 
     // Testimonials
     test_badge: "Community Voices",
@@ -495,6 +497,8 @@ export const translations = {
     faq_guide_title: "Kumanura Igitabo cy'Amabwiriza y'Ishuri",
     faq_guide_desc: "Bona igitabo cyose cya 2026 cy'ishuri rya Rwenanura Parents kirimo ingengabihe y'amasomo, amafaranga y'ishuri, n'amabwiriza agenga ikigo.",
     faq_guide_btn: "Kumanura Igitabo (PDF)",
+    faq_guide_request_btn: "Saba Igitabo cy'Ishuri kuri Email",
+    alumni_whatsapp_soon: "Baza ibiro by'ishuri ihuza rya WhatsApp.",
 
     // Testimonials
     test_badge: "Ubuhamya bw'Umuryango w'Ishuri",
@@ -730,6 +734,8 @@ export const translations = {
     faq_guide_title: "Télécharger le Guide Officiel de l'École",
     faq_guide_desc: "Obtenez le livret officiel 2026 avec le calendrier scolaire, la grille tarifaire détaillée et le règlement intérieur.",
     faq_guide_btn: "Télécharger le Livret (PDF)",
+    faq_guide_request_btn: "Demander la Brochure par Email",
+    alumni_whatsapp_soon: "Demandez le lien du groupe WhatsApp au secrétariat.",
 
     // Testimonials
     test_badge: "Témoignages de la Communauté",
