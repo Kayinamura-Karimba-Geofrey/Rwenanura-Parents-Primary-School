@@ -80,6 +80,7 @@ app.use(cors({
     return callback(null, false);
   },
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'X-Requested-With'],
   credentials: false,
 }));
 
@@ -95,6 +96,19 @@ app.use(rateLimit({
 }));
 
 app.use(express.json({ limit: '16kb' }));
+
+// ---------------------------------------------------------------------------
+// CSRF protection for the cookie session: every state-changing API request
+// must carry a custom header. Browsers only let another site add custom
+// headers after a CORS preflight, which the allowlist above rejects.
+// ---------------------------------------------------------------------------
+app.use('/api', (req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (req.get('X-Requested-With') !== 'rpps') {
+    return res.status(403).json({ success: false, error: 'Request blocked.' });
+  }
+  next();
+});
 
 // API Routes
 app.use('/api', admissionsRouter);
