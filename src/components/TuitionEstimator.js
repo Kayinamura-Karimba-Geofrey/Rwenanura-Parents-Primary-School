@@ -85,7 +85,7 @@ export function createTuitionEstimator(onOpenApplyModal) {
             </div>
           </div>
 
-          <button id="estimator-apply-btn" class="btn btn-gold" style="width: 100%; margin-top: 1.5rem;">
+          <button id="estimator-apply-btn" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
             ${t('calc_btn_apply')}
           </button>
         </div>
