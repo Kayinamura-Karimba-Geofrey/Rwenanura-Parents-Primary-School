@@ -101,8 +101,47 @@ News, the academic calendar and accounts are managed in the website itself (**Ma
 | `npm run server` | Start the API server. It also serves `dist/` when present. |
 | `npm test` | API test suite (starts the server on a throwaway database) |
 | `npm run lint` | ESLint |
+| `npm run backup` / `npm run restore` | Database backup and restore (see below) |
 
 CI (`.github/workflows/ci.yml`) runs lint, tests, the build and `npm audit` on Node 22 and 24 for every push.
+
+## Backups
+
+All school data (applications, accounts, news, calendar, alumni) lives in one SQLite file. Back it up daily.
+
+```bash
+npm run backup
+```
+
+The backup script:
+
+- copies the database safely while the server is running
+- checks the copy's integrity
+- gzip-compresses it into `server/data/backups/`
+- keeps the newest 14 backups
+
+`BACKUP_DIR` and `BACKUP_KEEP` change the folder and the count.
+
+**Schedule it** with cron on the server. This example backs up daily at 02:00:
+
+```cron
+0 2 * * * cd /srv/rpps && /usr/bin/npm run backup >> /var/log/rpps-backup.log 2>&1
+```
+
+**Keep a copy off the server** as well (another machine, cloud storage, a USB drive). A backup on the same disk does not survive a disk failure.
+
+**Restore:**
+
+1. Stop the server.
+2. Run:
+
+   ```bash
+   npm run restore -- server/data/backups/database-2026-10-07T02-00-00.sqlite.gz --yes
+   ```
+
+3. Start the server.
+
+The restore script checks the backup's integrity first. It keeps the current database next to it as `database.sqlite.before-restore-<time>` rather than deleting it.
 
 ## Project structure
 
@@ -120,6 +159,7 @@ src/
   utils/            HTML escaping, modal accessibility, lifecycle scope
   styles/           Stylesheets (alumni/ = alumni modal and homepage section)
 public/             Static files copied as-is: images, fonts, prospectus
+scripts/            Database backup and restore
 tests/              API tests
 ```
 
