@@ -765,7 +765,9 @@ router.get('/auth/me', authenticateToken, (req, res) => {
       }
     }
 
-    const { class_level, ...profile } = user;
+    // class_level is exposed as classLevel (students only)
+    const profile = { ...user };
+    delete profile.class_level;
     res.json({
       success: true,
       user: { ...profile, ...extraData }
