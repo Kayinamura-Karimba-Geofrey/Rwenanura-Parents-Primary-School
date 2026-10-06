@@ -21,6 +21,7 @@ import { createTestimonials } from './components/Testimonials.js';
 import { createContactModal } from './components/ContactModal.js';
 import { createTrackModal } from './components/TrackModal.js';
 import { createAuthModal } from './components/AuthModal.js';
+import { createInfoModal } from './components/InfoModal.js';
 import { createAdminDashboard } from './components/AdminDashboard.js';
 import { createAlumniModal } from './components/AlumniModal.js';
 import { createAlumniSection } from './components/AlumniSection.js';
@@ -58,8 +59,10 @@ function setupScrollReveal() {
   });
 }
 
-// The app is rebuilt on language change; keep a handle on the live auth modal.
+// The app is rebuilt on language change; keep handles on the live modals.
 let currentAuthModal = null;
+let currentInfoModal = null;
+let currentTrackModal = null;
 
 function initApp() {
   initUserRole();
@@ -148,6 +151,9 @@ function initApp() {
   app.appendChild(alumniModal);
 
   currentAuthModal = authModal;
+  currentTrackModal = trackModal;
+  currentInfoModal = createInfoModal();
+  app.appendChild(currentInfoModal);
 
   // Initialize Scroll Reveal Animations
   setupScrollReveal();
@@ -175,6 +181,16 @@ function handleEmailLinks() {
 // Other components (e.g. the alumni sign-in) can open the shared auth modal,
 // such as its "Forgot password" view: dispatch 'rpps-open-auth' with a tab.
 window.addEventListener('rpps-open-auth', (e) => currentAuthModal?.open(e.detail || 'login'));
+
+window.addEventListener('rpps-open-track', () => currentTrackModal?.classList.add('active'));
+
+// Full news articles and policy pages: dispatch 'rpps-show-info' with
+// { title, meta, text } (escaped) or { title, html } (trusted static HTML).
+window.addEventListener('rpps-show-info', (e) => {
+  const d = e.detail || {};
+  if (d.html !== undefined) currentInfoModal?.showHtml(d);
+  else currentInfoModal?.showText(d);
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
