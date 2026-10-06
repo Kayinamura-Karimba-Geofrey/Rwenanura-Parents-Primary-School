@@ -36,7 +36,7 @@ export function createNewsEvents() {
                 
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: var(--gray-500); font-weight: 500;">
                   <span>📍 ${escapeHtml(item.location)}</span>
-                  <button class="read-news-btn" style="color: var(--primary); font-weight: 700;">${t('news_read_more')}</button>
+                  <button class="read-news-btn" data-index="${items.indexOf(item)}" style="color: var(--primary); font-weight: 700;">${t('news_read_more')}</button>
                 </div>
               </div>
             </div>
@@ -45,10 +45,18 @@ export function createNewsEvents() {
       </div>
     `;
 
-    const btns = section.querySelectorAll('.read-news-btn');
-    btns.forEach(btn => {
+    section.querySelectorAll('.read-news-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        alert("Full news story details and photo gallery are available on our school bulletin board!");
+        const item = items[Number(btn.dataset.index)];
+        const date = [item.date.day, item.date.month, item.date.year].filter(Boolean).join(' ');
+        window.dispatchEvent(new CustomEvent('rpps-show-info', {
+          detail: {
+            title: item.title,
+            meta: [date, item.time, item.location].filter(Boolean).join(' • '),
+            // Full article when staff wrote one, otherwise the summary
+            text: item.body ? `${item.summary}\n\n${item.body}` : item.summary
+          }
+        }));
       });
     });
   }
