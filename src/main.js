@@ -3,6 +3,7 @@ import './styles/components.css';
 import './styles/alumni.css';
 import './styles/gallery.css';
 import './styles/calendar.css';
+import './styles/dashboard.css';
 
 import { createHeader } from './components/Header.js';
 import { createHero } from './components/Hero.js';
