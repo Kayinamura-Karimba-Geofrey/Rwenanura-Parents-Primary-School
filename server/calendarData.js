@@ -2,8 +2,10 @@
  * Academic Calendar & Term Dates Data for Rwenanura Parents Primary School
  * Follows the Rwanda Basic Education Board (REB) 3-Term School Calendar (2026/2027)
  *
- * Served only to signed-in students, staff and admins via GET /api/calendar,
- * so it lives on the server instead of in the public frontend bundle.
+ * Initial seed only: on first start these are copied into the
+ * academic_terms / calendar_events tables, which staff then edit from the
+ * management console. Changing this file later has no effect on an existing
+ * database.
  */
 
 export const academicTerms = [
