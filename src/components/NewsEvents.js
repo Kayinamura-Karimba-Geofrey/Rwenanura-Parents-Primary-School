@@ -8,7 +8,8 @@ export function createNewsEvents() {
   section.className = 'section section-muted';
   section.id = 'news';
 
-  function renderNews(items) {
+  // fromServer: items are real articles with a page at /news/:id
+  function renderNews(items, fromServer = false) {
     section.innerHTML = `
       <div class="container">
         <div class="section-header">
@@ -54,7 +55,8 @@ export function createNewsEvents() {
             title: item.title,
             meta: [date, item.time, item.location].filter(Boolean).join(' • '),
             // Full article when staff wrote one, otherwise the summary
-            text: item.body ? `${item.summary}\n\n${item.body}` : item.summary
+            text: item.body ? `${item.summary}\n\n${item.body}` : item.summary,
+            link: fromServer ? `/news/${item.id}` : null
           }
         }));
       });
@@ -67,7 +69,7 @@ export function createNewsEvents() {
   // Fetch live API news from SQLite backend
   fetchNewsAndEvents().then(res => {
     if (res.success && res.newsAndEvents && res.newsAndEvents.length > 0) {
-      renderNews(res.newsAndEvents);
+      renderNews(res.newsAndEvents, true);
     }
   });
 
