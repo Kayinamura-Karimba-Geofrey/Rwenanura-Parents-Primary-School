@@ -9,35 +9,33 @@ export function createContactModal() {
   modal.innerHTML = `
     <div class="modal-dialog">
       <button class="modal-close" aria-label="Close modal">&times;</button>
-      
-      <div class="badge badge-gold" style="margin-bottom: 0.5rem;">Admissions Portal</div>
-      <h3 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: var(--navy);">Apply to Rwenanura Parents</h3>
-      <p style="color: var(--gray-600); font-size: 0.9rem; margin-bottom: 1.5rem;">Fill out this application form to reserve your child's spot for the upcoming academic year.</p>
 
-      <div id="modal-feedback" style="display: none; padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.9rem;"></div>
+      <div class="badge badge-gold">Admissions Portal</div>
+      <h3 class="modal-title">Apply to Rwenanura Parents</h3>
+      <p class="modal-intro">Fill out this application form to reserve your child's spot for the upcoming academic year.</p>
+
+      <div id="modal-feedback" class="form-feedback" role="status" hidden></div>
 
       <form id="apply-form">
-        <div class="form-grid-2" style="margin-bottom: 1rem;">
+        <div class="form-grid-2">
           <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Parent / Guardian Name *</label>
-            <input type="text" id="app-parent-name" required placeholder="e.g. Jean-Claude Habimana" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
+            <label class="form-label" for="app-parent-name">Parent / Guardian Name *</label>
+            <input class="form-input" type="text" id="app-parent-name" required maxlength="120" autocomplete="name" placeholder="e.g. Jean-Claude Habimana" />
           </div>
-
           <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Phone Number *</label>
-            <input type="tel" id="app-phone" required placeholder="+250 78X XXX XXX" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
+            <label class="form-label" for="app-phone">Phone Number *</label>
+            <input class="form-input" type="tel" id="app-phone" required maxlength="30" autocomplete="tel" placeholder="+250 78X XXX XXX" />
           </div>
         </div>
 
-        <div class="form-grid-2" style="margin-bottom: 1rem;">
+        <div class="form-grid-2">
           <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Child's Full Name *</label>
-            <input type="text" id="app-child-name" required placeholder="Child's full name" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
+            <label class="form-label" for="app-child-name">Child's Full Name *</label>
+            <input class="form-input" type="text" id="app-child-name" required maxlength="120" placeholder="Child's full name" />
           </div>
-
           <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Grade Level Applying For *</label>
-            <select id="app-grade" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem; background: white;">
+            <label class="form-label" for="app-grade">Grade Level Applying For *</label>
+            <select class="form-input" id="app-grade" required>
               <option value="">Select Grade Level</option>
               <option value="Nursery Baby Class">Nursery - Baby Class (3 yrs)</option>
               <option value="Nursery Middle Class">Nursery - Middle Class (4 yrs)</option>
@@ -52,17 +50,13 @@ export function createContactModal() {
           </div>
         </div>
 
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Email Address</label>
-          <input type="email" id="app-email" placeholder="parent@example.com" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
-        </div>
+        <label class="form-label" for="app-email">Email Address <span class="auth-optional">(we'll email your tracking code)</span></label>
+        <input class="form-input" type="email" id="app-email" maxlength="200" autocomplete="email" placeholder="parent@example.com" />
 
-        <div style="margin-bottom: 1.5rem;">
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--navy);">Additional Information / Tour Request</label>
-          <textarea id="app-notes" rows="3" placeholder="Tell us any special learning requirements or preferred campus tour date..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit;"></textarea>
-        </div>
+        <label class="form-label" for="app-notes">Additional Information</label>
+        <textarea class="form-input" id="app-notes" rows="3" maxlength="1000" placeholder="Tell us about any special learning requirements..."></textarea>
 
-        <button type="submit" id="submit-app-btn" class="btn btn-primary" style="width: 100%; padding: 0.9rem;">
+        <button type="submit" id="submit-app-btn" class="btn btn-primary btn-block">
           <span>Submit Application</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         </button>
@@ -97,26 +91,22 @@ export function createContactModal() {
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span>Submitting Application...</span>';
-    feedbackEl.style.display = 'none';
+    feedbackEl.hidden = true;
 
     const response = await submitApplication({ parentName, phone, childName, grade, email, notes });
 
     if (response.success) {
-      feedbackEl.style.display = 'block';
-      feedbackEl.style.backgroundColor = 'rgba(13, 92, 58, 0.1)';
-      feedbackEl.style.color = 'var(--primary)';
-      feedbackEl.style.border = '1px solid var(--primary-light)';
+      feedbackEl.hidden = false;
+      feedbackEl.classList.remove('is-error');
       feedbackEl.innerHTML = `
         <strong>🎉 Application Submitted!</strong><br />
         Tracking Code: <strong>${escapeHtml(response.trackingCode)}</strong><br />
-        <span style="font-size: 0.82rem; color: var(--gray-600);">We have recorded your application for ${escapeHtml(childName)} (${escapeHtml(grade)}). Our admissions office will contact you shortly!</span>
+        <span class="form-feedback-note">We have recorded your application for ${escapeHtml(childName)} (${escapeHtml(grade)}). Keep your tracking code to check the status; our admissions office will contact you shortly.</span>
       `;
       form.reset();
     } else {
-      feedbackEl.style.display = 'block';
-      feedbackEl.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-      feedbackEl.style.color = 'var(--danger)';
-      feedbackEl.style.border = '1px solid var(--danger-border)';
+      feedbackEl.hidden = false;
+      feedbackEl.classList.add('is-error');
       feedbackEl.textContent = response.error || 'Failed to submit application. Please check details and try again.';
     }
 
