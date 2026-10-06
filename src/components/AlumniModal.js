@@ -4,6 +4,7 @@ import { escapeHtml } from '../utils/html.js';
 import { createChatPanel } from './alumni/chatPanel.js';
 import { createDirectoryPanel } from './alumni/directoryPanel.js';
 import { renderPortal } from './alumni/portalPanel.js';
+import { onCleanup } from '../utils/lifecycle.js';
 
 /**
  * Alumni Network modal ("OBs & OGs ChatUp"): a shell with three tabs.
@@ -275,6 +276,8 @@ export function createAlumniModal() {
 
   renderRoleBasedUI();
   onAuthChange(renderRoleBasedUI);
+  // Close the live stream / polling when the app is rebuilt
+  onCleanup(() => chat.stop());
 
   modal.open = (targetTab = 'chat', targetChannel = null) => {
     modal.classList.add('active');
