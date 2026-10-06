@@ -31,7 +31,13 @@ export function appLink(params) {
 export async function sendMail({ to, subject, text }) {
   if (!to) return false;
   if (!transport) {
-    console.log(`📧 [mail not configured] To: ${to}\n   Subject: ${subject}\n   ${text.replace(/\n/g, '\n   ')}`);
+    // In development, print the message so links can be followed. In
+    // production never log it: it contains single-use login links.
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`📧 Email not sent (SMTP_HOST not configured): ${subject}`);
+    } else {
+      console.log(`📧 [mail not configured] To: ${to}\n   Subject: ${subject}\n   ${text.replace(/\n/g, '\n   ')}`);
+    }
     return false;
   }
   try {
