@@ -34,6 +34,17 @@ export function initDatabase() {
     )
   `);
 
+  // Migrations for databases created before student accounts existed:
+  // requested_role holds the role a pending registration asked for, and
+  // class_level the pupil's class (students only).
+  const userColumns = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+  if (!userColumns.includes('requested_role')) {
+    db.exec('ALTER TABLE users ADD COLUMN requested_role TEXT');
+  }
+  if (!userColumns.includes('class_level')) {
+    db.exec('ALTER TABLE users ADD COLUMN class_level TEXT');
+  }
+
   // 2. Applications Table
   db.exec(`
     CREATE TABLE IF NOT EXISTS applications (
