@@ -275,6 +275,30 @@ export async function fetchCalendar() {
   }
 }
 
+async function sendJson(method, path, body, fallbackError) {
+  try {
+    return await apiRequest(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
+  } catch (err) {
+    return { success: false, error: err.message || fallbackError };
+  }
+}
+
+export function createCalendarEvent(event) {
+  return sendJson('POST', '/api/calendar/events', event, 'Failed to add the event.');
+}
+
+export function updateCalendarEvent(id, event) {
+  return sendJson('PUT', `/api/calendar/events/${id}`, event, 'Failed to update the event.');
+}
+
+export function deleteCalendarEvent(id) {
+  return sendJson('DELETE', `/api/calendar/events/${id}`, undefined, 'Failed to delete the event.');
+}
+
+export function updateCalendarTerm(id, changes) {
+  return sendJson('PATCH', `/api/calendar/terms/${id}`, changes, 'Failed to update the term.');
+}
+
 // ----------------- NEWSLETTER APIS -----------------
 
 export async function subscribeNewsletter(email) {
