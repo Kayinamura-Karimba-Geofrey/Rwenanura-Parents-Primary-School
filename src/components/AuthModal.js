@@ -33,15 +33,15 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
         <button class="auth-tab" data-auth-tab="register" role="tab">Register</button>
       </div>
 
-      <div id="auth-feedback" class="auth-feedback" role="status" hidden></div>
+      <div id="form-feedback" class="form-feedback" role="status" hidden></div>
 
       <!-- LOGIN FORM -->
       <form id="auth-login-form" class="auth-form">
-        <label class="auth-label" for="login-email">Email or Username</label>
-        <input class="auth-input" type="text" id="login-email" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="you@example.com or username" />
+        <label class="form-label" for="login-email">Email or Username</label>
+        <input class="form-input" type="text" id="login-email" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="you@example.com or username" />
 
-        <label class="auth-label" for="login-password">Password</label>
-        <input class="auth-input" type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
+        <label class="form-label" for="login-password">Password</label>
+        <input class="form-input" type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
 
         <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block">Log In</button>
         <div class="auth-links">
@@ -53,8 +53,8 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
       <!-- FORGOT PASSWORD FORM -->
       <form id="auth-forgot-form" class="auth-form" hidden>
         <p class="auth-help">Enter the email address of your account and we'll send you a link to choose a new password.</p>
-        <label class="auth-label" for="forgot-email">Email</label>
-        <input class="auth-input" type="email" id="forgot-email" required autocomplete="email" placeholder="you@example.com" />
+        <label class="form-label" for="forgot-email">Email</label>
+        <input class="form-input" type="email" id="forgot-email" required autocomplete="email" placeholder="you@example.com" />
         <button type="submit" id="forgot-submit-btn" class="btn btn-primary btn-block">Send Reset Link</button>
         <div class="auth-links">
           <button type="button" class="btn-link-action" data-auth-goto="login">Back to Log In</button>
@@ -64,16 +64,16 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
       <!-- RESET PASSWORD FORM (opened from the emailed link) -->
       <form id="auth-reset-form" class="auth-form" hidden>
         <p class="auth-help">Choose a new password for your account.</p>
-        <label class="auth-label" for="reset-password">New Password</label>
-        <input class="auth-input" type="password" id="reset-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
-        <label class="auth-label" for="reset-password-confirm">Confirm New Password</label>
-        <input class="auth-input" type="password" id="reset-password-confirm" required minlength="8" maxlength="128" autocomplete="new-password" />
+        <label class="form-label" for="reset-password">New Password</label>
+        <input class="form-input" type="password" id="reset-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
+        <label class="form-label" for="reset-password-confirm">Confirm New Password</label>
+        <input class="form-input" type="password" id="reset-password-confirm" required minlength="8" maxlength="128" autocomplete="new-password" />
         <button type="submit" id="reset-submit-btn" class="btn btn-primary btn-block">Save New Password</button>
       </form>
 
       <!-- REGISTER FORM -->
       <form id="auth-register-form" class="auth-form" hidden>
-        <span class="auth-label">I am registering as</span>
+        <span class="form-label">I am registering as</span>
         <div class="auth-type-toggle">
           <label class="auth-type-option">
             <input type="radio" name="account-type" value="student" checked />
@@ -85,26 +85,26 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
           </label>
         </div>
 
-        <label class="auth-label" for="register-name">Full Name</label>
-        <input class="auth-input" type="text" id="register-name" required maxlength="120" autocomplete="name" placeholder="e.g. Aline Uwase" />
+        <label class="form-label" for="register-name">Full Name</label>
+        <input class="form-input" type="text" id="register-name" required maxlength="120" autocomplete="name" placeholder="e.g. Aline Uwase" />
 
         <div id="register-username-field">
-          <label class="auth-label" for="register-username">Username</label>
-          <input class="auth-input" type="text" id="register-username" minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,29}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. aline.uwase" />
+          <label class="form-label" for="register-username">Username</label>
+          <input class="form-input" type="text" id="register-username" minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,29}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. aline.uwase" />
         </div>
 
-        <label class="auth-label" for="register-email" id="register-email-label">Email <span class="auth-optional">(optional - a parent's email is fine)</span></label>
-        <input class="auth-input" type="email" id="register-email" maxlength="200" autocomplete="email" placeholder="you@example.com" />
+        <label class="form-label" for="register-email" id="register-email-label">Email <span class="auth-optional">(optional - a parent's email is fine)</span></label>
+        <input class="form-input" type="email" id="register-email" maxlength="200" autocomplete="email" placeholder="you@example.com" />
 
         <div id="register-class-field">
-          <label class="auth-label" for="register-class">Class</label>
-          <select class="auth-input" id="register-class">
+          <label class="form-label" for="register-class">Class</label>
+          <select class="form-input" id="register-class">
             ${CLASS_LEVELS.map(c => `<option value="${c}">${c}</option>`).join('')}
           </select>
         </div>
 
-        <label class="auth-label" for="register-password">Password</label>
-        <input class="auth-input" type="password" id="register-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
+        <label class="form-label" for="register-password">Password</label>
+        <input class="form-input" type="password" id="register-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
 
         <button type="submit" id="register-submit-btn" class="btn btn-primary btn-block">Create Account</button>
         <p class="auth-note" id="register-note">A staff member approves student accounts before first sign-in.</p>
@@ -124,7 +124,7 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
   const resendBtn = modal.querySelector('#auth-resend-btn');
   const tabBar = modal.querySelector('.auth-tabs');
   let resetToken = null;
-  const feedback = modal.querySelector('#auth-feedback');
+  const feedback = modal.querySelector('#form-feedback');
   const classField = modal.querySelector('#register-class-field');
   const usernameField = modal.querySelector('#register-username-field');
   const usernameInput = modal.querySelector('#register-username');
