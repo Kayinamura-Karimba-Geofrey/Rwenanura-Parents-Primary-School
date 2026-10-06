@@ -105,6 +105,67 @@ News, the academic calendar and accounts are managed in the website itself (**Ma
 
 CI (`.github/workflows/ci.yml`) runs lint, tests, the build and `npm audit` on Node 22 and 24 for every push.
 
+## Production deployment
+
+You need a Linux server with Node.js 22+, a domain name pointing to it, and an SMTP account for email (your email host, or a service like Brevo, Mailgun or Amazon SES).
+
+### Option A: Node + systemd + nginx
+
+1. **Put the code in place and build it** (as a dedicated user, e.g. `rpps`, in `/srv/rpps`):
+
+   ```bash
+   git clone <repository> /srv/rpps && cd /srv/rpps
+   npm ci && npm run build && npm prune --omit=dev
+   cp .env.example .env
+   ```
+
+2. **Edit `.env`:**
+
+   ```ini
+   NODE_ENV=production
+   JWT_SECRET=<64 random hex characters>
+   APP_URL=https://rwenanuraparents.sch.rw
+   TRUST_PROXY=1
+   SMTP_HOST=...  SMTP_USER=...  SMTP_PASS=...  MAIL_FROM=...
+   ```
+
+   Protect it: `chmod 600 .env`.
+
+3. **Run it as a service:** follow the instructions at the top of `deploy/rpps.service`. It restarts automatically, and it may write only `server/data/`.
+
+4. **Add HTTPS with nginx:** use `deploy/nginx.conf.example` and a free Let's Encrypt certificate (`certbot --nginx`). HTTPS matters: session cookies are marked `Secure` in production and are not sent over plain HTTP.
+
+5. **Schedule daily backups** (see [Backups](#backups)).
+
+### Option B: Docker
+
+```bash
+docker build -t rpps .
+docker run -d --name rpps --restart unless-stopped \
+  -p 127.0.0.1:5000:5000 --env-file .env \
+  -v rpps-data:/app/server/data rpps
+```
+
+The database lives in the `rpps-data` volume. Put nginx (above) in front for HTTPS. Back up from inside the container with `docker exec rpps node scripts/backup-db.js`, and copy `/app/server/data/backups` out of the volume.
+
+### Updating
+
+```bash
+cd /srv/rpps && npm run backup
+git pull && npm ci && npm run build && npm prune --omit=dev
+sudo systemctl restart rpps
+```
+
+Database changes are applied automatically when the server starts.
+
+### Checklist after going live
+
+- The site loads over `https://`, and `http://` redirects to it.
+- Registering an account sends a real confirmation email.
+- `/robots.txt` and `/sitemap.xml` show your domain.
+- `npm run backup` works, and the cron job is in place.
+- Change the first admin's password and delete `server/data/initial-admin-password.txt`.
+
 ## Backups
 
 All school data (applications, accounts, news, calendar, alumni) lives in one SQLite file. Back it up daily.
@@ -160,6 +221,7 @@ src/
   styles/           Stylesheets (alumni/ = alumni modal and homepage section)
 public/             Static files copied as-is: images, fonts, prospectus
 scripts/            Database backup and restore
+deploy/             systemd service and nginx configuration examples
 tests/              API tests
 ```
 
