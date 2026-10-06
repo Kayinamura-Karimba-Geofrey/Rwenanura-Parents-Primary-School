@@ -476,6 +476,13 @@
   transform: scale(1.05);
 }
 
+.btn-reaction-cheer.liked {
+  background: var(--primary-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .btn-reaction-cheer.reacting {
   animation: heartPump 0.35s ease;
   background: var(--primary-border);
