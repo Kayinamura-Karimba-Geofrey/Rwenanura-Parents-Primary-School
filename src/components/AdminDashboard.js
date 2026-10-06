@@ -418,7 +418,7 @@ export function createAdminDashboard(onLogout) {
         const newStatus = e.target.value;
         const res = await updateApplicationStatus(id, newStatus);
         if (res.success) {
-          const item = applications.find(a => a.id == id);
+          const item = applications.find(a => a.id === Number(id));
           if (item) item.status = newStatus;
           updateCounters();
           renderGradeAnalytics();
@@ -435,7 +435,7 @@ export function createAdminDashboard(onLogout) {
         if (confirm('Delete this application record?')) {
           const res = await deleteApplication(id);
           if (res.success) {
-            applications = applications.filter(a => a.id != id);
+            applications = applications.filter(a => a.id !== Number(id));
             updateCounters();
             renderGradeAnalytics();
             renderApplications();
@@ -522,7 +522,7 @@ export function createAdminDashboard(onLogout) {
         if (confirm('Delete this news article?')) {
           const res = await deleteNewsItem(id);
           if (res.success) {
-            newsList = newsList.filter(n => n.id != id);
+            newsList = newsList.filter(n => n.id !== Number(id));
             renderNews();
           } else {
             alert(res.error || 'Failed to delete article.');
@@ -603,7 +603,7 @@ export function createAdminDashboard(onLogout) {
         const id = e.currentTarget.dataset.id;
         const res = await approveUser(id);
         if (!res.success) return alert(res.error || 'Failed to approve account.');
-        const item = staffUsers.find(u => u.id == id);
+        const item = staffUsers.find(u => u.id === Number(id));
         if (item) item.role = res.role;
         renderStaff();
       });
@@ -624,7 +624,7 @@ export function createAdminDashboard(onLogout) {
         const { id, role } = e.currentTarget.dataset;
         const res = await updateStaffRole(id, role);
         if (!res.success) return alert(res.error || 'Failed to update role.');
-        const item = staffUsers.find(u => u.id == id);
+        const item = staffUsers.find(u => u.id === Number(id));
         if (item) item.role = role;
         renderStaff();
       });
@@ -636,7 +636,7 @@ export function createAdminDashboard(onLogout) {
         if (!confirm('Remove this account? The person will no longer be able to sign in.')) return;
         const res = await deleteStaffUser(id);
         if (!res.success) return alert(res.error || 'Failed to remove account.');
-        staffUsers = staffUsers.filter(u => u.id != id);
+        staffUsers = staffUsers.filter(u => u.id !== Number(id));
         renderStaff();
       });
     });
