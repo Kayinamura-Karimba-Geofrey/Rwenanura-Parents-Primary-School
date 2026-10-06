@@ -72,7 +72,7 @@ export function createGallery() {
         </button>
 
         <div class="lightbox-image-container">
-          <img src="" alt="" class="lightbox-main-img" id="lightbox-main-img" />
+          <img alt="" class="lightbox-main-img" id="lightbox-main-img" />
         </div>
 
         <button class="lightbox-nav-btn lightbox-next-btn" id="lightbox-next" aria-label="Next Image">
