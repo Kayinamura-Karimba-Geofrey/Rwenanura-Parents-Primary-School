@@ -992,6 +992,9 @@ export function createAlumniModal() {
               <button type="submit" id="btn-modal-login-submit" class="btn btn-primary btn-block">
                 Sign In to Alumni Network 🚀
               </button>
+              <div class="auth-links">
+                <button type="button" class="btn-link-action" id="alumni-forgot-password">Forgot password?</button>
+              </div>
             </form>
           </div>
 
@@ -1114,6 +1117,11 @@ export function createAlumniModal() {
         }
       });
 
+      portalContainer.querySelector('#alumni-forgot-password').addEventListener('click', () => {
+        modal.classList.remove('active');
+        window.dispatchEvent(new CustomEvent('rpps-open-auth', { detail: 'forgot' }));
+      });
+
       // Handle Registration Submission
       const regForm = portalContainer.querySelector('#alumni-signup-form');
       regForm.addEventListener('submit', async (e) => {
@@ -1148,10 +1156,9 @@ export function createAlumniModal() {
         btn.textContent = 'Create Account & Join Network 🎉';
 
         if (res.success) {
-          showAlert(`Welcome to the RPPS Alumni Network, ${name}! Your account is now active.`, false);
-          setTimeout(() => {
-            tabs[0].click(); // jump to chat
-          }, 500);
+          // The account is activated from the emailed confirmation link
+          regForm.reset();
+          showAlert(res.message || 'Check your email for a confirmation link to activate your account.', false);
         } else {
           showAlert(res.error || 'Failed to create account.', true);
         }
