@@ -97,6 +97,22 @@ a {
   display: none !important;
 }
 
+/* Page behind an open modal does not scroll */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Visible keyboard focus everywhere (mouse clicks don't show it) */
+:focus-visible {
+  outline: 3px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+[role="dialog"]:focus,
+[role="dialog"]:focus-visible {
+  outline: none;
+}
+
 button {
   cursor: pointer;
   border: none;
