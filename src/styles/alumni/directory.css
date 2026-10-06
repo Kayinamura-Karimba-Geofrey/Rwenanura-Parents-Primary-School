@@ -1,0 +1,268 @@
+/* Alumni modal: OBs & OGs directory tab */
+
+/* TAB 2: Directory Styles */
+
+.directory-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.directory-filters {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.filter-pill {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 20px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-pill.active {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+.directory-search-box input {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.84rem;
+  min-width: 250px;
+  outline: none;
+}
+
+.directory-stats-row {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  padding: 0.4rem 0.6rem;
+  background: var(--gray-50);
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.alumni-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.25rem;
+}
+
+.alumni-member-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.alumni-member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: var(--gray-300);
+}
+
+.member-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.member-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--white);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.member-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 0.2rem 0;
+}
+
+.member-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.member-year {
+  font-size: 0.75rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.member-card-body {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  margin-bottom: 0.75rem;
+}
+
+.member-detail {
+  margin-bottom: 0.25rem;
+}
+
+.member-bio {
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  margin-top: 0.4rem;
+  line-height: 1.35;
+}
+
+.member-card-footer {
+  border-top: 1px solid var(--gray-100);
+  padding-top: 0.6rem;
+}
+
+.btn-say-hi {
+  width: 100%;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  padding: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-say-hi:hover {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+/* 3. Directory Contact Masking */
+
+.directory-guest-badge {
+  font-size: 0.72rem;
+  background: var(--gold-light);
+  color: var(--gold-dark);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+.directory-auth-badge {
+  font-size: 0.72rem;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+.member-contact-strip {
+  margin-top: 0.6rem;
+}
+
+.contact-masked-box {
+  background: var(--gray-50);
+  border: 1px dashed var(--gray-300);
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-link-action {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-link-action:hover {
+  color: var(--primary-dark);
+}
+
+.contact-unmasked-box {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  background: var(--gray-100);
+  color: var(--navy);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.contact-pill:hover {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+.contact-pill.contact-whatsapp {
+  background: rgba(22, 128, 82, 0.12);
+  color: var(--primary-light);
+  border-color: rgba(22, 128, 82, 0.3);
+}
+
+.contact-pill.contact-whatsapp:hover {
+  background: var(--primary-light);
+  color: var(--white);
+  border-color: var(--primary-light);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .directory-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .directory-search-box input {
+    width: 100%;
+    min-width: 0;
+  }
+}
