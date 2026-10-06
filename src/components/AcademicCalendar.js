@@ -2,6 +2,7 @@ import { downloadICalFile } from '../data/calendarData.js';
 import { fetchCalendar } from '../data/api.js';
 import { canViewCalendar, onAuthChange } from '../data/userRole.js';
 import { t, getLanguage } from '../data/i18n.js';
+import { escapeHtml } from '../utils/html.js';
 
 /**
  * School calendar section. Only signed-in students, staff and admins can see
@@ -288,14 +289,4 @@ export function createAcademicCalendar() {
   window.addEventListener('rpps-calendar-changed', refresh);
 
   return section;
-}
-
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
