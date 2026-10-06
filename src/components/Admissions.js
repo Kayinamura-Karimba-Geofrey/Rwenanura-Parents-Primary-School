@@ -1,4 +1,5 @@
 import { t } from '../data/i18n.js';
+import { schoolInfo } from '../data/schoolData.js';
 
 export function createAdmissions(onOpenApplyModal) {
   const section = document.createElement('section');
@@ -56,16 +57,16 @@ export function createAdmissions(onOpenApplyModal) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
           
-          <button class="btn btn-glass schedule-tour-btn" style="padding: 0.85rem 1.75rem;">
+          <a class="btn btn-glass schedule-tour-btn" style="padding: 0.85rem 1.75rem;"
+             href="mailto:${schoolInfo.admissionsEmail}?subject=${encodeURIComponent('School tour request')}&body=${encodeURIComponent('Hello, I would like to book a visit to the school.\n\nPreferred date and time:\nNumber of visitors:\nPhone number:')}">
             <span>${t('btn_book_tour')}</span>
-          </button>
+          </a>
         </div>
       </div>
     </div>
   `;
 
   section.querySelector('.start-application-btn').addEventListener('click', onOpenApplyModal);
-  section.querySelector('.schedule-tour-btn').addEventListener('click', onOpenApplyModal);
 
   return section;
 }
