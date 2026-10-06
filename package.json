@@ -10,7 +10,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test \"tests/**/*.test.js\"",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "backup": "node scripts/backup-db.js",
+    "restore": "node scripts/restore-db.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
