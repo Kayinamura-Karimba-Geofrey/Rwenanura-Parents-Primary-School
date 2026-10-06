@@ -51,7 +51,7 @@ export function createHero(onOpenApplyModal) {
     </div>
 
     <!-- Foreground Banner Content -->
-    <div class="container" style="position: relative; z-index: 10;">
+    <div class="container hero-foreground">
       <div class="hero-content">
         <div class="badge badge-gold" id="hero-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -76,7 +76,7 @@ export function createHero(onOpenApplyModal) {
 
     <!-- Slider Controls -->
     <div class="slider-controls">
-      <button class="slider-arrow prev-slide" aria-label="Previous slide" style="color: white; background: rgba(255,255,255,0.15); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+      <button class="slider-arrow prev-slide" aria-label="Previous slide">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       
@@ -86,7 +86,7 @@ export function createHero(onOpenApplyModal) {
         `).join('')}
       </div>
 
-      <button class="slider-arrow next-slide" aria-label="Next slide" style="color: white; background: rgba(255,255,255,0.15); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+      <button class="slider-arrow next-slide" aria-label="Next slide">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
