@@ -4,6 +4,7 @@ import fs from 'fs';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
+import { academicTerms as seedTerms, calendarEvents as seedEvents } from './calendarData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -211,6 +212,48 @@ export function initDatabase() {
       registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // 7. Academic calendar (editable by staff). Localized text ({en, rw, fr})
+  // is stored as JSON.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS academic_terms (
+      id TEXT PRIMARY KEY,
+      term_number INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      period TEXT NOT NULL,
+      duration TEXT,
+      status TEXT NOT NULL DEFAULT 'upcoming',
+      highlights TEXT NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS calendar_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      term TEXT NOT NULL REFERENCES academic_terms(id),
+      category TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      audience TEXT,
+      location TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // First run: seed the calendar from server/calendarData.js
+  if (db.prepare('SELECT COUNT(*) AS count FROM academic_terms').get().count === 0) {
+    const insertTerm = db.prepare('INSERT INTO academic_terms (id, term_number, name, period, duration, status, highlights) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const insertEvent = db.prepare('INSERT INTO calendar_events (term, category, title, description, start_date, end_date, audience, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    db.transaction(() => {
+      for (const t of seedTerms) {
+        insertTerm.run(t.id, t.termNumber, JSON.stringify(t.name), t.period, t.duration, t.status, JSON.stringify(t.highlights));
+      }
+      for (const e of seedEvents) {
+        insertEvent.run(e.term, e.category, JSON.stringify(e.title), JSON.stringify(e.description), e.startDate.slice(0, 16), e.endDate.slice(0, 16), e.audience, e.location);
+      }
+    })();
+  }
 
   // Seed default news if empty
   const count = db.prepare('SELECT COUNT(*) as count FROM news_events').get().count;
