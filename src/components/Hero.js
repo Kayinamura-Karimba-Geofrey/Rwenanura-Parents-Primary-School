@@ -15,28 +15,28 @@ export function createHero(onOpenApplyModal) {
       title: t('hero_title_1'),
       subtitle: t('hero_subtitle_1'),
       ctaPrimary: t('hero_cta_apply'),
-      image: heroSlides[0]?.image || 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80'
+      image: heroSlides[0]?.image || '/images/hero-1.jpg'
     },
     {
       badge: t('acad_badge'),
       title: t('hero_title_2'),
       subtitle: t('hero_subtitle_2'),
       ctaPrimary: t('hero_cta_apply'),
-      image: heroSlides[1]?.image || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1600&q=80'
+      image: heroSlides[1]?.image || '/images/hero-2.jpg'
     },
     {
       badge: t('val_innovation'),
       title: t('hero_title_3'),
       subtitle: t('hero_subtitle_3'),
       ctaPrimary: t('hero_cta_apply'),
-      image: heroSlides[2]?.image || 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1600&q=80'
+      image: heroSlides[2]?.image || '/images/hero-3.jpg'
     },
     {
       badge: t('val_community'),
       title: t('hero_title_4'),
       subtitle: t('hero_subtitle_4'),
       ctaPrimary: t('hero_cta_apply'),
-      image: heroSlides[3]?.image || 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1600&q=80'
+      image: heroSlides[3]?.image || '/images/hero-4.jpg'
     }
   ];
 
