@@ -1,6 +1,7 @@
 import { newsAndEvents as defaultNews } from '../data/schoolData.js';
 import { fetchNewsAndEvents } from '../data/api.js';
 import { t } from '../data/i18n.js';
+import { escapeHtml } from '../utils/html.js';
 
 export function createNewsEvents() {
   const section = document.createElement('section');
@@ -72,14 +73,4 @@ export function createNewsEvents() {
   });
 
   return section;
-}
-
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
