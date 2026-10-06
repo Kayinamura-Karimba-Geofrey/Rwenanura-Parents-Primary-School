@@ -2,6 +2,7 @@ import { fetchAlumniMembers } from '../data/api.js';
 import { getUserRole, getCurrentUser, onAuthChange } from '../data/userRole.js';
 import { t } from '../data/i18n.js';
 import { schoolInfo } from '../data/schoolData.js';
+import { escapeHtml } from '../utils/html.js';
 
 export function createAlumniSection(onOpenAlumniModal) {
   const section = document.createElement('section');
@@ -217,14 +218,4 @@ export function createAlumniSection(onOpenAlumniModal) {
   });
 
   return section;
-}
-
-function escapeHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
