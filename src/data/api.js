@@ -433,33 +433,18 @@ export function connectAlumniStream(onEvent, onError) {
 
   const es = new EventSource('/api/alumni/stream');
 
-  es.addEventListener('new_message', (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      onEvent('new_message', data);
-    } catch (err) {}
-  });
-
-  es.addEventListener('reaction_update', (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      onEvent('reaction_update', data);
-    } catch (err) {}
-  });
-
-  es.addEventListener('typing_status', (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      onEvent('typing_status', data);
-    } catch (err) {}
-  });
-
-  es.addEventListener('online_count', (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      onEvent('online_count', data);
-    } catch (err) {}
-  });
+  // Forward each server event; ignore malformed payloads
+  for (const eventType of ['new_message', 'reaction_update', 'typing_status', 'online_count']) {
+    es.addEventListener(eventType, (e) => {
+      let data;
+      try {
+        data = JSON.parse(e.data);
+      } catch {
+        return;
+      }
+      onEvent(eventType, data);
+    });
+  }
 
   es.onerror = (err) => {
     if (onError) onError(err);
