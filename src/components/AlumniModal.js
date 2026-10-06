@@ -361,7 +361,7 @@ export function createAlumniModal() {
           <div class="message-content-wrap">
             <div class="message-header-line">
               <span class="message-author">${escapeHtml(msg.author_name)}</span>
-              <span class="alumni-badge ${badgeClass}">${msg.author_type}</span>
+              <span class="alumni-badge ${badgeClass}">${escapeHtml(msg.author_type)}</span>
               <span class="message-class">${escapeHtml(msg.class_year || '')}</span>
               ${msg.profession ? `<span class="message-profession">• ${escapeHtml(msg.profession)}</span>` : ''}
               <span class="message-time">${timeStr}</span>
@@ -384,6 +384,10 @@ export function createAlumniModal() {
     messagesFeed.querySelectorAll('.btn-reaction-cheer').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-msg-id');
+        if (!isAlumni() && !isStaffOrAdmin()) {
+          tabs[2].click(); // reacting requires sign-in; open the portal tab
+          return;
+        }
         btn.classList.add('reacting');
         const res = await reactToAlumniMessage(id);
         if (res.success) {
@@ -766,7 +770,7 @@ export function createAlumniModal() {
       directoryGrid.innerHTML = res.members.map(member => {
         const isOB = member.member_type === 'OB';
         const badgeClass = isOB ? 'badge-ob' : 'badge-og';
-        const color = isOB ? '#0d5c3a' : '#d97706';
+        const color = isOB ? 'var(--primary)' : 'var(--gold)';
         const initials = escapeHtml((member.name || 'Alumni').substring(0, 2).toUpperCase());
 
         const cleanPhone = member.phone ? member.phone.replace(/[^0-9]/g, '') : '';
@@ -781,7 +785,7 @@ export function createAlumniModal() {
               <div>
                 <h5 class="member-name">${escapeHtml(member.name)}</h5>
                 <div class="member-meta">
-                  <span class="alumni-badge ${badgeClass}">${member.member_type}</span>
+                  <span class="alumni-badge ${badgeClass}">${escapeHtml(member.member_type)}</span>
                   <span class="member-year">${escapeHtml(member.class_year)}</span>
                 </div>
               </div>
@@ -892,7 +896,7 @@ export function createAlumniModal() {
                 </div>
               </div>
               <div class="id-card-ribbon ${isOB ? 'ribbon-ob' : 'ribbon-og'}">
-                ${user.memberType || (role === 'admin' ? 'ADMIN' : 'OB')}
+                ${escapeHtml(user.memberType || (role === 'admin' ? 'ADMIN' : 'OB'))}
               </div>
             </div>
 
@@ -1196,8 +1200,8 @@ export function createAlumniModal() {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
-  return str
+  if (str == null) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

@@ -98,11 +98,11 @@ export function createFooter() {
 
     msgEl.style.display = 'block';
     if (res.success) {
-      msgEl.style.color = '#34d399';
+      msgEl.style.color = 'var(--primary-border)';
       msgEl.textContent = res.message;
       form.reset();
     } else {
-      msgEl.style.color = '#f87171';
+      msgEl.style.color = 'var(--danger-border)';
       msgEl.textContent = res.error || 'Failed to subscribe.';
     }
 

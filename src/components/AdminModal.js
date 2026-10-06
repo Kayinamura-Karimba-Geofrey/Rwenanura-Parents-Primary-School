@@ -61,7 +61,7 @@ export function createAdminModal() {
       countEl.textContent = allApplications.length;
       renderList();
     } else {
-      listEl.innerHTML = `<div style="text-align: center; color: #dc2626; padding: 1.5rem;">Failed to load applications from server.</div>`;
+      listEl.innerHTML = `<div style="text-align: center; color: var(--danger); padding: 1.5rem;">Failed to load applications from server.</div>`;
     }
   }
 
@@ -91,7 +91,7 @@ export function createAdminModal() {
               <option value="Approved" ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
             </select>
             
-            <button class="delete-app-btn" data-id="${app.id}" title="Delete Application" style="color: #dc2626; border: 1px solid #fee2e2; background: #fef2f2; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
+            <button class="delete-app-btn" data-id="${app.id}" title="Delete Application" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
               🗑️
             </button>
           </div>
@@ -148,7 +148,7 @@ export function createAdminModal() {
   });
 
   function escapeHtml(str) {
-    if (!str) return '';
+    if (str == null) return '';
     return String(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')

@@ -23,7 +23,7 @@ export function createAuthModal(onAuthSuccess) {
           Login
         </button>
         <button id="tab-signup-btn" style="flex: 1; padding: 0.75rem; font-weight: 600; font-size: 0.95rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-500); cursor: pointer;">
-          Sign Up (New Staff)
+          Request Access
         </button>
       </div>
 
@@ -72,8 +72,9 @@ export function createAuthModal(onAuthSuccess) {
         </div>
 
         <button type="submit" id="signup-submit-btn" class="btn btn-gold" style="width: 100%; padding: 0.85rem;">
-          Register Account
+          Submit Access Request
         </button>
+        <p style="font-size: 0.78rem; color: var(--gray-500); margin-top: 0.6rem; text-align: center;">An administrator must approve new staff accounts before they can sign in.</p>
       </form>
     </div>
   `;
@@ -91,8 +92,8 @@ export function createAuthModal(onAuthSuccess) {
   function showFeedback(msg, isError = false) {
     feedback.style.display = 'block';
     feedback.style.backgroundColor = isError ? 'rgba(220, 38, 38, 0.1)' : 'rgba(13, 92, 58, 0.1)';
-    feedback.style.color = isError ? '#dc2626' : 'var(--primary)';
-    feedback.style.border = `1px solid ${isError ? '#fca5a5' : 'var(--primary-light)'}`;
+    feedback.style.color = isError ? 'var(--danger)' : 'var(--primary)';
+    feedback.style.border = `1px solid ${isError ? 'var(--danger-border)' : 'var(--primary-light)'}`;
     feedback.textContent = msg;
   }
 
@@ -149,29 +150,25 @@ export function createAuthModal(onAuthSuccess) {
     const name = modal.querySelector('#signup-name').value;
     const email = modal.querySelector('#signup-email').value;
     const password = modal.querySelector('#signup-password').value;
-    // Server always assigns 'staff' for public signups; admin promotion is
-    // done by an existing administrator via the /api/auth/promote endpoint.
-    const role = 'staff';
     const btn = modal.querySelector('#signup-submit-btn');
 
     btn.disabled = true;
     btn.textContent = 'Creating account...';
     feedback.style.display = 'none';
 
-    const res = await signupUser(name, email, password, role);
+    const res = await signupUser(name, email, password);
 
     if (res.success) {
-      showFeedback('Account created successfully! Welcome to RPPS Portal.', false);
-      setTimeout(() => {
-        modal.classList.remove('active');
-        if (onAuthSuccess) onAuthSuccess(res.user);
-      }, 600);
+      // Account starts as 'pending' until an administrator approves it.
+      signupForm.reset();
+      tabLogin.click();
+      showFeedback(res.message || 'Account request submitted. An administrator must approve it before you can sign in.', false);
     } else {
       showFeedback(res.error || 'Failed to create account.', true);
     }
 
     btn.disabled = false;
-    btn.textContent = 'Register Account';
+    btn.textContent = 'Submit Access Request';
   });
 
   return modal;

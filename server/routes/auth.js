@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
 import db from '../db.js';
 
 const router = express.Router();
@@ -18,6 +19,59 @@ if (!JWT_SECRET || JWT_SECRET.length < 32 || /your_jwt_secret|secret-key|change/
 export { JWT_SECRET };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Only HS256 is ever issued; pinning it prevents algorithm-confusion attacks.
+const JWT_VERIFY_OPTIONS = { algorithms: ['HS256'] };
+
+// bcrypt only uses the first 72 bytes; also caps hashing cost per request.
+const MAX_PASSWORD_LEN = 128;
+const MAX_NAME_LEN = 120;
+const MAX_EMAIL_LEN = 200;
+
+const MANAGEABLE_ROLES = ['pending', 'staff', 'admin'];
+
+// Real hash of a random value, used to equalize login timing for unknown emails.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
+
+function isValidPassword(password) {
+  return typeof password === 'string' && password.length >= 8 && password.length <= MAX_PASSWORD_LEN;
+}
+
+function isValidEmail(email) {
+  return typeof email === 'string' && email.trim().length <= MAX_EMAIL_LEN && EMAIL_RE.test(email.trim());
+}
+
+function isValidName(name) {
+  return typeof name === 'string' && name.trim().length > 0 && name.trim().length <= MAX_NAME_LEN;
+}
+
+const ALUMNI_FIELD_LIMITS = { name: 120, classYear: 40, profession: 120, location: 120, phone: 30, bio: 600 };
+
+// Shared validation for alumni profile fields (account + directory signups).
+// Returns an error message, or null when the input is acceptable.
+export function validateAlumniProfile(fields) {
+  if (typeof fields.memberType !== 'string' || !['OB', 'OG'].includes(fields.memberType.toUpperCase())) {
+    return 'Member type must be OB or OG.';
+  }
+  for (const [key, max] of Object.entries(ALUMNI_FIELD_LIMITS)) {
+    const value = fields[key];
+    if (value == null || value === '') continue;
+    if (typeof value !== 'string' || value.trim().length > max) {
+      return `${key} must be text of at most ${max} characters.`;
+    }
+  }
+  return null;
+}
+
+// Re-read the account on every authenticated request so deleted accounts and
+// role changes (approval, demotion) take effect immediately instead of when
+// the 14-day token expires.
+function attachLiveUser(req, decoded) {
+  const dbUser = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(decoded.id);
+  if (!dbUser || dbUser.role === 'pending') return false;
+  req.user = { ...decoded, name: dbUser.name, email: dbUser.email, role: dbUser.role };
+  return true;
+}
 
 // Rate Limiter for Login Attempts (Max 10 attempts per 15 mins)
 const loginLimiter = rateLimit({
@@ -47,12 +101,9 @@ export function optionalAuthenticate(req, res, next) {
     return next();
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      req.user = null;
-    } else {
-      req.user = decoded;
-    }
+  jwt.verify(token, JWT_SECRET, JWT_VERIFY_OPTIONS, (err, decoded) => {
+    req.user = null;
+    if (!err) attachLiveUser(req, decoded);
     next();
   });
 }
@@ -66,11 +117,10 @@ export function authenticateToken(req, res, next) {
     return res.status(401).json({ success: false, error: 'Access token required. Please log in.' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ success: false, error: 'Invalid or expired session token.' });
+  jwt.verify(token, JWT_SECRET, JWT_VERIFY_OPTIONS, (err, decoded) => {
+    if (err || !attachLiveUser(req, decoded)) {
+      return res.status(401).json({ success: false, error: 'Invalid or expired session token.' });
     }
-    req.user = decoded;
     next();
   });
 }
@@ -93,7 +143,7 @@ export function requireRole(...roles) {
 // POST /api/auth/alumni-register - Register new Alumni account
 router.post('/auth/alumni-register', registerLimiter, (req, res) => {
   try {
-    const { name, email, password, memberType, classYear, profession, location, phone, bio } = req.body;
+    const { name, email, password, memberType, classYear, profession, location, phone, bio } = req.body || {};
 
     if (!name || !email || !password || !memberType || !classYear) {
       return res.status(400).json({
@@ -102,12 +152,17 @@ router.post('/auth/alumni-register', registerLimiter, (req, res) => {
       });
     }
 
-    if (!EMAIL_RE.test(String(email))) {
+    if (!isValidEmail(email)) {
       return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
     }
 
-    if (typeof password !== 'string' || password.length < 8) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ success: false, error: `Password must be between 8 and ${MAX_PASSWORD_LEN} characters long.` });
+    }
+
+    const profileError = validateAlumniProfile({ name, memberType, classYear, profession, location, phone, bio });
+    if (profileError) {
+      return res.status(400).json({ success: false, error: profileError });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -190,22 +245,26 @@ router.post('/auth/alumni-register', registerLimiter, (req, res) => {
   }
 });
 
-// POST /api/auth/signup - Register new STAFF account (public requests always
-// get role 'staff'; promoting anyone to 'admin' requires an existing admin).
+// POST /api/auth/signup - Request a STAFF account (created as 'pending';
+// an existing admin approves it from the management console).
 router.post('/auth/signup', registerLimiter, (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password } = req.body || {};
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, error: 'Name, email, and password are required.' });
     }
 
-    if (!EMAIL_RE.test(String(email))) {
+    if (!isValidName(name)) {
+      return res.status(400).json({ success: false, error: `Name must be at most ${MAX_NAME_LEN} characters.` });
+    }
+
+    if (!isValidEmail(email)) {
       return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
     }
 
-    if (typeof password !== 'string' || password.length < 8) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ success: false, error: `Password must be between 8 and ${MAX_PASSWORD_LEN} characters long.` });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -219,25 +278,21 @@ router.post('/auth/signup', registerLimiter, (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(password, salt);
 
-    // SECURITY: role is fixed to 'staff' for public signups. A client-supplied
-    // role is ignored, otherwise anyone could self-register as admin.
-    const userRole = 'staff';
+    // SECURITY: public signups start as 'pending' and get no session. Staff
+    // can read every family's application (children's names, parent phones),
+    // so an administrator must approve the account before it grants access.
+    // A client-supplied role is always ignored.
+    const userRole = 'pending';
 
     const stmt = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-    const info = stmt.run(name.trim(), cleanEmail, passwordHash, userRole);
+    stmt.run(name.trim(), cleanEmail, passwordHash, userRole);
 
-    const userId = info.lastInsertRowid;
-    const userObj = { id: userId, name: name.trim(), email: cleanEmail, role: userRole };
-
-    const token = jwt.sign(userObj, JWT_SECRET, { expiresIn: '7d' });
-
-    console.log(`👤 New User Registered: ${name} (${cleanEmail}) [${userRole}]`);
+    console.log(`👤 New Staff Signup Awaiting Approval: ${name} (${cleanEmail})`);
 
     res.status(201).json({
       success: true,
-      message: 'Account registered successfully!',
-      token,
-      user: userObj
+      pendingApproval: true,
+      message: 'Account request submitted. An administrator must approve it before you can sign in.'
     });
 
   } catch (err) {
@@ -250,8 +305,8 @@ router.post('/auth/signup', registerLimiter, (req, res) => {
 // Only callable by an existing administrator.
 router.post('/auth/promote', authenticateToken, requireRole('admin'), (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email || !EMAIL_RE.test(String(email))) {
+    const { email } = req.body || {};
+    if (!isValidEmail(email)) {
       return res.status(400).json({ success: false, error: 'A valid email address is required.' });
     }
     const cleanEmail = email.trim().toLowerCase();
@@ -271,12 +326,73 @@ router.post('/auth/promote', authenticateToken, requireRole('admin'), (req, res)
   }
 });
 
+// GET /api/auth/users - List staff/admin accounts and pending requests (admin only)
+router.get('/auth/users', authenticateToken, requireRole('admin'), (req, res) => {
+  try {
+    const users = db.prepare(
+      "SELECT id, name, email, role, created_at FROM users WHERE role IN ('pending', 'staff', 'admin') ORDER BY CASE role WHEN 'pending' THEN 0 ELSE 1 END, id DESC"
+    ).all();
+    res.json({ success: true, users });
+  } catch (err) {
+    console.error('List users error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load accounts.' });
+  }
+});
+
+// PATCH /api/auth/users/:id/role - Approve, demote or promote an account (admin only)
+router.patch('/auth/users/:id/role', authenticateToken, requireRole('admin'), (req, res) => {
+  try {
+    const userId = Number.parseInt(req.params.id, 10);
+    const { role } = req.body || {};
+    if (!Number.isInteger(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user id.' });
+    }
+    if (!MANAGEABLE_ROLES.includes(role)) {
+      return res.status(400).json({ success: false, error: `Role must be one of: ${MANAGEABLE_ROLES.join(', ')}` });
+    }
+    if (userId === req.user.id) {
+      return res.status(400).json({ success: false, error: 'You cannot change your own role.' });
+    }
+    const target = db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(userId);
+    if (!target || !MANAGEABLE_ROLES.includes(target.role)) {
+      return res.status(404).json({ success: false, error: 'Staff account not found.' });
+    }
+    db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
+    console.log(`🛡️ Role change: ${target.email} ${target.role} -> ${role} (by ${req.user.email})`);
+    res.json({ success: true, message: `${target.email} is now ${role}.` });
+  } catch (err) {
+    console.error('Role change error:', err);
+    res.status(500).json({ success: false, error: 'Failed to update role.' });
+  }
+});
+
+// DELETE /api/auth/users/:id - Reject a pending request or remove a staff account (admin only)
+router.delete('/auth/users/:id', authenticateToken, requireRole('admin'), (req, res) => {
+  try {
+    const userId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user id.' });
+    }
+    if (userId === req.user.id) {
+      return res.status(400).json({ success: false, error: 'You cannot delete your own account.' });
+    }
+    const result = db.prepare("DELETE FROM users WHERE id = ? AND role IN ('pending', 'staff', 'admin')").run(userId);
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Staff account not found.' });
+    }
+    res.json({ success: true, message: 'Account removed.' });
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({ success: false, error: 'Failed to remove account.' });
+  }
+});
+
 // POST /api/auth/login - Authenticate staff/admin/alumni
 router.post('/auth/login', loginLimiter, (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!email || !password) {
+    if (!email || !password || typeof email !== 'string' || typeof password !== 'string' || password.length > MAX_PASSWORD_LEN) {
       return res.status(400).json({ success: false, error: 'Please enter both email and password.' });
     }
 
@@ -285,11 +401,15 @@ router.post('/auth/login', loginLimiter, (req, res) => {
 
     // Uniform error + constant-ish work factor: run a dummy compare even when
     // the user doesn't exist so response timing doesn't reveal valid emails.
-    const passwordHash = user ? user.password_hash : '$2a$10$C6UzMDM.H6dfI/f/IKcEeO7ZbKqFsOpbDfLZbKaQRU-u3v0tF8S0m';
-    const validPassword = bcrypt.compareSync(String(password), passwordHash);
+    const passwordHash = user ? user.password_hash : DUMMY_PASSWORD_HASH;
+    const validPassword = bcrypt.compareSync(password, passwordHash);
 
     if (!user || !validPassword) {
       return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+    }
+
+    if (user.role === 'pending') {
+      return res.status(403).json({ success: false, error: 'Your staff account is awaiting administrator approval.' });
     }
 
     let extraData = {};

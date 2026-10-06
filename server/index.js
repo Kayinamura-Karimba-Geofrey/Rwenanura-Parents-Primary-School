@@ -18,10 +18,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.disable('x-powered-by');
 
-// Behind a reverse proxy (nginx, etc.), trust it for client IP detection so
-// rate limiting works correctly.
-app.set('trust proxy', 1);
+// Only trust X-Forwarded-For when actually deployed behind a reverse proxy
+// (set TRUST_PROXY=1). Trusting it unconditionally lets any client spoof its
+// IP and bypass every rate limiter.
+app.set('trust proxy', process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY : false);
 
 const PORT = process.env.PORT || 5000;
 
@@ -41,9 +43,9 @@ app.use((req, res, next) => {
     [
       "default-src 'self'",
       "script-src 'self'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data:",
-      "font-src 'self' data:",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "img-src 'self' data: https://images.unsplash.com",
+      "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
@@ -53,6 +55,9 @@ app.use((req, res, next) => {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=()');
   res.setHeader('X-DNS-Prefetch-Control', 'off');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
   next();
 });
 
@@ -110,6 +115,18 @@ app.get('/api/health', (req, res) => {
 // Unknown API paths return JSON 404 instead of falling through to the SPA
 app.use('/api', (req, res) => {
   res.status(404).json({ success: false, error: 'Endpoint not found.' });
+});
+
+// Malformed JSON / oversized bodies / unexpected errors: JSON response, never
+// a stack trace.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) console.error('Unhandled error:', err);
+  res.status(status).json({
+    success: false,
+    error: status === 413 ? 'Request body too large.' : status < 500 ? 'Invalid request.' : 'Internal server error.',
+  });
 });
 
 // Serve frontend build if dist directory exists

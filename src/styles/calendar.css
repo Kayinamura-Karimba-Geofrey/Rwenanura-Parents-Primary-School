@@ -36,7 +36,7 @@
 
 .term-summary-card.term-active {
   border: 2px solid var(--primary);
-  background: linear-gradient(180deg, #ffffff 0%, var(--primary-subtle) 100%);
+  background: var(--primary-subtle);
 }
 
 .term-status-pill {
@@ -54,13 +54,13 @@
 }
 
 .term-status-active {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--primary-subtle);
+  color: var(--primary);
 }
 
 .term-status-upcoming {
   background: var(--gold-light);
-  color: #92400e;
+  color: var(--gold-dark);
 }
 
 .term-card-title {
@@ -287,7 +287,7 @@
 /* Event Left Date Badge */
 .event-date-box {
   background: var(--primary-subtle);
-  border: 1px solid #ccebd7;
+  border: 1px solid var(--primary-border);
   border-radius: var(--radius-md);
   padding: 0.85rem 1.15rem;
   text-align: center;
@@ -338,18 +338,18 @@
 }
 
 .cat-academic {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--primary-subtle);
+  color: var(--primary);
 }
 
 .cat-holiday {
   background: var(--gold-light);
-  color: #92400e;
+  color: var(--gold-dark);
 }
 
 .cat-community {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--gray-100);
+  color: var(--navy-light);
 }
 
 .event-audience-pill {
@@ -421,7 +421,7 @@
 
   .calendar-event-card {
     page-break-inside: avoid;
-    border: 1px solid #ccc;
+    border: 1px solid var(--gray-300);
     box-shadow: none;
     margin-bottom: 0.75rem;
   }

@@ -254,8 +254,8 @@ export function createAcademicCalendar() {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
-  return str
+  if (str == null) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

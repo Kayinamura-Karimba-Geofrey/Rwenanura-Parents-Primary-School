@@ -90,7 +90,7 @@ export function createTrackModal() {
       `;
     } else {
       resultDiv.innerHTML = `
-        <div style="background: rgba(220, 38, 38, 0.08); border: 1px solid #fca5a5; color: #dc2626; padding: 1rem; border-radius: var(--radius-sm); font-size: 0.88rem; text-align: center;">
+        <div style="background: rgba(220, 38, 38, 0.08); border: 1px solid var(--danger-border); color: var(--danger); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.88rem; text-align: center;">
           ❌ ${escapeHtml(res.error || 'Tracking code not found.')}
         </div>
       `;
@@ -101,7 +101,7 @@ export function createTrackModal() {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
+  if (str == null) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

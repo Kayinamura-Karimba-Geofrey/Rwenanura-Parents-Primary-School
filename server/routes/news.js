@@ -17,6 +17,8 @@ const MAX_LEN = {
   summary: 1000,
 };
 
+const VALID_TYPES = ['news', 'event'];
+
 function capped(value, max) {
   return String(value).trim().substring(0, max);
 }
@@ -52,12 +54,23 @@ router.get('/news', (req, res) => {
 });
 
 // POST /api/news - Create new news item or event (Protected Admin)
-router.post('/news', authenticateToken, (req, res) => {
+// SECURITY: requireRole was missing here, which let any self-registered
+// alumni account publish articles on the public landing page.
+router.post('/news', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
-    const { title, type, category, day, month, year, time, location, summary } = req.body;
+    const { title, type, category, day, month, year, time, location, summary } = req.body || {};
 
     if (!title || !category || !day || !month || !summary) {
       return res.status(400).json({ success: false, error: 'Title, category, date, and summary are required.' });
+    }
+
+    const fields = [title, type, category, day, month, year, time, location, summary];
+    if (fields.some(v => v != null && typeof v !== 'string' && typeof v !== 'number')) {
+      return res.status(400).json({ success: false, error: 'Invalid input format.' });
+    }
+
+    if (type && !VALID_TYPES.includes(type)) {
+      return res.status(400).json({ success: false, error: `Type must be one of: ${VALID_TYPES.join(', ')}` });
     }
 
     const stmt = db.prepare(`
@@ -70,7 +83,7 @@ router.post('/news', authenticateToken, (req, res) => {
       capped(type || 'news', MAX_LEN.type),
       capped(category, MAX_LEN.category),
       capped(day.toString().padStart(2, '0'), MAX_LEN.day),
-      capped(month.toUpperCase().substring(0, 3), MAX_LEN.month),
+      capped(String(month).toUpperCase().substring(0, 3), MAX_LEN.month),
       capped((year || new Date().getFullYear()).toString(), MAX_LEN.year),
       capped(time || 'All Day', MAX_LEN.time),
       capped(location || 'School Campus', MAX_LEN.location),

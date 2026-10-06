@@ -67,7 +67,7 @@ export function createNewsEvents() {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
+  if (str == null) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

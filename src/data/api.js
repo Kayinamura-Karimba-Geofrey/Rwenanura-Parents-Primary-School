@@ -10,8 +10,12 @@ export function getStoredToken() {
 }
 
 export function getStoredUser() {
-  const data = localStorage.getItem(USER_KEY);
-  return data ? JSON.parse(data) : null;
+  try {
+    const data = localStorage.getItem(USER_KEY);
+    return data ? JSON.parse(data) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function setAuthSession(token, user) {
@@ -111,12 +115,14 @@ export async function loginUser(email, password) {
   }
 }
 
-export async function signupUser(name, email, password, role = 'staff') {
+// Staff signups are created as 'pending' and return no session until an
+// administrator approves them.
+export async function signupUser(name, email, password) {
   try {
     const data = await apiRequest('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, role })
+      body: JSON.stringify({ name, email, password })
     });
 
     if (data.success && data.token) {
@@ -141,6 +147,37 @@ export async function checkAuthMe() {
     return data;
   } catch (err) {
     return { success: false };
+  }
+}
+
+export async function fetchStaffUsers() {
+  try {
+    return await apiRequest('/api/auth/users', { headers: getAuthHeaders() });
+  } catch (err) {
+    return { success: false, users: [] };
+  }
+}
+
+export async function updateStaffRole(id, role) {
+  try {
+    return await apiRequest(`/api/auth/users/${id}/role`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ role })
+    });
+  } catch (err) {
+    return { success: false, error: err.message || 'Failed to update role' };
+  }
+}
+
+export async function deleteStaffUser(id) {
+  try {
+    return await apiRequest(`/api/auth/users/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+  } catch (err) {
+    return { success: false, error: err.message || 'Failed to remove account' };
   }
 }
 
@@ -303,7 +340,8 @@ export async function sendAlumniMessage(messageData) {
 export async function reactToAlumniMessage(messageId) {
   try {
     return await apiRequest(`/api/alumni/messages/${messageId}/react`, {
-      method: 'POST'
+      method: 'POST',
+      headers: getAuthHeaders()
     });
   } catch (err) {
     console.error('reactToAlumniMessage error:', err);

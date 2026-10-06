@@ -25,7 +25,7 @@ import { createAlumniModal } from './components/AlumniModal.js';
 import { createAlumniSection } from './components/AlumniSection.js';
 import { createFooter } from './components/Footer.js';
 
-import { getStoredToken, checkAuthMe, clearAuthSession } from './data/api.js';
+import { getStoredToken, getStoredUser, checkAuthMe, clearAuthSession } from './data/api.js';
 import { initUserRole } from './data/userRole.js';
 import { onLanguageChange } from './data/i18n.js';
 
@@ -95,7 +95,10 @@ function initApp() {
 
   const handleOpenAdminConsole = () => {
     const token = getStoredToken();
-    if (token) {
+    const user = getStoredUser();
+    if (token && user && user.role === 'alumni') {
+      alumniModal.open('portal');
+    } else if (token) {
       adminDashboard.classList.add('active');
     } else {
       authModal.classList.add('active');

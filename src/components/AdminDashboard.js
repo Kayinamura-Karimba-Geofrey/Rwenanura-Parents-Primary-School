@@ -6,6 +6,9 @@ import {
   fetchNewsAndEvents,
   createNewsItem,
   deleteNewsItem,
+  fetchStaffUsers,
+  updateStaffRole,
+  deleteStaffUser,
   clearAuthSession,
   getStoredUser
 } from '../data/api.js';
@@ -47,9 +50,9 @@ export function createAdminDashboard(onLogout) {
           <div id="stat-total-apps" style="font-size: 1.5rem; font-weight: 800; color: var(--navy);">0</div>
         </div>
 
-        <div style="background: var(--gray-100); padding: 0.85rem; border-radius: var(--radius-sm); border-left: 4px solid #d97706;">
+        <div style="background: var(--gray-100); padding: 0.85rem; border-radius: var(--radius-sm); border-left: 4px solid var(--gold);">
           <div style="font-size: 0.75rem; color: var(--gray-600); text-transform: uppercase; font-weight: 600;">Pending Review</div>
-          <div id="stat-pending-apps" style="font-size: 1.5rem; font-weight: 800; color: #d97706;">0</div>
+          <div id="stat-pending-apps" style="font-size: 1.5rem; font-weight: 800; color: var(--gold);">0</div>
         </div>
 
         <div style="background: var(--gray-100); padding: 0.85rem; border-radius: var(--radius-sm); border-left: 4px solid var(--primary-light);">
@@ -82,6 +85,9 @@ export function createAdminDashboard(onLogout) {
         </button>
         <button class="dash-tab" data-tab="newsletter" style="padding: 0.6rem 1.25rem; font-weight: 600; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-600); cursor: pointer;">
           📧 Newsletter Mailing List
+        </button>
+        <button class="dash-tab" data-tab="staff" id="dash-staff-tab-btn" style="display: none; padding: 0.6rem 1.25rem; font-weight: 600; font-size: 0.9rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-600); cursor: pointer;">
+          🛡️ Staff Accounts
         </button>
       </div>
 
@@ -202,6 +208,16 @@ export function createAdminDashboard(onLogout) {
           </div>
         </div>
 
+        <!-- 4. STAFF ACCOUNTS TAB (admin only) -->
+        <div id="tab-content-staff" style="display: none;">
+          <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem;">
+            New staff sign-ups stay <strong>pending</strong> until approved here. Staff can view and update admissions; admins can also delete records and manage accounts.
+          </p>
+          <div id="dash-staff-container" style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <div style="text-align: center; padding: 2rem; color: var(--gray-500);">Loading accounts...</div>
+          </div>
+        </div>
+
       </div>
     </div>
   `;
@@ -228,7 +244,8 @@ export function createAdminDashboard(onLogout) {
   const tabContents = {
     admissions: modal.querySelector('#tab-content-admissions'),
     news: modal.querySelector('#tab-content-news'),
-    newsletter: modal.querySelector('#tab-content-newsletter')
+    newsletter: modal.querySelector('#tab-content-newsletter'),
+    staff: modal.querySelector('#tab-content-staff')
   };
 
   tabs.forEach(tab => {
@@ -238,10 +255,10 @@ export function createAdminDashboard(onLogout) {
         t.style.borderBottom = '3px solid transparent';
         t.style.color = 'var(--gray-600)';
       });
-      const selected = e.target.dataset.tab;
-      e.target.classList.add('active');
-      e.target.style.borderBottom = '3px solid var(--primary)';
-      e.target.style.color = 'var(--primary)';
+      const selected = e.currentTarget.dataset.tab;
+      e.currentTarget.classList.add('active');
+      e.currentTarget.style.borderBottom = '3px solid var(--primary)';
+      e.currentTarget.style.color = 'var(--primary)';
 
       Object.keys(tabContents).forEach(key => {
         tabContents[key].style.display = key === selected ? 'block' : 'none';
@@ -253,31 +270,37 @@ export function createAdminDashboard(onLogout) {
   let applications = [];
   let subscribers = [];
   let newsList = [];
+  let staffUsers = [];
   let appFilter = 'all';
 
   async function loadAllData() {
     const user = getStoredUser();
+    const isAdmin = user && user.role === 'admin';
     if (user) {
       modal.querySelector('#dash-user-name').textContent = user.name || 'Staff';
       modal.querySelector('#dash-user-email').textContent = user.email || '';
       modal.querySelector('#dash-user-role').textContent = (user.role || 'staff').toUpperCase();
     }
+    modal.querySelector('#dash-staff-tab-btn').style.display = isAdmin ? '' : 'none';
 
-    const [appRes, subRes, newsRes] = await Promise.all([
+    const [appRes, subRes, newsRes, staffRes] = await Promise.all([
       fetchApplications(),
       fetchSubscribers(),
-      fetchNewsAndEvents()
+      fetchNewsAndEvents(),
+      isAdmin ? fetchStaffUsers() : Promise.resolve({ success: false })
     ]);
 
     if (appRes.success) applications = appRes.applications || [];
     if (subRes.success) subscribers = subRes.subscribers || [];
     if (newsRes.success) newsList = newsRes.newsAndEvents || [];
+    if (staffRes.success) staffUsers = staffRes.users || [];
 
     updateCounters();
     renderGradeAnalytics();
     renderApplications();
     renderNews();
     renderSubscribers();
+    if (isAdmin) renderStaff();
   }
 
   function updateCounters() {
@@ -393,7 +416,7 @@ export function createAdminDashboard(onLogout) {
               <option value="Approved" ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
             </select>
             
-            <button class="app-delete-btn" data-id="${app.id}" style="color: #dc2626; border: 1px solid #fee2e2; background: #fef2f2; padding: 0.3rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.78rem; cursor: pointer;">
+            <button class="app-delete-btn" data-id="${app.id}" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.3rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.78rem; cursor: pointer;">
               🗑️
             </button>
           </div>
@@ -420,6 +443,9 @@ export function createAdminDashboard(onLogout) {
           if (item) item.status = newStatus;
           updateCounters();
           renderGradeAnalytics();
+        } else {
+          alert(res.error || 'Failed to update status.');
+          renderApplications();
         }
       });
     });
@@ -434,6 +460,8 @@ export function createAdminDashboard(onLogout) {
             updateCounters();
             renderGradeAnalytics();
             renderApplications();
+          } else {
+            alert(res.error || 'Failed to delete application.');
           }
         }
       });
@@ -444,8 +472,8 @@ export function createAdminDashboard(onLogout) {
   appFilterBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       appFilterBtns.forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      appFilter = e.target.dataset.filter;
+      e.currentTarget.classList.add('active');
+      appFilter = e.currentTarget.dataset.filter;
       renderApplications();
     });
   });
@@ -502,7 +530,7 @@ export function createAdminDashboard(onLogout) {
           <p style="font-size: 0.82rem; color: var(--gray-600); margin: 0.2rem 0 0 0;">${escapeHtml(item.summary)}</p>
         </div>
 
-        <button class="delete-news-btn" data-id="${item.id}" style="color: #dc2626; border: 1px solid #fee2e2; background: #fef2f2; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
+        <button class="delete-news-btn" data-id="${item.id}" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer;">
           Delete 🗑️
         </button>
       </div>
@@ -516,6 +544,8 @@ export function createAdminDashboard(onLogout) {
           if (res.success) {
             newsList = newsList.filter(n => n.id != id);
             renderNews();
+          } else {
+            alert(res.error || 'Failed to delete article.');
           }
         }
       });
@@ -554,6 +584,65 @@ export function createAdminDashboard(onLogout) {
     `;
   }
 
+  // 4. Render Staff Accounts (admin only)
+  const staffContainer = modal.querySelector('#dash-staff-container');
+  const ROLE_BADGE = {
+    pending: 'background: var(--gold-light); color: var(--gold-dark);',
+    staff: 'background: var(--primary-subtle); color: var(--primary);',
+    admin: 'background: var(--navy); color: var(--white);'
+  };
+
+  function renderStaff() {
+    const me = getStoredUser();
+    if (staffUsers.length === 0) {
+      staffContainer.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No staff accounts found.</div>`;
+      return;
+    }
+
+    staffContainer.innerHTML = staffUsers.map(u => {
+      const isSelf = me && me.id === u.id;
+      const actions = isSelf ? `<span style="font-size: 0.78rem; color: var(--gray-500);">(you)</span>` : `
+        ${u.role === 'pending' ? `<button class="btn btn-primary staff-role-btn" data-id="${u.id}" data-role="staff" style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">Approve</button>` : ''}
+        ${u.role === 'staff' ? `<button class="btn btn-outline staff-role-btn" data-id="${u.id}" data-role="admin" style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">Make Admin</button>` : ''}
+        ${u.role === 'admin' ? `<button class="btn btn-outline staff-role-btn" data-id="${u.id}" data-role="staff" style="padding: 0.3rem 0.7rem; font-size: 0.78rem;">Make Staff</button>` : ''}
+        <button class="staff-delete-btn" data-id="${u.id}" style="color: var(--danger); border: 1px solid var(--danger-border); background: var(--danger-subtle); padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.78rem; cursor: pointer;">
+          ${u.role === 'pending' ? 'Reject' : 'Remove'}
+        </button>`;
+      return `
+        <div style="background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <strong style="color: var(--navy);">${escapeHtml(u.name)}</strong>
+            <span style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 3px; margin-left: 0.35rem; ${ROLE_BADGE[u.role] || ''}">${escapeHtml(u.role)}</span>
+            <div style="font-size: 0.8rem; color: var(--gray-600);">${escapeHtml(u.email)} • joined ${new Date(u.created_at).toLocaleDateString()}</div>
+          </div>
+          <div style="display: flex; gap: 0.4rem; align-items: center;">${actions}</div>
+        </div>
+      `;
+    }).join('');
+
+    staffContainer.querySelectorAll('.staff-role-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const { id, role } = e.currentTarget.dataset;
+        const res = await updateStaffRole(id, role);
+        if (!res.success) return alert(res.error || 'Failed to update role.');
+        const item = staffUsers.find(u => u.id == id);
+        if (item) item.role = role;
+        renderStaff();
+      });
+    });
+
+    staffContainer.querySelectorAll('.staff-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        if (!confirm('Remove this account? The person will no longer be able to sign in.')) return;
+        const res = await deleteStaffUser(id);
+        if (!res.success) return alert(res.error || 'Failed to remove account.');
+        staffUsers = staffUsers.filter(u => u.id != id);
+        renderStaff();
+      });
+    });
+  }
+
   copySubBtn.addEventListener('click', () => {
     const emails = subscribers.map(s => s.email).join(', ');
     navigator.clipboard.writeText(emails);
@@ -572,7 +661,7 @@ export function createAdminDashboard(onLogout) {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
+  if (str == null) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

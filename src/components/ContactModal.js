@@ -114,8 +114,8 @@ export function createContactModal() {
     } else {
       feedbackEl.style.display = 'block';
       feedbackEl.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-      feedbackEl.style.color = '#dc2626';
-      feedbackEl.style.border = '1px solid #fca5a5';
+      feedbackEl.style.color = 'var(--danger)';
+      feedbackEl.style.border = '1px solid var(--danger-border)';
       feedbackEl.textContent = response.error || 'Failed to submit application. Please check details and try again.';
     }
 
@@ -127,7 +127,7 @@ export function createContactModal() {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
+  if (str == null) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

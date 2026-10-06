@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../db.js';
-import { authenticateToken, optionalAuthenticate, JWT_SECRET } from './auth.js';
+import { authenticateToken, optionalAuthenticate, validateAlumniProfile, JWT_SECRET } from './auth.js';
 
 const router = express.Router();
 
@@ -20,6 +20,14 @@ const typingLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 150,
   message: { success: false },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const reactionLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  message: { success: false, error: 'Too many reactions. Please slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -43,6 +51,12 @@ function sanitizeColor(value, fallback = '#0d5c3a') {
 }
 
 const MAX_MESSAGE_LEN = 1000;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Escape LIKE wildcards; queries must pair this with ESCAPE '\'.
+function likeTerm(search) {
+  return '%' + search.trim().replace(/[\\%_]/g, m => '\\' + m) + '%';
+}
 
 // Active Server-Sent Events (SSE) Subscribers for Real-Time Streaming
 const sseSubscribers = new Set();
@@ -123,6 +137,9 @@ router.get('/alumni/stream', (req, res) => {
 router.post('/alumni/typing', typingLimiter, authenticateToken, (req, res) => {
   try {
     const { channel = 'general', isTyping = true } = req.body || {};
+    if (!VALID_CHANNELS.includes(channel)) {
+      return res.status(400).json({ success: false });
+    }
     const authorName = req.user.name;
     const authorType = req.user.memberType || 'OB';
 
@@ -153,14 +170,14 @@ router.get('/alumni/messages', (req, res) => {
 
     const conditions = [];
 
-    if (channel && channel !== 'all') {
+    if (typeof channel === 'string' && channel !== 'all') {
       conditions.push('channel = ?');
       params.push(channel);
     }
 
-    if (search && search.trim()) {
-      conditions.push('(content LIKE ? OR author_name LIKE ? OR class_year LIKE ?)');
-      const term = `%${search.trim()}%`;
+    if (typeof search === 'string' && search.trim()) {
+      conditions.push("(content LIKE ? ESCAPE '\\' OR author_name LIKE ? ESCAPE '\\' OR class_year LIKE ? ESCAPE '\\')");
+      const term = likeTerm(search);
       params.push(term, term, term);
     }
 
@@ -196,7 +213,7 @@ router.post('/alumni/messages', messageLimiter, authenticateToken, (req, res) =>
       });
     }
 
-    const { channel = 'general', content } = req.body;
+    const { channel = 'general', content } = req.body || {};
 
     if (!content || typeof content !== 'string' || !content.trim()) {
       return res.status(400).json({
@@ -251,7 +268,7 @@ router.post('/alumni/messages', messageLimiter, authenticateToken, (req, res) =>
 });
 
 // POST /api/alumni/messages/:id/react - Like/Cheer a message
-router.post('/alumni/messages/:id/react', authenticateToken, (req, res) => {
+router.post('/alumni/messages/:id/react', reactionLimiter, authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const msgId = Number.parseInt(id, 10);
@@ -328,9 +345,9 @@ router.get('/alumni/members', optionalAuthenticate, (req, res) => {
     }
 
     if (search && typeof search === 'string' && search.trim()) {
-      conditions.push('(name LIKE ? OR class_year LIKE ? OR profession LIKE ? OR location LIKE ?)');
+      conditions.push("(name LIKE ? ESCAPE '\\' OR class_year LIKE ? ESCAPE '\\' OR profession LIKE ? ESCAPE '\\' OR location LIKE ? ESCAPE '\\')");
       // Escape LIKE wildcards so a user can't probe the whole table with '%'
-      const term = '%' + search.trim().replace(/[\\%_]/g, m => '\\' + m) + '%';
+      const term = likeTerm(search);
       params.push(term, term, term, term);
     }
 
@@ -380,7 +397,7 @@ router.get('/alumni/members', optionalAuthenticate, (req, res) => {
 // POST /api/alumni/members - Register in Alumni Network (with optional password for instant account creation)
 router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
   try {
-    const { name, email, phone, memberType, classYear, profession, location, bio, password } = req.body;
+    const { name, email, phone, memberType, classYear, profession, location, bio, password } = req.body || {};
 
     if (!name || !memberType || !classYear) {
       return res.status(400).json({
@@ -389,12 +406,21 @@ router.post('/alumni/members', memberRegisterLimiter, (req, res) => {
       });
     }
 
+    const profileError = validateAlumniProfile({ name, memberType, classYear, profession, location, phone, bio });
+    if (profileError) {
+      return res.status(400).json({ success: false, error: profileError });
+    }
+
+    if (email && (typeof email !== 'string' || email.trim().length > 200 || !EMAIL_RE.test(email.trim()))) {
+      return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
+    }
+
     const cleanType = memberType.toUpperCase() === 'OG' ? 'OG' : 'OB';
     const cleanEmail = email ? email.trim().toLowerCase() : null;
 
     // If a password is provided, an account is created; enforce the policy.
-    if (password && (typeof password !== 'string' || password.length < 8)) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
+    if (password && (typeof password !== 'string' || password.length < 8 || password.length > 128)) {
+      return res.status(400).json({ success: false, error: 'Password must be between 8 and 128 characters long.' });
     }
 
     const stmt = db.prepare(`

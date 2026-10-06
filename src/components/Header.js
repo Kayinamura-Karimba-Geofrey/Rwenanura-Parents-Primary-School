@@ -98,7 +98,7 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
 
     if (role === 'alumni' && user) {
       const shortName = (user.name || 'Alumnus').split(' ')[0];
-      const memberType = user.memberType || 'OB';
+      const memberType = user.memberType === 'OG' ? 'OG' : 'OB';
       topActionsContainer.innerHTML = `
         <button class="top-util-link parent-track-trigger" title="${t('top_track')}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -328,8 +328,8 @@ export function createHeader(onOpenApplyModal, onOpenTrackModal, onOpenAdminModa
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
-  return str
+  if (str == null) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

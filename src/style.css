@@ -6,10 +6,12 @@
   --primary-dark: #083e27;
   --primary-light: #168052;
   --primary-subtle: #e8f5ee;
+  --primary-border: #b7dcc8;
   
   --gold: #d97706;
   --gold-hover: #b45309;
   --gold-light: #fef3c7;
+  --gold-dark: var(--gold-dark);
   
   --navy: #0f172a;
   --navy-light: #1e293b;
@@ -25,7 +27,17 @@
   --gray-100: #f1f5f9;
   --gray-50: #f8fafc;
   
-  --white: #ffffff;
+  --white: var(--white);
+
+  /* Semantic Colors */
+  --danger: var(--danger);
+  --danger-dark: var(--danger-dark);
+  --danger-subtle: var(--danger-subtle);
+  --danger-border: var(--danger-border);
+
+  /* Flat image overlay (no gradients) */
+  --overlay: rgba(15, 23, 42, 0.72);
+  --overlay-strong: rgba(15, 23, 42, 0.85);
   
   /* Typography */
   --font-heading: 'Outfit', sans-serif;

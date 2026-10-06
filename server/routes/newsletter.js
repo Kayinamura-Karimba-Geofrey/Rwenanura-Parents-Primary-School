@@ -18,7 +18,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // POST /api/newsletter - Subscribe parent email to bulletin
 router.post('/newsletter', subscribeLimiter, (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.body || {};
 
     if (!email || typeof email !== 'string' || !EMAIL_RE.test(email)) {
       return res.status(400).json({

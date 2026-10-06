@@ -137,7 +137,7 @@
 .gallery-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.85) 75%, rgba(15, 23, 42, 0.95) 100%);
+  background: var(--overlay-strong);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -281,8 +281,8 @@
 }
 
 .lightbox-close-btn:hover {
-  background: #dc2626;
-  border-color: #dc2626;
+  background: var(--danger);
+  border-color: var(--danger);
 }
 
 /* Main Display Center Area */
