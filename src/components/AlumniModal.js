@@ -646,6 +646,8 @@ export function createAlumniModal() {
         });
       });
 
+      const input = composerWrap.querySelector('#alumni-message-input');
+
       // Typing indicator emit (throttled to 1 event/second instead of firing
       // per keystroke, which hammered the server and risked hitting the
       // server-side typing rate limit)
