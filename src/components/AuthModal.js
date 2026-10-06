@@ -1,4 +1,4 @@
-import { loginUser, registerUser } from '../data/api.js';
+import { loginUser, registerUser, resendVerification, requestPasswordReset, resetPassword } from '../data/api.js';
 
 const CLASS_LEVELS = ['Nursery 1', 'Nursery 2', 'Nursery 3', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
 
@@ -6,7 +6,10 @@ const CLASS_LEVELS = ['Nursery 1', 'Nursery 2', 'Nursery 3', 'P1', 'P2', 'P3', '
  * Unified Log In / Register modal for students, staff and administrators.
  * Alumni have their own sign-in inside the Alumni Network modal.
  *
- * The returned element exposes `open(tab)` where tab is 'login' or 'register'.
+ * The returned element exposes:
+ *  - open(tab)            tab: 'login' | 'register' | 'forgot'
+ *  - openReset(token)     show the "choose a new password" form
+ *  - showMessage(msg, isError)  open on the login tab with a status message
  */
 export function createAuthModal(onAuthSuccess, onOpenAlumni) {
   const modal = document.createElement('div');
@@ -41,6 +44,31 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
         <input class="auth-input" type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
 
         <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block">Log In</button>
+        <div class="auth-links">
+          <button type="button" class="btn-link-action" data-auth-goto="forgot">Forgot password?</button>
+          <button type="button" class="btn-link-action" id="auth-resend-btn" hidden>Resend confirmation email</button>
+        </div>
+      </form>
+
+      <!-- FORGOT PASSWORD FORM -->
+      <form id="auth-forgot-form" class="auth-form" hidden>
+        <p class="auth-help">Enter the email address of your account and we'll send you a link to choose a new password.</p>
+        <label class="auth-label" for="forgot-email">Email</label>
+        <input class="auth-input" type="email" id="forgot-email" required autocomplete="email" placeholder="you@example.com" />
+        <button type="submit" id="forgot-submit-btn" class="btn btn-primary btn-block">Send Reset Link</button>
+        <div class="auth-links">
+          <button type="button" class="btn-link-action" data-auth-goto="login">Back to Log In</button>
+        </div>
+      </form>
+
+      <!-- RESET PASSWORD FORM (opened from the emailed link) -->
+      <form id="auth-reset-form" class="auth-form" hidden>
+        <p class="auth-help">Choose a new password for your account.</p>
+        <label class="auth-label" for="reset-password">New Password</label>
+        <input class="auth-input" type="password" id="reset-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
+        <label class="auth-label" for="reset-password-confirm">Confirm New Password</label>
+        <input class="auth-input" type="password" id="reset-password-confirm" required minlength="8" maxlength="128" autocomplete="new-password" />
+        <button type="submit" id="reset-submit-btn" class="btn btn-primary btn-block">Save New Password</button>
       </form>
 
       <!-- REGISTER FORM -->
@@ -74,7 +102,7 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
         <input class="auth-input" type="password" id="register-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
 
         <button type="submit" id="register-submit-btn" class="btn btn-primary btn-block">Create Account</button>
-        <p class="auth-note" id="register-note">Student accounts are activated once a staff member approves them.</p>
+        <p class="auth-note" id="register-note">Confirm your email, then a staff member approves student accounts.</p>
       </form>
 
       <p class="auth-alumni-link">
@@ -86,6 +114,11 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
   const tabs = modal.querySelectorAll('.auth-tab');
   const loginForm = modal.querySelector('#auth-login-form');
   const registerForm = modal.querySelector('#auth-register-form');
+  const forgotForm = modal.querySelector('#auth-forgot-form');
+  const resetForm = modal.querySelector('#auth-reset-form');
+  const resendBtn = modal.querySelector('#auth-resend-btn');
+  const tabBar = modal.querySelector('.auth-tabs');
+  let resetToken = null;
   const feedback = modal.querySelector('#auth-feedback');
   const classField = modal.querySelector('#register-class-field');
   const registerNote = modal.querySelector('#register-note');
@@ -102,8 +135,12 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
 
   function switchTab(tab) {
     tabs.forEach(t => t.classList.toggle('active', t.dataset.authTab === tab));
+    tabBar.hidden = tab === 'forgot' || tab === 'reset';
     loginForm.hidden = tab !== 'login';
     registerForm.hidden = tab !== 'register';
+    forgotForm.hidden = tab !== 'forgot';
+    resetForm.hidden = tab !== 'reset';
+    resendBtn.hidden = true;
     feedback.hidden = true;
   }
 
@@ -112,9 +149,22 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
     modal.classList.add('active');
   };
 
+  modal.openReset = (token) => {
+    resetToken = token;
+    modal.open('reset');
+  };
+
+  modal.showMessage = (msg, isError = false) => {
+    modal.open('login');
+    showFeedback(msg, isError);
+  };
+
   modal.querySelector('.modal-close').addEventListener('click', close);
   modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
   tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.authTab)));
+  modal.querySelectorAll('[data-auth-goto]').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.authGoto));
+  });
 
   modal.querySelector('#auth-open-alumni').addEventListener('click', () => {
     close();
@@ -127,8 +177,8 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
       const isStudent = radio.value === 'student' && radio.checked;
       classField.hidden = !isStudent;
       registerNote.textContent = isStudent
-        ? 'Student accounts are activated once a staff member approves them.'
-        : 'Staff accounts are activated once an administrator approves them.';
+        ? 'Confirm your email, then a staff member approves student accounts.'
+        : 'Confirm your email, then an administrator approves staff accounts.';
     });
   });
 
@@ -153,7 +203,48 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
       if (onAuthSuccess) onAuthSuccess(res.user);
     } else {
       showFeedback(res.error || 'Invalid credentials.', true);
+      resendBtn.hidden = res.code !== 'EMAIL_NOT_VERIFIED';
     }
+  });
+
+  resendBtn.addEventListener('click', async () => {
+    resendBtn.disabled = true;
+    const res = await resendVerification(modal.querySelector('#login-email').value);
+    resendBtn.disabled = false;
+    resendBtn.hidden = true;
+    showFeedback(res.success ? res.message : (res.error || 'Failed to send confirmation email.'), !res.success);
+  });
+
+  forgotForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = modal.querySelector('#forgot-submit-btn');
+    btn.disabled = true;
+    const res = await requestPasswordReset(modal.querySelector('#forgot-email').value);
+    btn.disabled = false;
+    if (res.success) {
+      forgotForm.reset();
+      switchTab('login');
+    }
+    showFeedback(res.success ? res.message : (res.error || 'Failed to start password reset.'), !res.success);
+  });
+
+  resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = modal.querySelector('#reset-password').value;
+    if (password !== modal.querySelector('#reset-password-confirm').value) {
+      showFeedback('The two passwords do not match.', true);
+      return;
+    }
+    const btn = modal.querySelector('#reset-submit-btn');
+    btn.disabled = true;
+    const res = await resetPassword(resetToken, password);
+    btn.disabled = false;
+    if (res.success) {
+      resetToken = null;
+      resetForm.reset();
+      switchTab('login');
+    }
+    showFeedback(res.success ? res.message : (res.error || 'Failed to reset password.'), !res.success);
   });
 
   registerForm.addEventListener('submit', async (e) => {
