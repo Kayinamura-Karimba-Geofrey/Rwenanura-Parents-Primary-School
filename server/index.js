@@ -167,6 +167,12 @@ if (fs.existsSync(distPath)) {
     setHeaders(res, filePath) {
       if (filePath.endsWith('.html')) {
         res.setHeader('Cache-Control', 'no-cache');
+      } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+        // Vite puts a content hash in these file names: cache "forever"
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else {
+        // Photos, fonts, prospectus: may be replaced under the same name
+        res.setHeader('Cache-Control', 'public, max-age=86400');
       }
     },
   }));
@@ -176,4 +182,12 @@ if (fs.existsSync(distPath)) {
 // Start Express Backend
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 RPPS Unified Express & Frontend Server running on http://localhost:${PORT}`);
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.SMTP_HOST) {
+      console.warn('⚠️  SMTP_HOST is not set: confirmation and password-reset emails will NOT be sent.');
+    }
+    if (!process.env.APP_URL) {
+      console.warn('⚠️  APP_URL is not set: email links and the sitemap will point to localhost.');
+    }
+  }
 });
