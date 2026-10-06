@@ -45,7 +45,7 @@ export function createAcademics(onOpenApplyModal) {
         ${localizedPrograms.map(prog => `
           <div class="program-card">
             <div class="program-img">
-              <img src="${prog.image}" alt="${prog.title}" loading="lazy" />
+              <img src="${prog.image}" alt="${prog.title}" loading="lazy" decoding="async" />
               <div class="program-grade-badge">${prog.grades}</div>
             </div>
             
