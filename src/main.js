@@ -98,16 +98,23 @@ function initApp() {
     const user = getStoredUser();
     if (token && user && user.role === 'alumni') {
       alumniModal.open('portal');
-    } else if (token) {
+    } else if (token && user && (user.role === 'staff' || user.role === 'admin')) {
       adminDashboard.classList.add('active');
     } else {
-      authModal.classList.add('active');
+      authModal.open('login');
     }
+  };
+
+  const handleOpenAuthModal = (tab = 'login') => {
+    authModal.open(tab);
   };
 
   const handleAuthSuccess = (user) => {
     if (user && user.role === 'alumni') {
       alumniModal.open('portal');
+    } else if (user && user.role === 'student') {
+      // Calendar section renders once its data loads after sign-in
+      setTimeout(() => document.querySelector('#calendar')?.scrollIntoView({ behavior: 'smooth' }), 400);
     } else {
       adminDashboard.classList.add('active');
     }
@@ -117,11 +124,11 @@ function initApp() {
     // Session cleared
   };
 
-  authModal = createAuthModal(handleAuthSuccess);
+  authModal = createAuthModal(handleAuthSuccess, () => handleOpenAlumniModal('portal'));
   adminDashboard = createAdminDashboard(handleLogout);
 
   // Mount Components
-  app.appendChild(createHeader(handleOpenApplyModal, handleOpenTrackModal, handleOpenAdminConsole, handleOpenAlumniModal));
+  app.appendChild(createHeader(handleOpenApplyModal, handleOpenTrackModal, handleOpenAdminConsole, handleOpenAlumniModal, handleOpenAuthModal));
   app.appendChild(createHero(handleOpenApplyModal));
   app.appendChild(createStats());
   app.appendChild(createAcademics(handleOpenApplyModal));
