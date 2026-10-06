@@ -213,6 +213,12 @@ export function initDatabase() {
     )
   `);
 
+  // Full article text for news items ("Read more"); summary stays the teaser.
+  const newsColumns = db.prepare('PRAGMA table_info(news_events)').all().map(c => c.name);
+  if (!newsColumns.includes('body')) {
+    db.exec('ALTER TABLE news_events ADD COLUMN body TEXT');
+  }
+
   // 7. Academic calendar (editable by staff). Localized text ({en, rw, fr})
   // is stored as JSON.
   db.exec(`
