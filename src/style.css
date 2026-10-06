@@ -11,7 +11,7 @@
   --gold: #d97706;
   --gold-hover: #b45309;
   --gold-light: #fef3c7;
-  --gold-dark: var(--gold-dark);
+  --gold-dark: #92400e;
   
   --navy: #0f172a;
   --navy-light: #1e293b;
@@ -27,13 +27,13 @@
   --gray-100: #f1f5f9;
   --gray-50: #f8fafc;
   
-  --white: var(--white);
+  --white: #ffffff;
 
   /* Semantic Colors */
-  --danger: var(--danger);
-  --danger-dark: var(--danger-dark);
-  --danger-subtle: var(--danger-subtle);
-  --danger-border: var(--danger-border);
+  --danger: #dc2626;
+  --danger-dark: #991b1b;
+  --danger-subtle: #fef2f2;
+  --danger-border: #fecaca;
 
   /* Flat image overlay (no gradients) */
   --overlay: rgba(15, 23, 42, 0.72);
@@ -68,6 +68,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keep section headings clear of the sticky header on anchor jumps */
+  scroll-padding-top: 110px;
   font-size: 16px;
 }
 
@@ -89,6 +91,10 @@ h1, h2, h3, h4, h5, h6 {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 button {
@@ -176,7 +182,10 @@ img {
   color: var(--gray-600);
 }
 
-/* Buttons */
+/* Buttons
+ * Every button uses the single brand color (--primary): solid for main
+ * actions, outlined for secondary ones. Legacy variant classes (btn-gold,
+ * btn-glass) map onto the same color so markup stays consistent. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -202,15 +211,21 @@ img {
 }
 
 .btn-gold {
-  background-color: var(--gold);
+  background-color: var(--primary);
   color: var(--white);
-  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+  box-shadow: 0 4px 12px rgba(13, 92, 58, 0.25);
 }
 
 .btn-gold:hover {
-  background-color: var(--gold-hover);
+  background-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.35);
+  box-shadow: 0 6px 20px rgba(13, 92, 58, 0.35);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-outline {
@@ -227,25 +242,76 @@ img {
 
 .btn-white {
   background-color: var(--white);
-  color: var(--navy);
-  box-shadow: var(--shadow-md);
+  color: var(--primary);
+  border: 2px solid var(--primary);
 }
 
 .btn-white:hover {
-  background-color: var(--gray-100);
+  background-color: var(--primary);
+  color: var(--white);
   transform: translateY(-2px);
 }
 
+/* Outline button for dark backgrounds (hero, banners) */
 .btn-glass {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
+  background: transparent;
   color: var(--white);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--primary-light);
 }
 
 .btn-glass:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--primary);
+  border-color: var(--primary);
   transform: translateY(-2px);
+}
+
+/* Sizes */
+.btn-xs {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+  gap: 0.35rem;
+}
+
+.btn-xs.btn-outline {
+  border-width: 1px;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.05rem;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Filter / segmented buttons (admin dashboard) */
+.filter-btn {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--primary-border);
+  background: var(--white);
+  color: var(--primary);
+  transition: var(--transition);
+}
+
+.filter-btn:hover {
+  background: var(--primary-subtle);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
 }
 
 /* Animations */
@@ -255,8 +321,8 @@ img {
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3); }
-  50% { box-shadow: 0 0 25px rgba(217, 119, 6, 0.65), 0 0 35px rgba(13, 92, 58, 0.4); }
+  0%, 100% { box-shadow: 0 4px 12px rgba(13, 92, 58, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(13, 92, 58, 0.55); }
 }
 
 @keyframes floatSlow {
