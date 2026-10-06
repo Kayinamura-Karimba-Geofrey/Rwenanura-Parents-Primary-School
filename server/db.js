@@ -9,13 +9,14 @@ import { academicTerms as seedTerms, calendarEvents as seedEvents } from './cale
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure data directory exists
-const dataDir = path.join(__dirname, 'data');
+// Database file: server/data/database.sqlite unless DB_PATH is set (used by
+// the test suite to run against a throwaway database).
+const dbPath = process.env.DB_PATH ? path.resolve(process.env.DB_PATH) : path.join(__dirname, 'data', 'database.sqlite');
+const dataDir = path.dirname(dbPath);
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'database.sqlite');
 const db = new Database(dbPath);
 
 // Enable WAL mode for high performance
