@@ -1,0 +1,38 @@
+# systemd service for the RPPS website/API.
+#
+# Install (as root), assuming the app is in /srv/rpps owned by user "rpps":
+#   cp deploy/rpps.service /etc/systemd/system/rpps.service
+#   systemctl daemon-reload && systemctl enable --now rpps
+#   journalctl -u rpps -f        # logs
+#
+# Settings are read from /srv/rpps/.env (NODE_ENV=production, JWT_SECRET, ...).
+
+[Unit]
+Description=Rwenanura Parents Primary School website and API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rpps
+Group=rpps
+WorkingDirectory=/srv/rpps
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node server/index.js
+Restart=on-failure
+RestartSec=5
+
+# Hardening: the app may only write its data folder
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/rpps/server/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
