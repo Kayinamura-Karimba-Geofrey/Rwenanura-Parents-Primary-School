@@ -155,6 +155,16 @@ export function initDatabase() {
     )
   `);
 
+  // 5b. One like per user per message (likes_count is kept in sync)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS alumni_message_likes (
+      message_id INTEGER NOT NULL REFERENCES alumni_messages(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (message_id, user_id)
+    )
+  `);
+
   // 6. Alumni Members Directory Table
   db.exec(`
     CREATE TABLE IF NOT EXISTS alumni_members (
