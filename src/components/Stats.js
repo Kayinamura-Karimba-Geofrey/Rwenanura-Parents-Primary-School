@@ -1,5 +1,6 @@
 import { quickStats } from '../data/schoolData.js';
 import { t } from '../data/i18n.js';
+import { onCleanup } from '../utils/lifecycle.js';
 
 export function createStats() {
   const container = document.createElement('div');
@@ -57,6 +58,7 @@ export function createStats() {
       }
     });
   }, { threshold: 0.3 });
+  onCleanup(() => observer.disconnect());
 
   observer.observe(container);
 
