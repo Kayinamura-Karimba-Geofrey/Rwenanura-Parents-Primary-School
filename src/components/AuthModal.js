@@ -1,174 +1,188 @@
-import { loginUser, signupUser } from '../data/api.js';
+import { loginUser, registerUser } from '../data/api.js';
 
-export function createAuthModal(onAuthSuccess) {
+const CLASS_LEVELS = ['Nursery 1', 'Nursery 2', 'Nursery 3', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+
+/**
+ * Unified Log In / Register modal for students, staff and administrators.
+ * Alumni have their own sign-in inside the Alumni Network modal.
+ *
+ * The returned element exposes `open(tab)` where tab is 'login' or 'register'.
+ */
+export function createAuthModal(onAuthSuccess, onOpenAlumni) {
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
   modal.id = 'auth-modal';
 
   modal.innerHTML = `
-    <div class="modal-dialog" style="max-width: 480px; width: 90%;">
+    <div class="modal-dialog auth-dialog">
       <button class="modal-close" aria-label="Close modal">&times;</button>
-      
-      <div style="text-align: center; margin-bottom: 1.25rem;">
-        <div class="logo-crest" style="width: 45px; height: 45px; margin: 0 auto 0.75rem auto;">
+
+      <div class="auth-header">
+        <div class="logo-crest auth-crest">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </div>
-        <h3 style="font-size: 1.5rem; color: var(--navy); margin-bottom: 0.25rem;">Staff & Admin Portal</h3>
-        <p style="color: var(--gray-600); font-size: 0.88rem;">Authenticate to access school management dashboard</p>
+        <h3>RPPS School Portal</h3>
+        <p>For pupils, teachers and school administration</p>
       </div>
 
-      <!-- Tabs -->
-      <div style="display: flex; border-bottom: 2px solid var(--gray-200); margin-bottom: 1.25rem;">
-        <button id="tab-login-btn" style="flex: 1; padding: 0.75rem; font-weight: 700; font-size: 0.95rem; border: none; background: none; border-bottom: 3px solid var(--primary); color: var(--primary); cursor: pointer;">
-          Login
-        </button>
-        <button id="tab-signup-btn" style="flex: 1; padding: 0.75rem; font-weight: 600; font-size: 0.95rem; border: none; background: none; border-bottom: 3px solid transparent; color: var(--gray-500); cursor: pointer;">
-          Request Access
-        </button>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" data-auth-tab="login" role="tab">Log In</button>
+        <button class="auth-tab" data-auth-tab="register" role="tab">Register</button>
       </div>
 
-      <!-- Feedback Banner -->
-      <div id="auth-feedback" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.88rem;"></div>
+      <div id="auth-feedback" class="auth-feedback" role="status" hidden></div>
 
       <!-- LOGIN FORM -->
-      <form id="auth-login-form">
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Staff Email</label>
-          <input type="email" id="login-email" required placeholder="admin@rwenanura.ac.rw" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
-        </div>
+      <form id="auth-login-form" class="auth-form">
+        <label class="auth-label" for="login-email">Email</label>
+        <input class="auth-input" type="email" id="login-email" required autocomplete="username" placeholder="you@example.com" />
 
-        <div style="margin-bottom: 1.25rem;">
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Password</label>
-          <input type="password" id="login-password" required placeholder="••••••••" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
-        </div>
+        <label class="auth-label" for="login-password">Password</label>
+        <input class="auth-input" type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
 
-        <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
-          Sign In to Dashboard
-        </button>
+        <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block">Log In</button>
       </form>
 
-      <!-- SIGNUP FORM -->
-      <form id="auth-signup-form" style="display: none;">
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Full Name *</label>
-          <input type="text" id="signup-name" required placeholder="e.g. Teacher Eric Mutabazi" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
+      <!-- REGISTER FORM -->
+      <form id="auth-register-form" class="auth-form" hidden>
+        <span class="auth-label">I am registering as</span>
+        <div class="auth-type-toggle">
+          <label class="auth-type-option">
+            <input type="radio" name="account-type" value="student" checked />
+            <span>🎒 Student</span>
+          </label>
+          <label class="auth-type-option">
+            <input type="radio" name="account-type" value="staff" />
+            <span>🧑‍🏫 Staff</span>
+          </label>
         </div>
 
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Official Email *</label>
-          <input type="email" id="signup-email" required placeholder="eric@rwenanura.ac.rw" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
+        <label class="auth-label" for="register-name">Full Name</label>
+        <input class="auth-input" type="text" id="register-name" required maxlength="120" autocomplete="name" placeholder="e.g. Aline Uwase" />
+
+        <label class="auth-label" for="register-email">Email</label>
+        <input class="auth-input" type="email" id="register-email" required maxlength="200" autocomplete="email" placeholder="you@example.com" />
+
+        <div id="register-class-field">
+          <label class="auth-label" for="register-class">Class</label>
+          <select class="auth-input" id="register-class">
+            ${CLASS_LEVELS.map(c => `<option value="${c}">${c}</option>`).join('')}
+          </select>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
-          <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Password *</label>
-            <input type="password" id="signup-password" required minlength="8" placeholder="Min 8 chars" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem;" />
-          </div>
+        <label class="auth-label" for="register-password">Password</label>
+        <input class="auth-input" type="password" id="register-password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
 
-          <div>
-            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem;">Account Type</label>
-            <input type="text" value="School Staff" disabled style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 0.9rem; background: var(--gray-100); color: var(--gray-500);" />
-          </div>
-        </div>
-
-        <button type="submit" id="signup-submit-btn" class="btn btn-gold" style="width: 100%; padding: 0.85rem;">
-          Submit Access Request
-        </button>
-        <p style="font-size: 0.78rem; color: var(--gray-500); margin-top: 0.6rem; text-align: center;">An administrator must approve new staff accounts before they can sign in.</p>
+        <button type="submit" id="register-submit-btn" class="btn btn-primary btn-block">Create Account</button>
+        <p class="auth-note" id="register-note">Student accounts are activated once a staff member approves them.</p>
       </form>
+
+      <p class="auth-alumni-link">
+        Former pupil? <button type="button" class="btn-link-action" id="auth-open-alumni">Join the Alumni Network</button>
+      </p>
     </div>
   `;
 
-  const closeBtn = modal.querySelector('.modal-close');
-  closeBtn.addEventListener('click', () => modal.classList.remove('active'));
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-
-  const tabLogin = modal.querySelector('#tab-login-btn');
-  const tabSignup = modal.querySelector('#tab-signup-btn');
+  const tabs = modal.querySelectorAll('.auth-tab');
   const loginForm = modal.querySelector('#auth-login-form');
-  const signupForm = modal.querySelector('#auth-signup-form');
+  const registerForm = modal.querySelector('#auth-register-form');
   const feedback = modal.querySelector('#auth-feedback');
+  const classField = modal.querySelector('#register-class-field');
+  const registerNote = modal.querySelector('#register-note');
+
+  function close() {
+    modal.classList.remove('active');
+  }
 
   function showFeedback(msg, isError = false) {
-    feedback.style.display = 'block';
-    feedback.style.backgroundColor = isError ? 'rgba(220, 38, 38, 0.1)' : 'rgba(13, 92, 58, 0.1)';
-    feedback.style.color = isError ? 'var(--danger)' : 'var(--primary)';
-    feedback.style.border = `1px solid ${isError ? 'var(--danger-border)' : 'var(--primary-light)'}`;
+    feedback.hidden = false;
+    feedback.classList.toggle('is-error', isError);
     feedback.textContent = msg;
   }
 
-  tabLogin.addEventListener('click', () => {
-    tabLogin.style.borderBottom = '3px solid var(--primary)';
-    tabLogin.style.color = 'var(--primary)';
-    tabSignup.style.borderBottom = '3px solid transparent';
-    tabSignup.style.color = 'var(--gray-500)';
-    loginForm.style.display = 'block';
-    signupForm.style.display = 'none';
-    feedback.style.display = 'none';
+  function switchTab(tab) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.authTab === tab));
+    loginForm.hidden = tab !== 'login';
+    registerForm.hidden = tab !== 'register';
+    feedback.hidden = true;
+  }
+
+  modal.open = (tab = 'login') => {
+    switchTab(tab);
+    modal.classList.add('active');
+  };
+
+  modal.querySelector('.modal-close').addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.authTab)));
+
+  modal.querySelector('#auth-open-alumni').addEventListener('click', () => {
+    close();
+    if (onOpenAlumni) onOpenAlumni();
   });
 
-  tabSignup.addEventListener('click', () => {
-    tabSignup.style.borderBottom = '3px solid var(--gold)';
-    tabSignup.style.color = 'var(--navy)';
-    tabLogin.style.borderBottom = '3px solid transparent';
-    tabLogin.style.color = 'var(--gray-500)';
-    signupForm.style.display = 'block';
-    loginForm.style.display = 'none';
-    feedback.style.display = 'none';
+  // Class selection only applies to student accounts
+  registerForm.querySelectorAll('input[name="account-type"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isStudent = radio.value === 'student' && radio.checked;
+      classField.hidden = !isStudent;
+      registerNote.textContent = isStudent
+        ? 'Student accounts are activated once a staff member approves them.'
+        : 'Staff accounts are activated once an administrator approves them.';
+    });
   });
 
-  // Login Form Submission
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = modal.querySelector('#login-email').value;
-    const password = modal.querySelector('#login-password').value;
     const btn = modal.querySelector('#login-submit-btn');
-
     btn.disabled = true;
-    btn.textContent = 'Authenticating...';
-    feedback.style.display = 'none';
+    btn.textContent = 'Signing in...';
+    feedback.hidden = true;
 
-    const res = await loginUser(email, password);
+    const res = await loginUser(
+      modal.querySelector('#login-email').value,
+      modal.querySelector('#login-password').value
+    );
+
+    btn.disabled = false;
+    btn.textContent = 'Log In';
 
     if (res.success) {
-      showFeedback('Login successful! Redirecting to dashboard...', false);
-      setTimeout(() => {
-        modal.classList.remove('active');
-        if (onAuthSuccess) onAuthSuccess(res.user);
-      }, 500);
+      loginForm.reset();
+      close();
+      if (onAuthSuccess) onAuthSuccess(res.user);
     } else {
       showFeedback(res.error || 'Invalid credentials.', true);
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Sign In to Dashboard';
   });
 
-  // Signup Form Submission
-  signupForm.addEventListener('submit', async (e) => {
+  registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = modal.querySelector('#signup-name').value;
-    const email = modal.querySelector('#signup-email').value;
-    const password = modal.querySelector('#signup-password').value;
-    const btn = modal.querySelector('#signup-submit-btn');
-
+    const btn = modal.querySelector('#register-submit-btn');
+    const accountType = registerForm.querySelector('input[name="account-type"]:checked').value;
     btn.disabled = true;
     btn.textContent = 'Creating account...';
-    feedback.style.display = 'none';
+    feedback.hidden = true;
 
-    const res = await signupUser(name, email, password);
+    const res = await registerUser({
+      accountType,
+      name: modal.querySelector('#register-name').value,
+      email: modal.querySelector('#register-email').value,
+      password: modal.querySelector('#register-password').value,
+      classLevel: accountType === 'student' ? modal.querySelector('#register-class').value : undefined
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
 
     if (res.success) {
-      // Account starts as 'pending' until an administrator approves it.
-      signupForm.reset();
-      tabLogin.click();
-      showFeedback(res.message || 'Account request submitted. An administrator must approve it before you can sign in.', false);
+      registerForm.reset();
+      classField.hidden = false;
+      switchTab('login');
+      showFeedback(res.message || 'Registration received. You can log in once your account is approved.');
     } else {
       showFeedback(res.error || 'Failed to create account.', true);
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Submit Access Request';
   });
 
   return modal;
