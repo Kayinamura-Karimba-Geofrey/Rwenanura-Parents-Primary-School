@@ -33,6 +33,7 @@ import { createFooter } from './components/Footer.js';
 import { isSignedIn, getStoredUser, checkAuthMe, verifyEmail } from './data/api.js';
 import { initUserRole } from './data/userRole.js';
 import { onLanguageChange } from './data/i18n.js';
+import { resetScope, onCleanup } from './utils/lifecycle.js';
 
 function setupScrollReveal() {
   const observerOptions = {
@@ -54,6 +55,8 @@ function setupScrollReveal() {
     '.section-header, .program-card, .facility-card, .gallery-card, .term-summary-card, .calendar-event-card, .news-card, .step-card, .stat-card, .value-item, .headteacher-card, .testimonials-slider, .faq-item, .alumni-pillar-card, .spotlight-card, .metric-pill'
   );
 
+  onCleanup(() => observer.disconnect());
+
   elementsToReveal.forEach((el, idx) => {
     el.classList.add('reveal-on-scroll');
     const delayClass = `reveal-delay-${(idx % 4) + 1}`;
@@ -68,6 +71,8 @@ let currentInfoModal = null;
 let currentTrackModal = null;
 
 function initApp() {
+  // Tear down listeners, timers and streams of the previous build (language change)
+  resetScope();
   initUserRole();
 
   // Validate the cookie session on load so expired sessions and changed roles
