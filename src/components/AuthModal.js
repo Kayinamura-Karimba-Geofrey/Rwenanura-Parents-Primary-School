@@ -90,7 +90,7 @@ export function createAuthModal(onAuthSuccess, onOpenAlumni) {
 
         <div id="register-username-field">
           <label class="form-label" for="register-username">Username</label>
-          <input class="form-input" type="text" id="register-username" minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,29}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. aline.uwase" />
+          <input class="form-input" type="text" id="register-username" minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._\\-]{2,29}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. aline.uwase" />
         </div>
 
         <label class="form-label" for="register-email" id="register-email-label">Email <span class="auth-optional">(optional - a parent's email is fine)</span></label>
