@@ -90,7 +90,7 @@ router.post('/news', authenticateToken, requireRole('staff', 'admin'), (req, res
       capped(summary, MAX_LEN.summary)
     );
 
-    console.log(`📢 New Article Published: "${title}" (${category})`);
+    console.log(`📢 News item #${info.lastInsertRowid} published (user #${req.user.id})`);
 
     res.status(201).json({
       success: true,
