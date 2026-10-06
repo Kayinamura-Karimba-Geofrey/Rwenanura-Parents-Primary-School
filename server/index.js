@@ -14,6 +14,7 @@ import newsRouter from './routes/news.js';
 import authRouter from './routes/auth.js';
 import alumniRouter from './routes/alumni.js';
 import calendarRouter from './routes/calendar.js';
+import seoRouter from './routes/seo.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,19 +146,31 @@ app.use((err, req, res, next) => {
   });
 });
 
+// robots.txt, sitemap.xml and server-rendered article pages (/news/:id)
+app.use(seoRouter);
+
 // Serve frontend build if dist directory exists
 const distPath = path.join(__dirname, '../dist');
 if (fs.existsSync(distPath)) {
+  // index.html carries __APP_URL__ placeholders (canonical link, social
+  // preview image) that need the public address of this deployment.
+  const appUrl = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/+$/, '');
+  const indexHtml = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8').replaceAll('__APP_URL__', appUrl);
+  const sendIndex = (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.type('html').send(indexHtml);
+  };
+
+  app.get('/', sendIndex);
   app.use(express.static(distPath, {
+    index: false,
     setHeaders(res, filePath) {
       if (filePath.endsWith('.html')) {
         res.setHeader('Cache-Control', 'no-cache');
       }
     },
   }));
-  app.use((req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
+  app.use(sendIndex);
 }
 
 // Start Express Backend
