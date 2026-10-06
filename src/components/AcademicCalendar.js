@@ -3,6 +3,7 @@ import { fetchCalendar } from '../data/api.js';
 import { canViewCalendar, onAuthChange } from '../data/userRole.js';
 import { t, getLanguage } from '../data/i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { currentScope } from '../utils/lifecycle.js';
 
 /**
  * School calendar section. Only signed-in students, staff and admins can see
@@ -286,7 +287,7 @@ export function createAcademicCalendar() {
 
   refresh();
   onAuthChange(refresh);
-  window.addEventListener('rpps-calendar-changed', refresh);
+  window.addEventListener('rpps-calendar-changed', refresh, { signal: currentScope() });
 
   return section;
 }
