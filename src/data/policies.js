@@ -27,7 +27,7 @@ export const privacyPolicy = {
     <p>Applications, subscriber lists and account details are visible only to authorised school staff. We do not sell or share personal data with third parties, except where required by law.</p>
 
     <h4>Cookies and browser storage</h4>
-    <p>We use one essential cookie to keep you signed in. Your browser also remembers your language choice and basic profile details so pages display correctly. We use no advertising or tracking cookies. Some fonts and images are loaded from Google Fonts and Unsplash, which receive your IP address when they deliver them.</p>
+    <p>We use one essential cookie to keep you signed in. Your browser also remembers your language choice and basic profile details so pages display correctly. We use no advertising or tracking cookies. Fonts are loaded from Google Fonts, which receives your IP address when it delivers them.</p>
 
     <h4>How long we keep it</h4>
     <p>Application records are kept for as long as needed for admissions and school records. Accounts and alumni profiles are kept until you ask us to delete them or the account is closed.</p>
