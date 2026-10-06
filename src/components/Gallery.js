@@ -1,6 +1,7 @@
 import { galleryItems } from '../data/galleryData.js';
 import { t, getLanguage } from '../data/i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { currentScope } from '../utils/lifecycle.js';
 
 export function createGallery() {
   const section = document.createElement('section');
@@ -242,7 +243,7 @@ export function createGallery() {
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowRight') showNext();
     if (e.key === 'ArrowLeft') showPrev();
-  });
+  }, { signal: currentScope() });
 
   // Initial Grid Render
   renderGrid();
