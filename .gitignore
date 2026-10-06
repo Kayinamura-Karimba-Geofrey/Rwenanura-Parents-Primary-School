@@ -7,6 +7,7 @@ dist/
 .env
 server/data/*.sqlite*
 server/data/initial-admin-password.txt
+server/data/backups/
 
 # Security & Hardening rules
 *.bat
