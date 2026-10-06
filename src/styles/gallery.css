@@ -281,8 +281,8 @@
 }
 
 .lightbox-close-btn:hover {
-  background: var(--danger);
-  border-color: var(--danger);
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 /* Main Display Center Area */
