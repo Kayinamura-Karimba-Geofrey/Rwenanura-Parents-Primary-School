@@ -21,7 +21,7 @@ export function createTestimonials() {
         <p class="testimonial-text" id="testimonial-quote">"${testimonials[0].quote}"</p>
         
         <div class="author-info">
-          <img src="${testimonials[0].avatar}" alt="${testimonials[0].author}" class="author-avatar" id="testimonial-avatar" />
+          <img src="${testimonials[0].avatar}" alt="${testimonials[0].author}" class="author-avatar" id="testimonial-avatar" loading="lazy" decoding="async" width="54" height="54" />
           <div class="author-text">
             <h4 id="testimonial-author" class="author-name">${testimonials[0].author}</h4>
             <p id="testimonial-role" class="author-role">${testimonials[0].role}</p>
