@@ -451,23 +451,6 @@ export async function fetchAlumniMembers(type = '', search = '') {
   }
 }
 
-export async function registerAlumniMember(memberData) {
-  try {
-    const data = await apiRequest('/api/alumni/members', {
-      method: 'POST',
-      body: JSON.stringify(memberData)
-    });
-
-    if (data.success && data.user) {
-      setAuthSession(data.user);
-    }
-    return data;
-  } catch (err) {
-    console.error('registerAlumniMember error:', err);
-    return { success: false, error: err.message || 'Failed to register alumni member' };
-  }
-}
-
 export async function registerAlumniAccount(accountData) {
   try {
     const data = await apiRequest('/api/auth/alumni-register', {
