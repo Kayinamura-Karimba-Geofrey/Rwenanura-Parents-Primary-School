@@ -99,18 +99,21 @@ function startEmailVerification(userId, email, name, payload = null) {
 // role changes (approval, demotion) take effect immediately instead of when
 // the 14-day token expires.
 function attachLiveUser(req, decoded) {
-  const dbUser = db.prepare('SELECT id, name, email, role, password_changed_at FROM users WHERE id = ?').get(decoded.id);
+  const dbUser = db.prepare('SELECT id, name, email, role, session_version FROM users WHERE id = ?').get(decoded.id);
   if (!dbUser || dbUser.role === 'pending') return false;
-  // Sessions issued before the last password reset are revoked.
-  if (dbUser.password_changed_at && decoded.iat < Math.floor(dbUser.password_changed_at / 1000)) return false;
+  // Sessions from before the last password reset carry an older version.
+  if ((decoded.sv ?? 0) !== dbUser.session_version) return false;
   req.user = { ...decoded, name: dbUser.name, email: dbUser.email, role: dbUser.role };
   return true;
 }
 
-// Rate Limiter for Login Attempts (Max 10 attempts per 15 mins)
+// Rate limiter for login: 10 *failed* attempts per 15 minutes per IP.
+// Successful logins don't count, because a whole classroom of pupils shares
+// one school IP address and must all be able to sign in.
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  skipSuccessfulRequests: true,
   message: { success: false, error: 'Too many login attempts from this IP address. Please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -156,8 +159,8 @@ function cookieAttributes(maxAgeSeconds) {
   ].join('; ');
 }
 
-function startSession(res, userObj) {
-  const token = jwt.sign(userObj, JWT_SECRET, { expiresIn: SESSION_TTL_SECONDS });
+function startSession(res, userObj, sessionVersion) {
+  const token = jwt.sign({ ...userObj, sv: sessionVersion }, JWT_SECRET, { expiresIn: SESSION_TTL_SECONDS });
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${token}; ${cookieAttributes(SESSION_TTL_SECONDS)}`);
 }
 
@@ -286,18 +289,35 @@ router.post('/auth/alumni-register', registerLimiter, (req, res) => {
 const REGISTERABLE_ROLES = ['student', 'staff'];
 const CLASS_LEVELS = ['Nursery 1', 'Nursery 2', 'Nursery 3', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
 
-function createPendingAccount(req, res, requestedRole) {
-  const { name, email, password, classLevel } = req.body || {};
+// Pupils sign in with a username (they often have no email); staff with email.
+const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,29}$/;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ success: false, error: 'Name, email, and password are required.' });
+function normalizeUsername(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function createPendingAccount(req, res, requestedRole) {
+  const { name, email, password, classLevel, username } = req.body || {};
+  const isStudent = requestedRole === 'student';
+  const hasEmail = typeof email === 'string' && email.trim() !== '';
+
+  if (!name || !password || (isStudent ? !username : !hasEmail)) {
+    return res.status(400).json({
+      success: false,
+      error: isStudent ? 'Name, username, and password are required.' : 'Name, email, and password are required.'
+    });
   }
 
   if (!isValidName(name)) {
     return res.status(400).json({ success: false, error: `Name must be at most ${MAX_NAME_LEN} characters.` });
   }
 
-  if (!isValidEmail(email)) {
+  const cleanUsername = isStudent ? normalizeUsername(username) : null;
+  if (isStudent && !USERNAME_RE.test(cleanUsername)) {
+    return res.status(400).json({ success: false, error: 'Username must be 3-30 characters: letters, numbers, dots, dashes or underscores.' });
+  }
+
+  if (hasEmail && !isValidEmail(email)) {
     return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
   }
 
@@ -305,36 +325,43 @@ function createPendingAccount(req, res, requestedRole) {
     return res.status(400).json({ success: false, error: `Password must be between 8 and ${MAX_PASSWORD_LEN} characters long.` });
   }
 
-  if (requestedRole === 'student' && !CLASS_LEVELS.includes(classLevel)) {
+  if (isStudent && !CLASS_LEVELS.includes(classLevel)) {
     return res.status(400).json({ success: false, error: 'Please select a valid class.' });
   }
 
-  const cleanEmail = email.trim().toLowerCase();
+  const cleanEmail = hasEmail ? email.trim().toLowerCase() : null;
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail);
-  if (existing) {
+  if (cleanEmail && db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail)) {
     return res.status(400).json({ success: false, error: 'An account with this email already exists.' });
+  }
+  if (cleanUsername && db.prepare('SELECT id FROM users WHERE username = ?').get(cleanUsername)) {
+    return res.status(400).json({ success: false, error: 'That username is already taken. Please choose another.' });
   }
 
   const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 
   // SECURITY: the stored role is always 'pending'; the requested role is only
-  // applied when an authorized user approves the account.
+  // applied when an authorized user approves the account. Without an email
+  // there is nothing to verify: staff approval is the identity check.
   const info = db.prepare(`
-    INSERT INTO users (name, email, password_hash, role, requested_role, class_level, email_verified)
-    VALUES (?, ?, ?, 'pending', ?, ?, 0)
-  `).run(name.trim(), cleanEmail, passwordHash, requestedRole, requestedRole === 'student' ? classLevel : null);
+    INSERT INTO users (name, email, username, password_hash, role, requested_role, class_level, email_verified)
+    VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)
+  `).run(name.trim(), cleanEmail, cleanUsername, passwordHash, requestedRole, isStudent ? classLevel : null, cleanEmail ? 0 : 1);
 
-  startEmailVerification(info.lastInsertRowid, cleanEmail, name.trim());
+  if (cleanEmail) {
+    startEmailVerification(info.lastInsertRowid, cleanEmail, name.trim());
+  }
 
-  console.log(`👤 New ${requestedRole} signup awaiting verification/approval (user #${info.lastInsertRowid})`);
+  console.log(`👤 New ${requestedRole} signup awaiting ${cleanEmail ? 'verification/' : ''}approval (user #${info.lastInsertRowid})`);
 
-  const approver = requestedRole === 'student' ? 'a staff member' : 'an administrator';
+  const approver = isStudent ? 'a staff member' : 'an administrator';
   return res.status(201).json({
     success: true,
     pendingApproval: true,
-    pendingVerification: true,
-    message: `Registration received. Confirm your email using the link we sent you; ${approver} will then approve your account.`
+    pendingVerification: Boolean(cleanEmail),
+    message: cleanEmail
+      ? `Registration received. Confirm your email using the link we sent you; ${approver} will then approve your account.`
+      : `Registration received. You can sign in with your username once ${approver} approves your account.`
   });
 }
 
@@ -406,7 +433,7 @@ function canManage(actor, target) {
 router.get('/auth/users', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
   try {
     const users = db.prepare(`
-      SELECT id, name, email, role, requested_role, class_level, created_at FROM users
+      SELECT id, name, email, username, role, requested_role, class_level, created_at FROM users
       WHERE role IN ('pending', 'student', 'staff', 'admin')
       ORDER BY CASE role WHEN 'pending' THEN 0 ELSE 1 END, id DESC
     `).all().filter(u => canManage(req.user, u) || u.id === req.user.id);
@@ -435,6 +462,30 @@ router.post('/auth/users/:id/approve', authenticateToken, requireRole('staff', '
   } catch (err) {
     console.error('Approve error:', err);
     res.status(500).json({ success: false, error: 'Failed to approve account.' });
+  }
+});
+
+// POST /api/auth/users/:id/reset-password - Issue a temporary password.
+// For pupils without an email (who can't use "Forgot password"): staff reset
+// it and hand the temporary password over in person.
+router.post('/auth/users/:id/reset-password', authenticateToken, requireRole('staff', 'admin'), (req, res) => {
+  try {
+    const userId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(userId) || userId === req.user.id) {
+      return res.status(400).json({ success: false, error: 'Invalid user id.' });
+    }
+    const target = db.prepare('SELECT id, role, requested_role FROM users WHERE id = ?').get(userId);
+    if (!target || !canManage(req.user, target)) {
+      return res.status(404).json({ success: false, error: 'Account not found.' });
+    }
+    const temporaryPassword = crypto.randomBytes(6).toString('base64url');
+    db.prepare('UPDATE users SET password_hash = ?, password_changed_at = ?, session_version = session_version + 1 WHERE id = ?')
+      .run(bcrypt.hashSync(temporaryPassword, bcrypt.genSaltSync(10)), Date.now(), userId);
+    console.log(`🔑 Temporary password issued for user #${userId} (by user #${req.user.id})`);
+    res.json({ success: true, temporaryPassword });
+  } catch (err) {
+    console.error('Staff password reset error:', err);
+    res.status(500).json({ success: false, error: 'Failed to reset password.' });
   }
 });
 
@@ -589,8 +640,8 @@ router.post('/auth/reset-password', emailActionLimiter(10), (req, res) => {
       return res.status(400).json({ success: false, error: 'This reset link is invalid or has expired. Please request a new one.' });
     }
     // Receiving the reset email also proves ownership of the address.
-    // password_changed_at revokes every session issued before now.
-    db.prepare('UPDATE users SET password_hash = ?, email_verified = 1, password_changed_at = ? WHERE id = ?')
+    // Bumping session_version revokes every existing session.
+    db.prepare('UPDATE users SET password_hash = ?, email_verified = 1, password_changed_at = ?, session_version = session_version + 1 WHERE id = ?')
       .run(bcrypt.hashSync(password, bcrypt.genSaltSync(10)), Date.now(), row.user_id);
     res.json({ success: true, message: 'Your password has been changed. You can now sign in.' });
   } catch (err) {
@@ -602,14 +653,17 @@ router.post('/auth/reset-password', emailActionLimiter(10), (req, res) => {
 // POST /api/auth/login - Authenticate staff/admin/alumni
 router.post('/auth/login', loginLimiter, (req, res) => {
   try {
-    const { email, password } = req.body || {};
+    // `identifier` is an email or a username; `email` kept for older clients
+    const { identifier = (req.body || {}).email, password } = req.body || {};
 
-    if (!email || !password || typeof email !== 'string' || typeof password !== 'string' || password.length > MAX_PASSWORD_LEN) {
-      return res.status(400).json({ success: false, error: 'Please enter both email and password.' });
+    if (!identifier || !password || typeof identifier !== 'string' || typeof password !== 'string' || password.length > MAX_PASSWORD_LEN) {
+      return res.status(400).json({ success: false, error: 'Please enter your email or username and your password.' });
     }
 
-    const cleanEmail = String(email).trim().toLowerCase();
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(cleanEmail);
+    const cleanIdentifier = identifier.trim().toLowerCase();
+    const user = cleanIdentifier.includes('@')
+      ? db.prepare('SELECT * FROM users WHERE email = ?').get(cleanIdentifier)
+      : db.prepare('SELECT * FROM users WHERE username = ?').get(cleanIdentifier);
 
     // Uniform error + constant-ish work factor: run a dummy compare even when
     // the user doesn't exist so response timing doesn't reveal valid emails.
@@ -617,7 +671,7 @@ router.post('/auth/login', loginLimiter, (req, res) => {
     const validPassword = bcrypt.compareSync(password, passwordHash);
 
     if (!user || !validPassword) {
-      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+      return res.status(401).json({ success: false, error: 'Invalid email/username or password.' });
     }
 
     if (!user.email_verified) {
@@ -637,7 +691,7 @@ router.post('/auth/login', loginLimiter, (req, res) => {
     if (user.role === 'student') {
       extraData = { classLevel: user.class_level || '' };
     } else if (user.role === 'alumni') {
-      const member = db.prepare('SELECT * FROM alumni_members WHERE email = ?').get(cleanEmail);
+      const member = db.prepare('SELECT * FROM alumni_members WHERE email = ?').get(user.email);
       if (member) {
         extraData = {
           memberType: member.member_type,
@@ -655,11 +709,12 @@ router.post('/auth/login', loginLimiter, (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      username: user.username,
       role: user.role,
       ...extraData
     };
 
-    startSession(res, userObj);
+    startSession(res, userObj, user.session_version);
 
     console.log(`🔐 User #${user.id} logged in [${user.role}]`);
 
@@ -684,7 +739,7 @@ router.post('/auth/logout', (req, res) => {
 // GET /api/auth/me - Fetch current authenticated user
 router.get('/auth/me', authenticateToken, (req, res) => {
   try {
-    const user = db.prepare('SELECT id, name, email, role, class_level, created_at FROM users WHERE id = ?').get(req.user.id);
+    const user = db.prepare('SELECT id, name, email, username, role, class_level, created_at FROM users WHERE id = ?').get(req.user.id);
     if (!user) {
       return res.status(404).json({ success: false, error: 'User account not found.' });
     }
