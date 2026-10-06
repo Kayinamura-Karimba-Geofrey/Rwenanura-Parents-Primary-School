@@ -596,7 +596,7 @@ export function createAlumniModal() {
     } else {
       // Visitor / Guest Header
       headerAuthSlot.innerHTML = `
-        <button id="btn-header-login" class="btn btn-gold btn-sm" title="Sign in as an RPPS Alumnus">
+        <button id="btn-header-login" class="btn btn-primary btn-sm" title="Sign in as an RPPS Alumnus">
           <span>Alumni Sign In / Join 🎓</span>
         </button>
         <button class="modal-close alumni-close-btn" aria-label="Close modal">&times;</button>
@@ -627,7 +627,7 @@ export function createAlumniModal() {
             placeholder="Share a message, reunion thought, or memory with fellow OBs & OGs... (Press Enter to send)"
             required
           ></textarea>
-          <button type="submit" id="btn-send-message" class="btn btn-gold btn-send-alumni">
+          <button type="submit" id="btn-send-message" class="btn btn-primary btn-send-alumni">
             <span>Send</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
@@ -708,7 +708,7 @@ export function createAlumniModal() {
             <p>You can read conversations between RPPS alumni. To participate, share stories, and message fellow Old Boys & Old Girls, please sign in or register your alumni profile.</p>
           </div>
           <div class="gated-actions">
-            <button class="btn btn-gold btn-sm trigger-goto-login">
+            <button class="btn btn-primary btn-sm trigger-goto-login">
               Alumni Sign In
             </button>
             <button class="btn btn-outline-white btn-sm trigger-goto-register">
@@ -931,7 +931,7 @@ export function createAlumniModal() {
 
           <!-- Quick Portal Actions -->
           <div class="id-card-actions">
-            <button class="btn btn-gold btn-jump-chat">
+            <button class="btn btn-primary btn-jump-chat">
               <span>Go to Live ChatUp 💬</span>
             </button>
             <button class="btn btn-outline btn-jump-dir">
@@ -989,7 +989,7 @@ export function createAlumniModal() {
                 <input type="password" id="modal-login-password" required placeholder="••••••••" />
               </div>
 
-              <button type="submit" id="btn-modal-login-submit" class="btn btn-gold btn-block">
+              <button type="submit" id="btn-modal-login-submit" class="btn btn-primary btn-block">
                 Sign In to Alumni Network 🚀
               </button>
             </form>
