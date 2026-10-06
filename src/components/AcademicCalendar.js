@@ -187,7 +187,7 @@ export function createAcademicCalendar() {
       if (list.length === 0) {
         eventsContainer.innerHTML = `
           <div class="calendar-empty-state">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+            <div class="calendar-empty-icon" aria-hidden="true">🔍</div>
             <h4>${t('cal_empty_title', 'No Events Found')}</h4>
             <p>${t('cal_empty_sub', 'Try adjusting your search query or selecting a different term filter.')}</p>
           </div>
