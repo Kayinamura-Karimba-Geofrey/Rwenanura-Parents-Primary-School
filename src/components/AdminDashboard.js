@@ -10,7 +10,7 @@ import {
   approveUser,
   updateStaffRole,
   deleteStaffUser,
-  clearAuthSession,
+  logoutUser,
   getStoredUser
 } from '../data/api.js';
 
@@ -227,7 +227,7 @@ export function createAdminDashboard(onLogout) {
 
   const logoutBtn = modal.querySelector('#dash-logout-btn');
   logoutBtn.addEventListener('click', () => {
-    clearAuthSession();
+    logoutUser();
     modal.classList.remove('active');
     if (onLogout) onLogout();
   });
