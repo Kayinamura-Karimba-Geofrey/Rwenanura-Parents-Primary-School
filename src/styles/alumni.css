@@ -202,7 +202,7 @@
 }
 
 .alumni-tab-btn.active {
-  background: var(--navy);
+  background: var(--primary);
   color: var(--white);
 }
 
@@ -470,16 +470,16 @@
 }
 
 .btn-reaction-cheer:hover {
-  background: var(--danger-subtle);
-  border-color: var(--danger-border);
-  color: var(--danger);
+  background: var(--primary-subtle);
+  border-color: var(--primary-border);
+  color: var(--primary);
   transform: scale(1.05);
 }
 
 .btn-reaction-cheer.reacting {
   animation: heartPump 0.35s ease;
-  background: var(--danger-border);
-  color: var(--danger);
+  background: var(--primary-border);
+  color: var(--primary);
 }
 
 @keyframes heartPump {
@@ -621,9 +621,9 @@
 }
 
 .filter-pill.active {
-  background: var(--navy);
+  background: var(--primary);
   color: var(--white);
-  border-color: var(--navy);
+  border-color: var(--primary);
 }
 
 .directory-search-box input {
@@ -747,9 +747,9 @@
 }
 
 .btn-say-hi:hover {
-  background: var(--navy);
+  background: var(--primary);
   color: var(--white);
-  border-color: var(--navy);
+  border-color: var(--primary);
 }
 
 /* TAB 3: Registration Card */
@@ -924,7 +924,7 @@
 .alumni-header-trigger:hover {
   background: var(--primary-dark);
   color: var(--gold-light) !important;
-  border-color: var(--gold) !important;
+  border-color: var(--primary) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(13, 92, 58, 0.3);
 }
@@ -1083,9 +1083,9 @@
 }
 
 .year-pill.active {
-  background: var(--navy);
+  background: var(--primary);
   color: var(--white);
-  border-color: var(--navy);
+  border-color: var(--primary);
 }
 
 /* ==========================================================================
@@ -1431,7 +1431,7 @@
 .btn-outline-white {
   background: transparent;
   color: var(--white);
-  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border: 1.5px solid var(--primary-light);
   font-weight: 600;
   padding: 0.85rem 1.5rem;
   border-radius: 8px;
@@ -1440,8 +1440,8 @@
 }
 
 .btn-outline-white:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--white);
+  background: var(--primary);
+  border-color: var(--primary);
   transform: translateY(-2px);
 }
 
@@ -1524,8 +1524,8 @@
 
 .btn-outline-navy {
   background: transparent;
-  color: var(--navy);
-  border: 1px solid var(--navy);
+  color: var(--primary);
+  border: 1px solid var(--primary);
   font-weight: 600;
   border-radius: 6px;
   padding: 0.45rem 0.85rem;
@@ -1535,7 +1535,7 @@
 }
 
 .btn-outline-navy:hover {
-  background: var(--navy);
+  background: var(--primary);
   color: var(--white);
 }
 
@@ -1590,7 +1590,7 @@
 }
 
 .btn-link-action:hover {
-  color: var(--gold);
+  color: var(--primary-dark);
 }
 
 .contact-unmasked-box {
@@ -1809,8 +1809,8 @@
 
 .btn-outline-danger {
   background: transparent;
-  border: 1px solid var(--danger);
-  color: var(--danger);
+  border: 1px solid var(--primary);
+  color: var(--primary);
   padding: 0.55rem 1.15rem;
   border-radius: 8px;
   font-weight: 600;
@@ -1820,7 +1820,7 @@
 }
 
 .btn-outline-danger:hover {
-  background: var(--danger);
+  background: var(--primary);
   color: var(--white);
 }
 
