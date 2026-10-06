@@ -1,6 +1,7 @@
 import { fetchAlumniMembers } from '../data/api.js';
 import { getUserRole, getCurrentUser, onAuthChange } from '../data/userRole.js';
 import { t } from '../data/i18n.js';
+import { schoolInfo } from '../data/schoolData.js';
 
 export function createAlumniSection(onOpenAlumniModal) {
   const section = document.createElement('section');
@@ -66,10 +67,12 @@ export function createAlumniSection(onOpenAlumniModal) {
             <span class="cohort-tag">Nyagatare Hub</span>
             <span class="cohort-tag">Diaspora OB/OG</span>
           </div>
-          <a href="https://chat.whatsapp.com/invite/sample-rpps-alumni" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-block">
+          ${schoolInfo.links.alumniWhatsApp ? `
+          <a href="${encodeURI(schoolInfo.links.alumniWhatsApp)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-block">
             <span>${t('btn_join_whatsapp')}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
+          </a>` : `
+          <p class="pillar-note">${t('alumni_whatsapp_soon', 'Ask the school office for the WhatsApp group link.')}</p>`}
         </div>
 
         <!-- Card 3: Upcoming 2026 Reunion & Mentorship -->
