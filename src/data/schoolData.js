@@ -10,6 +10,14 @@ export const schoolInfo = {
   email: "info@rwenanuraparents.sch.rw",
   admissionsEmail: "admissions@rwenanuraparents.sch.rw",
   workingHours: "Monday - Friday: 7:30 AM - 4:30 PM",
+  // Optional links. Leave empty to hide the related buttons.
+  links: {
+    // Invite link of the official alumni WhatsApp group (https://chat.whatsapp.com/...)
+    alumniWhatsApp: "",
+    // Prospectus PDF: place the file at public/prospectus.pdf. When it is
+    // missing, visitors are offered to request it by email instead.
+    prospectusPdf: "/prospectus.pdf"
+  },
   headteacher: {
     name: "Mr. Geofrey K. Kayinamura",
     title: "Headteacher & Academic Director",
